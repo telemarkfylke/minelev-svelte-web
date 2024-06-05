@@ -1,6 +1,8 @@
 import { env } from '$env/dynamic/private'
+import { getAuthenticatedUser } from '$lib/authentication'
 import { error } from '@sveltejs/kit'
 import { logConfig, logger } from '@vtfk/logger'
+
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load(pageRequest) {
@@ -25,9 +27,11 @@ export async function load(pageRequest) {
 			value: header[1]
 		})
 	}
+	const entraUser = getAuthenticatedUser(pageRequest.request.headers)
 
 	logger('info', ['Er dette på server da?'])
 	return {
-		headers
+		headers,
+		entraUser
 	}
 }
