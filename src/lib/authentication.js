@@ -1,8 +1,6 @@
 import { env } from "$env/dynamic/private"
 import { error } from "@sveltejs/kit"
 import { logger } from "@vtfk/logger"
-import jwt from 'jsonwebtoken'
-const { sign, decode } = jwt
 
 /**
  * 
@@ -14,8 +12,8 @@ export const getAuthenticatedUser = (headers) => {
     headers.set('x-ms-client-principal-name', 'demo.spokelse@fisfylke.no')
     headers.set('x-ms-client-principal-id', '12345-4378493-fjdiofjd')
 
-    // Create mock id-token with necessary values
-    const mockJwtPayload = {
+    // Create mock claims with necessary values
+    const mockClaims = {
         "auth_typ": "aad",
         "claims": [
           {
@@ -39,43 +37,42 @@ export const getAuthenticatedUser = (headers) => {
         "role_typ": "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
     }
     if (env.MOCK_AUTH_LARER_ROLE === 'true') {
-      mockJwtPayload.claims.push({
+      mockClaims.claims.push({
         "typ": "roles",
         "val": env.DEFAULT_ROLE
       })
     }
     if (env.MOCK_AUTH_LEDER_ROLE === 'true') {
-      mockJwtPayload.claims.push({
+      mockClaims.claims.push({
         "typ": "roles",
         "val": env.LEDER_ROLE
       })
     }
     if (env.MOCK_AUTH_ADMIN_ROLE === 'true') {
-      mockJwtPayload.claims.push({
+      mockClaims.claims.push({
         "typ": "roles",
         "val": env.ADMIN_ROLE
       })
     }
 
-    const mockIdToken = sign(mockJwtPayload, 'mockesecretingentingfarligher')
-    headers.set('x-ms-client-principal', mockIdToken)
-
+    const mockClaimsBase64 = Buffer.from(JSON.stringify(mockClaims), 'utf-8').toString('base64')
+    headers.set('x-ms-client-principal', mockClaimsBase64)
   }
 
 	// Get MS Auth headers
 	const principalName = headers.get('x-ms-client-principal-name')
 	const principalId = headers.get('x-ms-client-principal-id')
-	const idToken = headers.get('x-ms-client-principal')
+	const encodedClaims = headers.get('x-ms-client-principal')
 
-	if (!principalName || !principalId || !idToken) {
+	if (!principalName || !principalId || !encodedClaims) {
 		logger('warn', ['Missing authentication headers from Microsoft, something is wrong'])
 		throw error(500, 'Missing authentication headers from Microsoft, something is wrong')
 	}
 
-	const decodedToken = decode(idToken)
-	if (!decodedToken) throw error(500, 'Det e itj no token her')
-	const roles = decodedToken.claims.filter(claim => claim.typ === 'roles').map(claim => claim.val)
-	const name = decodedToken.claims.find(claim => claim.typ === 'name').val
+	const decodedClaims = JSON.parse(Buffer.from(encodedClaims, 'base64').toString())
+	if (!decodedClaims) throw error(500, 'Det e itj no token her')
+	const roles = decodedClaims.claims.filter(claim => claim.typ === 'roles').map(claim => claim.val)
+	const name = decodedClaims.claims.find(claim => claim.typ === 'name').val
 	return {
 		principalName,
 		principalId,
