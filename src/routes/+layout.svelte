@@ -9,10 +9,9 @@
 
 
 
-<h1>Halla</h1>
 <md-filled-button on:click={() => goto('/')}>Klikk på meg for hjem</md-filled-button>
 
-<h1>Velkommen!</h1>
+<h1>Tester en app</h1>
 <div class="content">
   <slot></slot>
 </div>

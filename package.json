@@ -22,6 +22,7 @@
 	"type": "module",
 	"dependencies": {
 		"@material/material-color-utilities": "^0.2.7",
-		"@material/web": "^1.5.0"
+		"@material/web": "^1.5.0",
+		"@vtfk/logger": "^6.1.0"
 	}
 }
