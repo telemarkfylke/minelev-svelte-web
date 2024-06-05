@@ -27,7 +27,13 @@ export async function load(pageRequest) {
 			value: header[1]
 		})
 	}
-	const entraUser = getAuthenticatedUser(pageRequest.request.headers)
+	let entraUser
+	try {
+		entraUser = getAuthenticatedUser(pageRequest.request.headers)
+	} catch (error) {
+		logger('error', ['Feilet her jeg gitt', error.stack || error.toString()])
+		throw error(500, `iuiui ${error.toString()}`)
+	}
 
 	logger('info', ['Er dette på server da?'])
 	return {

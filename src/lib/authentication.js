@@ -1,4 +1,5 @@
 import { env } from "$env/dynamic/private"
+import { error } from "@sveltejs/kit"
 import { logger } from "@vtfk/logger"
 import jwt from 'jsonwebtoken'
 const { sign, decode } = jwt
