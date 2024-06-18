@@ -13,8 +13,8 @@
 
 
 <p>Hvordan blir dette her seesnenene ut da</p>
-<md-outlined-button on:click={() => goto('/tull')}>Klikk på meg for tull</md-outlined-button>
-<md-filled-button on:click={() => goto('/tull')}>Klikk på meg for tull</md-filled-button>
+<button on:click={() => goto('/tull')}>Klikk på meg for tull</button>
+<button on:click={() => goto('/tull')}>Klikk på meg for tull</button>
 
 <style>
     .color1 {

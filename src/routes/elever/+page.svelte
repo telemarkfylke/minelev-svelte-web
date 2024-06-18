@@ -17,6 +17,7 @@
 </script>
 
 <h1>Dine elever</h1>
+<input type="text" />
 <md-filled-text-field bind:this={searchField} on:input={() => { search(searchField.value) }} style="width: 300px" placeholder="Søk etter elev eller klasse">
   <md-icon slot="leading-icon">search</md-icon>
 </md-filled-text-field>
