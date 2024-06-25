@@ -57,9 +57,6 @@
     }
   ]
 
-  // For handling open / close of userMenu
-  let userMenu
-
 </script>
 
 <div class="layout">
@@ -67,13 +64,13 @@
     <p>Jeg burde ikke synes</p>
   </div>
   <div class="sidebar">
-    <a class="logoLink" href="/">
+    <a class="logoLink inward-focus-within" href="/">
       <img class="logo" src={logo} alt="Fylkekommunens logo" />
       <img class="logoDarkmode" src={logoDarkmode} alt="Fylkekommunens logo" />
     </a>
     <!--<md-divider role="separator"></md-divider>-->
     {#each sideMenuItems as menuItem}
-      <a href={menuItem.href} class="menuLink">
+      <a href={menuItem.href} class="menuLink inward-focus-within">
         <div class="menuItem{isActiveRoute(menuItem.href, $page.url.pathname) ? ' active' : ''}">
           <span class="material-symbols-outlined">{menuItem.icon}</span>
           <div>{menuItem.title}</div>
@@ -92,9 +89,9 @@
           <span class="material-symbols-outlined">more_vert</span>
           {#if showUsermenu}
             <div class="userMenu">
-              <button class="blank userMenuOption">Logg ut</button>
-              <button class="blank userMenuOption">Huoo</button>
-              <button class="blank userMenuOption">Hepp</button>
+              <button class="blank userMenuOption inward-focus-within">Logg ut</button>
+              <button class="blank userMenuOption inward-focus-within">Huoo</button>
+              <button class="blank userMenuOption inward-focus-within">Hepp</button>
             </div>
           {/if}
         </button>
@@ -114,7 +111,15 @@
     <div class="contentContainer">
       <div class="content">
         {#if $navigating}
-          LASTER (bytt meg ut med en spinner om du vil)
+          <div class="loadingOverlay">
+            <div class="spinner" style="width: 10rem">
+              <svg viewBox="0 0 50 50" focusable="false" aria-label="Laster...">
+                  <title>Laster...</title>
+                  <circle cx="25" cy="25" r="20"></circle>
+                  <circle cx="25" cy="25" r="20"></circle>
+              </svg>
+            </div>
+          </div>
         {/if}
         <slot></slot>
       </div>
@@ -128,11 +133,11 @@
     display: flex;
   }
   .fakesidebartotakeupspace, .sidebar {
-    width: 130px;
+    width: 8rem;
     flex-direction: column;
     flex-shrink: 0;
     align-items: center;
-    padding: 20px 0px;
+    padding: 1.5rem 0rem;
     display: flex;
     height: 100vh;
     background-color: var(--secondary-color-20);
@@ -141,12 +146,12 @@
     position: fixed;
   }
   .logoLink {
-    all: unset;
-    margin-bottom: 32px;
+    padding-bottom: 2rem;
   }
   .logo, .logoDarkmode {
-    width: 130px;
+    width: 8rem;
   }
+  /* Fylket hakke dark mode...
   @media (prefers-color-scheme: light) {
     .logoDarkmode {
       display: none;
@@ -157,16 +162,25 @@
       display: none;
     }
   }
-  .menuLink {
-    all: unset;
+  */ 
+  .logoDarkmode {
+    display: none;
+  }
+  .menuLink, .logoLink {
+    border-bottom: 1px solid var(--primary-color);
+    text-decoration: none;
+    color: var(--font-color);
   }
   .menuItem {
-    width: 130px;
+    width: 8rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 16px 0px;
+    padding: 1rem 0px;
     cursor: pointer;
+  }
+  .menuItem span {
+    font-size: 1.5rem;
   }
   .menuItem.active {
     font-weight: bold;
@@ -177,23 +191,23 @@
   }
   .pageContent {
     flex-grow: 1;
-    max-width: 1280px;
-    margin: 0px auto;
-    padding: 0px;
+    max-width: 80rem;
+    margin: 0rem auto;
+    padding: 0rem;
   }
   .topbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0px 32px;
-    border-bottom: 2px solid var(--primary-color);
+    padding: 0rem 2rem;
+    border-bottom: 1px solid var(--primary-color);
   }
   .pathtracker {
     display: flex;
-    padding: 4px 32px;
+    padding: 0.4rem 2rem;
   }
   .pathtrackerlink {
-    padding: 0px 4px;
+    padding: 0rem 0.4rem;
     text-decoration: none;
   }
   .userContainer {
@@ -210,24 +224,38 @@
     position: absolute;
     display: flex;
     flex-direction: column;
-    right: 2px;
-    top: 54px;
+    right: 0.125rem;
+    top: 3rem;
     border: 2px solid var(--primary-color);
   }
   .userMenuOption {
     flex-grow: 1;
-    padding: 16px;
+    padding: 1rem;
     background-color: var(--primary-background-color);
   }
   .userMenuOption:hover {
-    padding: 16px;
+    padding: 1rem;
     background-color: var(--primary-color-10);
   }
 
+  .loadingOverlay {
+    position: fixed;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgba(0,0,0,0.5);
+    top: 0;
+    left: 0;
+    z-index: 1000; /* Should be enough?? */
+  }
+  .spinner {
+    margin: auto;
+    margin-top: 5rem;
+  }
+
   .contentContainer {
-    padding: 16px 64px;
+    padding: 1rem 4rem;
   }
   .content {
-    margin: 0px auto 0px auto;
+    margin: 0rem auto 0rem auto;
   }
 </style>

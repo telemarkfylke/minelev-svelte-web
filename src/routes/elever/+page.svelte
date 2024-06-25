@@ -1,11 +1,18 @@
 <script>
+	import { clickOutside } from '$lib/helpers/click-outside'
+	import { goto } from '$app/navigation'
+	
+
 	/** @type {import('./$types').PageData} */
 	export let data
 
 	let students = data.students
 	let originalStudents = JSON.parse(JSON.stringify(data.students))
-	let userMenus = {}
-	let searchField
+	let studentMenus = {}
+	students.forEach(student => {
+		studentMenus[student.elevnummer] = false
+	})
+	let searchValue
 
 	const search = (searchValue) => {
 		const filterFunc = (student) => {
@@ -17,12 +24,12 @@
 </script>
 
 <h1>Dine elever</h1>
-<input type="text" />
-<md-filled-text-field bind:this={searchField} on:input={() => { search(searchField.value) }} style="width: 300px" placeholder="Søk etter elev eller klasse">
-  <md-icon slot="leading-icon">search</md-icon>
-</md-filled-text-field>
+<div class="icon-input" style="width: 16rem;">
+	<span class="material-symbols-outlined">search</span>
+	<input type="text" bind:value={searchValue} on:input={() => { search(searchValue) }} placeholder="Søk etter elev eller klasse" />
+</div>
 <div class="studentList">
-	<div class="studentRow md-typescale-title-medium header">
+	<div class="studentRow header">
 		<div class="studentInfo">Navn</div>
 		<div>Skole / Klasse</div>
 		<div class="studentAction">Handling</div>
@@ -31,36 +38,30 @@
 		<div class=studentRow>
 			<div class="studentInfo">
 				{#if student.kontaktlarer}
-					<div title="Du er kontaktlærer for denne eleven" class="studentId md-typescale-label-medium"><strong>Kontaktlærer</strong></div>
+					<div class="contactTeacher" title="Du er kontaktlærer for denne eleven"><strong>Kontaktlærer</strong></div>
 				{/if}
-				<a href="/elever/{student.elevnummer}" style="position: relative;">
-					<md-focus-ring style="--md-focus-ring-shape: 8px"></md-focus-ring>
-					<div class="studentName">{student.navn}</div>
-				</a>
-				<div class="studentId md-typescale-label-large">{student.feidenavn.substring(0, student.feidenavn.indexOf('@'))}</div>
+				<div class="studentName">
+					<a href="/elever/{student.feidenavnPrefix}">{student.navn}</a>
+				</div>
+				<div class="studentId">{student.feidenavnPrefix}</div>
 			</div>
 			<div>
 				{#each student.klasser as group}
-					<a href="/klasser/{group.systemId}" style="position: relative;">
-						<md-focus-ring style="--md-focus-ring-shape: 8px"></md-focus-ring>
-						<div class="md-typescale-label-medium">
-							{`${group.skole.kortkortnavn}:${group.navn}`}
-						</div>
-					</a>
+					<div class="classGroup">
+						<a href="/klasser/{group.systemId}">{`${group.skole.kortkortnavn}:${group.navn}`}</a>
+					</div>
 				{/each}
 			</div>
 			<div class="studentAction">
-				<span style="position: relative;">
-          <md-icon-button on:click={() => { userMenus[student.elevnummer].open = !userMenus[student.elevnummer].open;}} id="usage-anchor-{student.elevnummer}"><md-icon>more_vert</md-icon></md-icon-button>
-          <md-menu bind:this={userMenus[student.elevnummer]} id="usage-menu" yOffset="-20px" anchor="usage-anchor-{student.elevnummer}">
-            <md-menu-item href='/elever/{student.elevnummer}/dokumenter/nytt?type=document'>
-              <div slot="headline">Nytt dokument</div>
-            </md-menu-item>
-            <md-menu-item href='/elever/{student.elevnummer}/dokumenter/nytt?type=notat'>
-              <div slot="headline">Nytt notat</div>
-            </md-menu-item>
-          </md-menu>
-        </span>
+				<button class="action studentButton{studentMenus[student.elevnummer] ? ' cheatActive' : ''}" on:click={() => {studentMenus[student.elevnummer] = !studentMenus[student.elevnummer]}} use:clickOutside on:click_outside={() => {studentMenus[student.elevnummer] = false}}>
+          <span class="material-symbols-outlined">more_vert</span>
+          {#if studentMenus[student.elevnummer]}
+            <div class="studentMenu">
+              <button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument`)}}>Nytt dokument</button>
+              <button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument?type=notat`)}}>Nytt notat</button>
+            </div>
+          {/if}
+        </button>
 			</div>
 		</div>
 	{/each}
@@ -70,20 +71,54 @@
 	.studentRow {
 		display: flex;
 		align-items: center;
-		padding: 16px 32px;
+		padding: 1rem 2rem;
 	}
 	.studentRow.header {
-		padding: 16px 32px 0px 32px;
+		padding: 1rem 2rem 0rem 2rem;
 	}
 	.studentInfo {
-		max-width: 180px;
+		max-width: 11rem;
 		flex-grow: 1;
+	}
+	.contactTeacher {
+		font-size: var(--font-size-extra-small);
+	}
+	.studentId {
+		font-size: var(--font-size-small);
+	}
+	.classGroup {
+		font-size: var(--font-size-small);
 	}
 	.studentAction {
 		margin-left: auto;
 	}
 	.studentRow:nth-child(even) {
-		background-color: var(--md-sys-color-surface-container);
-		color: var(--md-sys-color-on-surface-container);
+		background-color: var(--primary-color-10);
 	}
+  .cheatActive {
+    background-color: rgba(0,0,0,0.1);
+  }
+
+	.studentButton {
+		position: relative;
+	}
+  .studentMenu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+		min-width: 8rem;
+    right: 0.125rem;
+    top: 3rem;
+    border: 2px solid var(--primary-color);
+		z-index: 2; /* ? */
+  }
+  .studentMenuOption {
+    flex-grow: 1;
+    padding: 1rem;
+    background-color: var(--primary-background-color);
+  }
+  .studentMenuOption:hover {
+    padding: 1rem;
+    background-color: var(--primary-color-10);
+  }
 </style>
