@@ -1,5 +1,6 @@
 <script>
   import { page } from "$app/stores";
+  import Elevsamtale from "$lib/document-types/Elevsamtale.svelte";
   import VarselFag from "$lib/document-types/VarselFag.svelte";
   import { documentTypes } from "$lib/document-types/document-types";
   /** @type {import('./$types').PageData} */
@@ -9,6 +10,7 @@
   const studentData = data.studentData
 
   let documentTypeId = $page.url.searchParams.get('document_type') || undefined
+
 
 </script>
 
@@ -30,12 +32,11 @@
 </div>
 
 {#if documentTypeId}
-  {documentTypeId}
   {#if documentTypeId === 'varsel-fag'}
-    <VarselFag {documentTypeId} {teacherStudent} {studentData} faggrupper={studentData.faggrupper} probableFaggrupper={studentData.probableFaggrupper} />
+    <VarselFag {documentTypeId} {teacherStudent} {studentData} user={data.user} teacher={data.teacher} faggrupper={studentData.faggrupper} probableFaggrupper={studentData.probableFaggrupper} />
   {/if}
   {#if documentTypeId === 'elevsamtale'}
-    Hallo elevsamtale
+    <Elevsamtale {documentTypeId} {teacherStudent} {studentData} />
   {/if}
   {#if documentTypeId === 'notat'}
     Hallo notat
@@ -44,9 +45,6 @@
     Hallo yff
   {/if}
 {/if}
-
-<!--Putte inn knappene her? Mulig submit fungeer like fett? Hva med preview? Bruke den rett her? Njaa, kan hende det er like greit, å ta alt inn i komppnenetene-->
-
 
 <style>
   select {

@@ -1,6 +1,11 @@
 import { fintTeacher } from './fintfolk-api/teacher'
 import { fintStudent } from './fintfolk-api/student'
 import { documentTypes } from './document-types/document-types'
+import { closeMongoClient, getMongoClient } from './mongo-client'
+import { env } from '$env/dynamic/private'
+import { ObjectId } from 'mongodb'
+import { getMockDb } from './mock-db'
+import { logger } from '@vtfk/logger'
 
 export const sleep = (ms) => {
   return new Promise((resolve) => {
@@ -48,7 +53,10 @@ export const getTeacher = async (user) => {
   const repackedTeacher = {
     upn: teacher.upn,
     feidenavn: teacher.feidenavn,
-    ansattnummer: teacher.ansattnummer
+    ansattnummer: teacher.ansattnummer,
+    name: teacher.navn,
+    firstName: teacher.fornavn,
+    lastName: teacher.etternavn
   }
 
   let students = []
@@ -83,7 +91,6 @@ export const getTeacher = async (user) => {
   }
   // Sleng på kort-feidenavn på alle elever, og gyldige dokumenttyper for eleven
   students = students.map(stud => { return { ...stud, feidenavnPrefix: stud.feidenavn.substring(0, stud.feidenavn.indexOf('@')), availableDocumentTypes: getAvailableDocumentTypesForTeacher(stud) } })
-  // Lag et lærerobjekt også som har passelig med data
   // Lag et objekt med siste aktivitet for lærerens elever
   return {
     teacher: repackedTeacher,
@@ -98,7 +105,15 @@ export const getTeacher = async (user) => {
  */
 export const getStudent = async (studentFeidenavn, classes) => {
   const student = await fintStudent(studentFeidenavn)
-  
+  const repackedStudent = {
+    upn: student.upn,
+    feidenavn: student.feidenavn,
+    elevnummer: student.elevnummer,
+    name: student.navn,
+    firstName: student.fornavn,
+    lastName: student.etternavn
+  }
+
   // Alle faggrupper, fordi vi mangler relasjon mellom lærer og faggrupper
   let faggrupper = []
   for (const elevforhold of student.elevforhold.filter(forhold => forhold.aktiv)) {
@@ -133,8 +148,111 @@ export const getStudent = async (studentFeidenavn, classes) => {
   // Hent så alle dokumenter lærerern har tilgang på
   const documents = [] // getDocuments(user, feidenavn) - Documents that the current user has read access to
   return {
+    student: repackedStudent,
     faggrupper,
     probableFaggrupper,
     documents
+  }
+}
+
+export const addDocument = async (document) => {
+  if (env.MOCK_API === 'true') return 'tullballid' // Evt ObjectId i tillegg  
+  try {
+    const mongoClient = await getMongoClient()
+    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_DOCUMENTS_COLLECTION)
+    const insertResult = await collection.insertOne(document)
+    return insertResult.insertedId
+  } catch (error) {
+    if (error.toString().startsWith('MongoTopologyClosedError')) {
+      logger('warn', 'Oh no, topology is closed! Closing client')
+      closeMongoClient()
+    }
+    throw error
+  }
+}
+
+export const getDocument = async (documentId) => {
+  if (env.MOCK_API === 'true') return 'et tulledokument?'
+  try {
+    const mongoClient = await getMongoClient()
+    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_DOCUMENTS_COLLECTION)
+    const document = await collection.findOne({ _id: ObjectId(documentId) })
+    return document
+  } catch (error) {
+    if (error.toString().startsWith('MongoTopologyClosedError')) {
+      logger('warn', 'Oh no, topology is closed! Closing client')
+      closeMongoClient()
+    }
+    throw error
+  }
+}
+
+export const getTeacherDocuments = async (teacher) => {
+  if (env.MOCK_API === 'true') return 'en liste med tulledokumenter'
+  try {
+    const mongoClient = await getMongoClient()
+    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_DOCUMENTS_COLLECTION)
+    // Her må vi lage en spørring som henter dokumenter som matcher alle elevene til læreren, men vi tar vel kanskje panskje med en top-parameter for å være flinke?
+  } catch (error) {
+    if (error.toString().startsWith('MongoTopologyClosedError')) {
+      logger('warn', 'Oh no, topology is closed! Closing client')
+      closeMongoClient()
+    }
+    throw error
+  }
+}
+
+export const getStudentDocuments = async (teacherStudent) => {
+  try {
+    const mongoClient = await getMongoClient()
+    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_DOCUMENTS_COLLECTION)
+    // Her må vi lage en spørring som henter dokumenter som matcher alle dokumentene til eleven som læreren faktisk har tilgang på
+  } catch (error) {
+    if (error.toString().startsWith('MongoTopologyClosedError')) {
+      logger('warn', 'Oh no, topology is closed! Closing client')
+      closeMongoClient()
+    }
+    throw error
+  }
+}
+
+export const getActiveRole = async (principalId) => {
+  if (env.MOCK_API === 'true') {
+    const mockDb = getMockDb()
+    const activeRole = mockDb.get('activeRole')
+    return activeRole || null
+  }
+  try {
+    const mongoClient = await getMongoClient()
+    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_USER_SETTINGS_COLLECTION)
+    const userSettings = await collection.findOne({ principalId })
+    if (!userSettings) return null
+    return userSettings.activeRole || null
+  } catch (error) {
+    if (error.toString().startsWith('MongoTopologyClosedError')) {
+      logger('warn', 'Oh no, topology is closed! Closing client')
+      closeMongoClient()
+    }
+    throw error
+  }
+}
+
+export const setActiveRole = async (user, activeRole) => {
+  if (env.MOCK_API === 'true') {
+    const mockDb = getMockDb()
+    mockDb.set('activeRole', activeRole)
+    return
+  }
+  try {
+    const mongoClient = await getMongoClient()
+    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_USER_SETTINGS_COLLECTION)
+    const setUserSetting = await collection.findOneAndUpdate({ principalId: user.principalId }, { $set: { principalId: user.principalId, principalName: user.principalName, activeRole }}, { upsert: true })
+    return
+  } catch (error) {
+    if (error.toString().startsWith('MongoTopologyClosedError')) {
+      logger('warn', 'Oh no, topology is closed! Closing client')
+      closeMongoClient()
+    }
+    throw error
   }
 }

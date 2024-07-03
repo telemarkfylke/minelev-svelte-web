@@ -1,14 +1,24 @@
 <script>
+  import { objectToFormdata } from "$lib/object-to-formdata";
+  import PdfPreview from "../components/PDFPreview.svelte";
   import { periods, courseReasons } from "./data/document-data";
   import { documentTypes, generateDocument } from "./document-types";
 
   export let faggrupper
   export let probableFaggrupper
   export let documentTypeId
-  export let student
+  export let teacherStudent
+  export let studentData
+  export let teacher
+  export let user
 
   let displayAllFaggrupper = false
+  let showPreview = false
   let loading = false
+
+  let showData = false
+
+  let errorMessage = ""
 
   const otherFaggrupper = faggrupper.filter(gruppe => !probableFaggrupper.some(group => group.systemId === gruppe.systemId))
   
@@ -20,7 +30,9 @@
   }
 
   const documentType = documentTypes.find(docType => docType.id === documentTypeId)
-  const availableSchools = student.availableDocumentTypes.find(docType => docType.id === documentTypeId).schools
+  const availableSchools = teacherStudent.availableDocumentTypes.find(docType => docType.id === documentTypeId).schools
+
+  let canClickSend = false
 
   // Content data
   const varsel = {
@@ -30,39 +42,54 @@
     reasons: []
   }
 
-  const validate = () => {
-    console.log(student)
-    const formData = new FormData()
-    formData.append('hei', "jhuhuhu")
-    const document = generateDocument({ 
-      documentTypeId,
-      type: 'varsel',
-      variant: 'fag',
-      school: student.skoler.find(school => school.skolenummer === varsel.schoolNumber),
-      user: "Halla",
-      student,
-      teacher: "Hijhi",
-      formData
-    })
-    console.log(document)
+  const resetVarsel = () => {
+    varsel.periodId = ""
+    varsel.courses = []
+    varsel.reasons = []
   }
 
-  $: if (varsel.courses && varsel.courses.length > 0) validate()
+  $: canClickSend = Boolean(varsel.schoolNumber && varsel.periodId && varsel.courses.length > 0 && varsel.reasons.length > 0)
+
+  const validate = () => {
+    errorMessage = ""
+    try {
+      const formData = objectToFormdata(varsel)
+
+      const document = generateDocument({ 
+        documentTypeId,
+        type: 'varsel',
+        variant: 'fag',
+        school: teacherStudent.skoler.find(school => school.skolenummer === varsel.schoolNumber),
+        user,
+        teacherStudent,
+        studentData,
+        teacher,
+        formData
+      })
+      return document
+    } catch (error) {
+      errorMessage = error.response?.data || error.stack || error.message?.message || error.toString() 
+    }
+  }
+
+  // $: if (varsel.courses && varsel.courses.length > 0) validate()
 
   // Faggrupper, kan de matches på fag i undervisninggrupper, ved navne-matching?? La oss teste
   // IDEEN - vi henter alle faggruppene til en elev - så matcher vi på navn (prefixen til undervisningsgrupep). Har vi en knapp for å vise alle fag - dersom faglærer ikke får opp sitt fag. MEN hva når vi skal vise sendte varsler.
   // Vi begynner med ideen over, og får ta det som det kommer.
 </script>
 
-<!--<pre>{JSON.stringify(faggrupper, null, 2)}</pre>-->
-<pre>{JSON.stringify(varsel, null, 2)}</pre>
+{#if showData}
+  <pre>{JSON.stringify(varsel, null, 2)}</pre>
+{/if}
+
 
 <form method="post" action="?/varsel-fag">
   {#if availableSchools.length > 1}
     <section>
       <h4>Velg skole</h4>
       {#each availableSchools as school}
-        <input type="radio" id="school-{school.skolenummer}" name="school" bind:group={varsel.schoolNumber} value="{school.skolenummer}" required />
+        <input type="radio" on:change={resetVarsel} id="school-{school.skolenummer}" name="schoolNumber" bind:group={varsel.schoolNumber} value="{school.skolenummer}" required />
         <label for="school-{school.skolenummer}">{school.navn}</label><br>
       {/each}
     </section>
@@ -73,9 +100,11 @@
   <!--Ikke noe poeng å vise resten før skole er valgt -->
   {#if varsel.schoolNumber}
     <section>
-      <h4>Velg periode</h4>
+      <h4>
+        Velg periode
+      </h4>
       {#each periods as period}
-        <input type="radio" id="period-{period.id}" bind:group={varsel.periodId} name="period" value="{period.id}" required />
+        <input type="radio" id="period-{period.id}" bind:group={varsel.periodId} name="periodId" value="{period.id}" required />
         <label for="period-{period.id}">{period.value.nb}</label><br>
       {/each}
     </section>
@@ -104,14 +133,46 @@
         <label for="reason-{reason.id}">{reason.description.nb}</label><br>
       {/each}
     </section>
-    <button type="submit" class="filled" on:click={(e) => { loading = true; e.preventDefault() }}>Send</button>
-    <button on:click={(e) => {e.preventDefault()}}>Forhåndsvisning</button>
-    {#if loading}
-      LASTER
+
+    {#if errorMessage}
+      <section class="error">
+        <h4>Noe er galt 😩</h4>
+        <p>{errorMessage}</p>
+      </section>
     {/if}
+
+    <div class="form-buttons">
+      {#if canClickSend}
+        <button on:click={(e) => {e.preventDefault(); showPreview = true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        <button type="submit" class="filled" on:click={(e) => { loading = true; }}><span class="material-symbols-outlined">send</span>Send</button>
+      {:else}
+        <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        <button disabled><span class="material-symbols-outlined">send</span>Send</button>
+      {/if}
+      {#if loading}
+        LASTER
+      {/if}
+    </div>
   {/if}
 </form>
+<PdfPreview getDataFunction={validate} {showPreview} closePreview={() => {showPreview = false}} />
+
 
 <style>
-
+  h4 {
+    border-bottom: 1px solid var(--primary-color);
+  }
+  .form-buttons {
+    display: flex;
+    gap: var(--spacing-small);
+  }
+  section {
+    /* background-color: var(--primary-color-20); */
+    padding-bottom: 0.5rem;
+  }
+  .error {
+    color: var(--error-color);
+    background-color: var(--error-background-color);
+    padding: 0.5rem 1rem;
+  }
 </style>

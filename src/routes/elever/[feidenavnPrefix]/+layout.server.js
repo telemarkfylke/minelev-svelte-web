@@ -36,12 +36,13 @@ export async function load ({ params, parent }) {
     }
 
     logger('info', [loggerPrefix, `Access to student ${studentFeidenavn} validated. Fetching student from FINT and repacking`])
-    const { documents, faggrupper, probableFaggrupper } = await getStudent(studentFeidenavn, classes)
+    const { student, documents, faggrupper, probableFaggrupper } = await getStudent(studentFeidenavn, classes)
 
     logger('info', [loggerPrefix, `Got student data for ${studentFeidenavn}, returning frontend with data`])
     
     return {
       studentData: {
+        student,
         documents,
         faggrupper,
         probableFaggrupper

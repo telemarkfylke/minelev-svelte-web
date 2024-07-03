@@ -41,6 +41,8 @@
 	--font-color-inverted: rgb(255, 255, 255);
 	--link-color: rgb(0, 82, 96);
 	--link-color-hover: rgb(0, 0, 0);
+	--error-color: rgb(183, 23, 61);
+	--error-background-color: rgb(241, 209, 216);
 
 	/* SIZES */
 	--font-size-root: 1rem;
@@ -137,6 +139,12 @@ button.filled, a.button.filled {
 
 button.filled:hover, a.button.filled:hover {
 	background-color: var(--primary-color-80);
+}
+
+button:disabled, button:disabled:hover {
+	background-color: var(--primary-background-color);
+	cursor: not-allowed;
+	color: grey;
 }
 
 button.icon, button.action, a.button.action {

@@ -6,7 +6,7 @@ import { logger } from '@vtfk/logger'
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load ({ request }) {
   try {
-    const user = getAuthenticatedUser(request.headers)
+    const user = await getAuthenticatedUser(request.headers)
 
     // Sjekk hva vi skal hente basert på om hva de har tilgang/rolle til
     

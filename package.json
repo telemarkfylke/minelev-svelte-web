@@ -25,6 +25,8 @@
 		"@material/material-color-utilities": "^0.2.7",
 		"@material/web": "^1.5.1-nightly.4f7ff4f.0",
 		"@vtfk/logger": "^6.1.0",
+		"axios": "^1.7.2",
+		"mongodb": "^6.8.0",
 		"node-cache": "^5.1.2"
 	}
 }

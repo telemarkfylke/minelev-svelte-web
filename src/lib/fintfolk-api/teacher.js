@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { getMsalToken } from '$lib/msal-token'
 import { sleep } from '$lib/api'
+import axios from 'axios'
 
 const mockTeacher = {
   feidenavn: 'larer.laresen@fisfylke.no',
@@ -360,12 +361,13 @@ for (let i = 0; i < 100; i++) {
  * @param {Object} user
  */
 export const fintTeacher = async (user) => {
-  const identifier = user.feidenavn || user.principalName
+  const identifier = user.principalName
   if (!identifier) throw error(400, 'Missing required parameter "user.feidenavn" or "user.principalName"')
   if (env.MOCK_API === 'true' && env.NODE_ENV !== 'production') {
     await sleep(1000)
     return mockTeacher
   }
-  const accessToken = await getMsalToken({ scope: 'fint-folk-scope' }) // Change to env!
-  return accessToken
+  const accessToken = await getMsalToken({ scope: env.FINTFOLK_API_SCOPE })
+  const { data } = await axios.get(`${env.FINTFOLK_API_URL}/teacher/upn/${identifier}`, { headers: { Authorization: `Bearer ${accessToken}` } })
+  return data
 }

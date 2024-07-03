@@ -61,6 +61,25 @@ export const courseReasons = [
   }
 ]
 
+export const conversationStatuses = [
+  {
+    id: 'samtale',
+    value: {
+      nb: 'Elevsamtalen er gjennomført',
+      nn: 'Elevsamtalen er gjennomført',
+      en: 'Elevsamtalen er gjennomført'
+    }
+  },
+  {
+    id: 'ikke-samtale',
+    value: {
+      nb: 'Eleven ønsker ikke samtale',
+      nn: 'Eleven ønsker ikke samtale',
+      en: 'Eleven ønsker ikke samtale'
+    }
+  }
+]
+
 export const DOCUMENTS = {
   documentTypes: [
     {

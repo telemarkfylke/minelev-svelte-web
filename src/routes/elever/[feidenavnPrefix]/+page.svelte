@@ -76,12 +76,10 @@
   .documentsBox {
     padding: 2.5rem 2rem;
     background-color: var(--primary-color-20);
-    color: var(--md-sys-color-on-secondary-container);
     margin-bottom: 2rem;
   }
   .documentsBox.yff {
     background-color: var(--secondary-color-20);
-    color: var(--md-sys-color-on-tertiary-container);
   }
   .boxTitle {
     margin: 0rem 0rem 2rem 0rem;

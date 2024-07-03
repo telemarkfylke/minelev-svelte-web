@@ -57,6 +57,10 @@
     }
   ]
 
+  const getAvailableRoles = (roles, activeRole) => {
+    return roles.filter(role => role.value !== activeRole)
+  }
+
 </script>
 
 <div class="layout">
@@ -83,17 +87,22 @@
     <div class="topbar">
       <h1>Min Elev</h1>
       <div class="userContainer">
-        <p>{data.user.name}</p>
+        <div class="displayName">
+          <span>{data.user.name}</span>
+          <span style="font-size: var(--font-size-small);">{data.user.roles.find(role => role.value === data.user.activeRole).roleName}</span>
+        </div>
         <!-- Note the position: relative style -->
         <button class="action{showUsermenu ? ' cheatActive' : ''}" on:click={() => {showUsermenu = !showUsermenu}} use:clickOutside on:click_outside={() => {showUsermenu = false}}>
           <span class="material-symbols-outlined">more_vert</span>
-          {#if showUsermenu}
-            <div class="userMenu">
-              <button class="blank userMenuOption inward-focus-within">Logg ut</button>
-              <button class="blank userMenuOption inward-focus-within">Huoo</button>
-              <button class="blank userMenuOption inward-focus-within">Hepp</button>
-            </div>
-          {/if}
+          <div class="userMenu{!showUsermenu ? ' hidden' : ''}">
+            {#each getAvailableRoles(data.user.roles, data.user.activeRole) as availableRole}
+              <form method="POST" action="/?/changeActiveRole">
+                <input type="hidden" value="{availableRole.value}" name="active_role" />
+                <button class="blank userMenuOption inward-focus-within">Bytt til rolle: {availableRole.roleName}</button>
+              </form>
+            {/each}
+            <button class="blank userMenuOption inward-focus-within">Logg ut</button>
+          </div>
         </button>
       </div>
     </div>
@@ -184,10 +193,10 @@
   }
   .menuItem.active {
     font-weight: bold;
-    background-color: var(--secondary-color-10);
+    background-color: var(--secondary-color-30);
   }
   .menuItem:hover {
-    background-color: var(--secondary-color-30);
+    background-color: var(--secondary-color-10);
   }
   .pageContent {
     flex-grow: 1;
@@ -214,6 +223,11 @@
     display: flex;
     align-items: center;
     position: relative;
+  }
+
+  .userContainer .displayName {
+    display: flex;
+    flex-direction: column;
   }
 
   .cheatActive {
@@ -257,5 +271,8 @@
   }
   .content {
     margin: 0rem auto 0rem auto;
+  }
+  .hidden {
+    display: none;
   }
 </style>
