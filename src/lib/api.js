@@ -48,8 +48,8 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
  *
  * @param {Object} user
  */
-export const getTeacher = async (user) => {
-  const teacher = await fintTeacher(user)
+export const getTeacher = async (userPrincipalName) => {
+  const teacher = await fintTeacher(userPrincipalName)
   const repackedTeacher = {
     upn: teacher.upn,
     feidenavn: teacher.feidenavn,

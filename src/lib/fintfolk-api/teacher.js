@@ -360,9 +360,9 @@ for (let i = 0; i < 100; i++) {
  *
  * @param {Object} user
  */
-export const fintTeacher = async (user) => {
-  const identifier = user.principalName
-  if (!identifier) throw error(400, 'Missing required parameter "user.feidenavn" or "user.principalName"')
+export const fintTeacher = async (userPrincipalName) => {
+  const identifier = userPrincipalName
+  if (!identifier) throw error(400, 'Missing required parameter "userPrincipalName"')
   if (env.MOCK_API === 'true' && env.NODE_ENV !== 'production') {
     await sleep(1000)
     return mockTeacher
