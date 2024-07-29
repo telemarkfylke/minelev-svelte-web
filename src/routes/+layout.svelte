@@ -72,7 +72,6 @@
       <img class="logo" src={logo} alt="Fylkekommunens logo" />
       <img class="logoDarkmode" src={logoDarkmode} alt="Fylkekommunens logo" />
     </a>
-    <!--<md-divider role="separator"></md-divider>-->
     {#each sideMenuItems as menuItem}
       <a href={menuItem.href} class="menuLink inward-focus-within">
         <div class="menuItem{isActiveRoute(menuItem.href, $page.url.pathname) ? ' active' : ''}">
@@ -80,7 +79,6 @@
           <div>{menuItem.title}</div>
         </div>
       </a>
-      <!--<md-divider role="separator"></md-divider>-->
     {/each}
   </div>
   <div class="pageContent">
@@ -88,7 +86,9 @@
       <h1>Min Elev</h1>
       <div class="userContainer">
         <div class="displayName">
-          <span>{data.user.name}</span>
+          <span>
+            {data.user.name} {data.user.impersonating ? `( ${data.user.impersonating} )` : ''}
+          </span>
           <span style="font-size: var(--font-size-small);">{data.user.roles.find(role => role.value === data.user.activeRole).roleName}</span>
         </div>
         <!-- Note the position: relative style -->
@@ -101,6 +101,9 @@
                 <button class="blank userMenuOption inward-focus-within">Bytt til rolle: {availableRole.roleName}</button>
               </form>
             {/each}
+            {#if data.user.activeRole === 'MinElev.Admin'}
+              <!-- Legg til noen ekstra admin-greier? Eller bare vise admin panel i sidemeny hvis rollen er aktiv (eller hvis man har rollen kanskje? -->
+            {/if}
             <button class="blank userMenuOption inward-focus-within">Logg ut</button>
           </div>
         </button>
@@ -130,7 +133,11 @@
             </div>
           </div>
         {/if}
-        <slot></slot>
+        {#if data.maintenanceMode}
+          <h3>MinElev er under oppussing grunnet fylkesdeling</h3>
+        {:else}
+          <slot></slot>
+        {/if}
       </div>
     </div>
   </div>

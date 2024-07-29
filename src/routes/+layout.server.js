@@ -15,6 +15,13 @@ export async function load ({ request }) {
       students: [],
       classes: []
     }
+
+    // If maintenance no need to return data
+    if (env.MAINTENANCE_MODE === 'true') {
+      result.maintenanceMode = true
+      return result
+    }
+
     // Sjekk hva vi skal hente basert på om hva de har tilgang/rolle til
 
     // Sjekk om vanlig lærer
