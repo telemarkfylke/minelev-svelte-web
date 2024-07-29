@@ -94,7 +94,12 @@ Vanlig
 Tilgang på hele skolen sin (om det trengs da, venter nok til over sommeren)
 
 # Admin (.Admin)
-Meg. Jeg trenger å logge inn som lærer for å se hvordan det ser ut for hen
+Meg. Jeg trenger å logge inn som lærer for å se hvordan det ser ut for hen.
+// Enten via mongodb
+// Eller man må override lokalt?
+// Eller via node-cache?
+// Kanskje bare via node-cache, som går ut etter 30 min?
+// Og logges til mongodb?
 
 
 # create-svelte

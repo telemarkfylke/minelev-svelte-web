@@ -6,6 +6,7 @@ import { env } from '$env/dynamic/private'
 import { ObjectId } from 'mongodb'
 import { getMockDb } from './mock-db'
 import { logger } from '@vtfk/logger'
+import { getInternalCache } from './internal-cache'
 
 export const sleep = (ms) => {
   return new Promise((resolve) => {
@@ -255,4 +256,21 @@ export const setActiveRole = async (user, activeRole) => {
     }
     throw error
   }
+}
+
+export const getAdminImpersonation = (principalId) => {
+  const internalCache = getInternalCache()
+  const impersonation = internalCache.get(`${principalId}-impersonation`)
+  return impersonation || null
+}
+
+export const setAdminImpersonation = async (user, target) => {
+  if (typeof target !== 'string') throw new Error('target må værra string')
+  const internalCache = getInternalCache()
+  internalCache.set(`${user.principalId}-impersonation`, target)
+  if (env.MOCK_API === 'true') return
+  /*
+    HHHEEEER MÅ VI LAGE EN LOGG PÅ AT DET SKJEDDE I MONGODB
+  */
+  return
 }

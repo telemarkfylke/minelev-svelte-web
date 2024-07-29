@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private'
 import { error } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'
-import { getActiveRole } from './api'
+import { getActiveRole, getAdminImpersonation } from './api'
 
 /**
  *
@@ -111,11 +111,20 @@ export const getAuthenticatedUser = async (headers) => {
     }
   })
 
+
+  let impersonating = null
+  // Check if admin and impersonating
+  if (activeRole === env.ADMIN_ROLE) {
+    const impersonation = getAdminImpersonation(principalId)
+    if (impersonation) impersonating = impersonation
+  }
+
   return {
     principalName,
     principalId,
     name,
     activeRole,
-    roles: repackedRoles
+    roles: repackedRoles,
+    impersonating
   }
 }
