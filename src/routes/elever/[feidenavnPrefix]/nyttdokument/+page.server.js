@@ -83,7 +83,7 @@ export const actions = {
     await generateDocumentAction(event, 'varsel-fag')
   },
   "preview": async (event) => {
-    logger('preview request, generating pdf-preview')
+    logger('info', ['preview request, generating pdf-preview'])
     const documentData = await event.request.json()
     const requestData = {
       system: 'minelev',
