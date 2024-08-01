@@ -13,7 +13,7 @@ const currentRoute = "/nytt"
 const getServerData = async (event) => {
   const user = getAuthenticatedUser(event.request.headers)
   const { teacher, students, classes } = await getTeacher(user)
-  const studentFeidenavn = `${event.params.feidenavnPrefix}${env.STUDENT_FEIDENAVN_SUFFIX}`
+  const studentFeidenavn = `${event.params.feidenavnPrefix}@${env.FEIDENAVN_SUFFIX}`
   const { student, documents, faggrupper, probableFaggrupper } = await getStudent(studentFeidenavn, classes)
   const studentData = { student, documents, faggrupper, probableFaggrupper }
   return {

@@ -27,7 +27,7 @@ export async function load ({ params, parent }) {
 
     loggerPrefix += ` - User: ${user.principalName}`
     
-    const studentFeidenavn = `${params.feidenavnPrefix}${env.STUDENT_FEIDENAVN_SUFFIX}`
+    const studentFeidenavn = `${params.feidenavnPrefix}@${env.FEIDENAVN_SUFFIX}`
     logger('info', [loggerPrefix, `Validating access to student ${studentFeidenavn}`])
     // Sjekk at brukeren har lov til å hente eleven
     if (!canViewStudent(user, students, studentFeidenavn)) {

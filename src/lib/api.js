@@ -7,6 +7,7 @@ import { ObjectId } from 'mongodb'
 import { getMockDb } from './mock-db'
 import { logger } from '@vtfk/logger'
 import { getInternalCache } from './internal-cache'
+import { ADMIN_ROLE, DEFAULT_ROLE, LEDER_ROLE, FEIDENAVN_SUFFIX } from '$env/static/private'
 
 export const sleep = (ms) => {
   return new Promise((resolve) => {
@@ -98,6 +99,75 @@ export const getTeacher = async (userPrincipalName) => {
     students,
     classes
   }
+}
+
+/**
+ *
+ * @param {Object} user
+ */
+export const getUserData = async (user) => {
+  const userData = {
+    userData: null,
+    students: null,
+    classes: null
+  }
+
+  // If regular teacher or administrator impersonating teacher
+  if (user.activeRole === DEFAULT_ROLE || (user.hasAdminRole && user.impersonating?.type === 'larer')) {
+    const teacherUpn = user.hasAdminRole && user.impersonating?.type === 'larer' ? user.impersonating.target : user.principalName 
+    const teacher = await fintTeacher(teacherUpn)
+
+    userData.userData = {
+      upn: teacher.upn,
+      feidenavn: teacher.feidenavn,
+      ansattnummer: teacher.ansattnummer,
+      name: teacher.navn,
+      firstName: teacher.fornavn,
+      lastName: teacher.etternavn
+    }
+    let students = []
+    const classes = []
+    for (const undervisningsforhold of teacher.undervisningsforhold.filter(forhold => forhold.aktiv)) {
+      for (const basisgruppe of undervisningsforhold.basisgrupper.filter(gruppe => gruppe.aktiv)) {
+        classes.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, fag: ['Basisgruppe'], skole: basisgruppe.skole.navn })
+        for (const elev of basisgruppe.elever) {
+          // I tilfelle eleven er med i flere basisgrupper
+          const existingStudent = students.find(student => student.elevnummer === elev.elevnummer)
+          if (existingStudent) {
+            existingStudent.klasser.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, skole: repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer) })
+            if (!existingStudent.skoler.some(skole => skole.skolenummer === undervisningsforhold.skole.skolenummer)) existingStudent.skoler.push(repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer))
+          } else {
+            students.push({ ...elev, klasser: [{ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, skole: repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer) }], skoler: [repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer)] })
+          }
+        }
+      }
+      for (const undervisningsgruppe of undervisningsforhold.undervisningsgrupper.filter(gruppe => gruppe.aktiv)) {
+        classes.push({ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, fag: undervisningsgruppe.fag.map(f => f.navn), skole: undervisningsgruppe.skole.navn })
+        for (const elev of undervisningsgruppe.elever) {
+          // I tilfelle eleven er med i flere basisgrupper
+          const existingStudent = students.find(student => student.elevnummer === elev.elevnummer)
+          if (existingStudent) {
+            existingStudent.klasser.push({ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, skole: repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer) })
+            if (!existingStudent.skoler.find(skole => skole.skolenummer === undervisningsforhold.skole.skolenummer)) existingStudent.skoler.push(repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer))
+          } else {
+            students.push({ ...elev, klasser: [{ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, skole: repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer) }], skoler: [repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer)] })
+          }
+        }
+      }
+    }
+    // Sleng på kort-feidenavn på alle elever, og gyldige dokumenttyper for eleven
+    students = students.map(stud => { return { ...stud, feidenavnPrefix: stud.feidenavn.substring(0, stud.feidenavn.indexOf('@')), availableDocumentTypes: getAvailableDocumentTypesForTeacher(stud) } })
+
+    userData.classes = classes
+    userData.students = students
+  }
+
+  // TODO - finn ut av leder rådgiver
+  if (user.activeRole === LEDER_ROLE) {
+    console.log('En leder rådgiver aiaiai')
+  }
+
+  return userData
 }
 
 /**
@@ -258,19 +328,30 @@ export const setActiveRole = async (user, activeRole) => {
   }
 }
 
-export const getAdminImpersonation = (principalId) => {
+export const getAdminImpersonation = (user) => {
+  if (!user.hasAdminRole) throw new Error('You do not have permission to do this')
   const internalCache = getInternalCache()
-  const impersonation = internalCache.get(`${principalId}-impersonation`)
+  const impersonation = internalCache.get(`${user.principalId}-impersonation`)
   return impersonation || null
 }
 
-export const setAdminImpersonation = async (user, target) => {
+export const setAdminImpersonation = async (user, target, type) => {
+  if (!user.hasAdminRole) throw new Error('You do not have permission to do this')
   if (typeof target !== 'string') throw new Error('target må værra string')
+  if (!target.endsWith(`@${FEIDENAVN_SUFFIX}`)) throw new Error(`Target må ende på @${FEIDENAVN_SUFFIX}`)
+  if (!['larer', 'leder'].includes(type)) throw new Error('type må værra "larer" eller "leder"')
   const internalCache = getInternalCache()
-  internalCache.set(`${user.principalId}-impersonation`, target)
+  internalCache.set(`${user.principalId}-impersonation`, { target, type })
   if (env.MOCK_API === 'true') return
   /*
     HHHEEEER MÅ VI LAGE EN LOGG PÅ AT DET SKJEDDE I MONGODB
   */
+  return
+}
+
+export const deleteAdminImpersonation = (user) => {
+  if (!user.hasAdminRole) throw new Error('You do not have permission to do this')
+  const internalCache = getInternalCache()
+  internalCache.del(`${user.principalId}-impersonation`)
   return
 }

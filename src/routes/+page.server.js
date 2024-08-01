@@ -41,7 +41,7 @@ export const actions = {
   },
   adminImpersonate: async (event) => {
     try {
-      logger('info', ['Changing active role'])
+      logger('info', ['Setting impersonation target for admin user'])
       const target = (await event.request.formData()).get('impersonation_target')
       if (!target) throw new Error('Missing required form data "impersonation_target"')
       const user = await getAuthenticatedUser(event.request.headers)

@@ -2,6 +2,7 @@ import { env } from '$env/dynamic/private'
 import { error } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'
 import { getActiveRole, getAdminImpersonation } from './api'
+import { FEIDENAVN_SUFFIX } from '$env/static/private'
 
 /**
  *
@@ -10,7 +11,7 @@ import { getActiveRole, getAdminImpersonation } from './api'
 export const getAuthenticatedUser = async (headers) => {
   if (env.MOCK_AUTH === 'true' && env.NODE_ENV !== 'production') {
     logger('warn', ['env.MOCK_AUTH is true, injecting MS auth headers, enjoy your local testing - if this in prod, pray and delete everything'])
-    headers.set('x-ms-client-principal-name', 'demo.spokelse@fisfylke.no')
+    headers.set('x-ms-client-principal-name', `demo.spokelse@${FEIDENAVN_SUFFIX}`)
     headers.set('x-ms-client-principal-id', '12345-4378493-fjdiofjd')
 
     // Create mock claims with necessary values
@@ -19,7 +20,7 @@ export const getAuthenticatedUser = async (headers) => {
       claims: [
         {
           typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
-          val: 'demo.spokelse@fisfylke.no'
+          val: `demo.spokelse@${FEIDENAVN_SUFFIX}`
         },
         {
           typ: 'name',
@@ -31,7 +32,7 @@ export const getAuthenticatedUser = async (headers) => {
         },
         {
           typ: 'preferred_username',
-          val: 'demo.spokelse@fisfylke.no'
+          val: `demo.spokelse@${FEIDENAVN_SUFFIX}`
         }
       ],
       name_typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
@@ -113,9 +114,13 @@ export const getAuthenticatedUser = async (headers) => {
 
 
   let impersonating = null
-  // Check if admin and impersonating
-  if (activeRole === env.ADMIN_ROLE) {
-    const impersonation = getAdminImpersonation(principalId)
+
+  // Check if has admin role (for easier checks later on)
+  const hasAdminRole = repackedRoles.some(role => role.value === env.ADMIN_ROLE)
+
+  // Check if hasAdmin and is impersonating
+  if (hasAdminRole) {
+    const impersonation = getAdminImpersonation({ principalId, hasAdminRole })
     if (impersonation) impersonating = impersonation
   }
 
@@ -125,6 +130,7 @@ export const getAuthenticatedUser = async (headers) => {
     name,
     activeRole,
     roles: repackedRoles,
+    hasAdminRole,
     impersonating
   }
 }

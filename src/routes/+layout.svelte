@@ -57,6 +57,14 @@
     }
   ]
 
+  if (data.user.hasAdminRole) {
+    sideMenuItems.push({
+      title: 'Admin',
+      href: '/admin',
+      icon: 'settings'
+    })
+  }
+
   const getAvailableRoles = (roles, activeRole) => {
     return roles.filter(role => role.value !== activeRole)
   }
@@ -101,9 +109,6 @@
                 <button class="blank userMenuOption inward-focus-within">Bytt til rolle: {availableRole.roleName}</button>
               </form>
             {/each}
-            {#if data.user.activeRole === 'MinElev.Admin'}
-              <!-- Legg til noen ekstra admin-greier? Eller bare vise admin panel i sidemeny hvis rollen er aktiv (eller hvis man har rollen kanskje? -->
-            {/if}
             <button class="blank userMenuOption inward-focus-within">Logg ut</button>
           </div>
         </button>

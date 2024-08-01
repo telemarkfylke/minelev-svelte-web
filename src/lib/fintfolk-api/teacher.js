@@ -3,11 +3,12 @@ import { env } from '$env/dynamic/private'
 import { getMsalToken } from '$lib/msal-token'
 import { sleep } from '$lib/api'
 import axios from 'axios'
+import { FEIDENAVN_SUFFIX } from '$env/static/private'
 
 const mockTeacher = {
-  feidenavn: 'larer.laresen@fisfylke.no',
+  feidenavn: `larer.laresen@${FEIDENAVN_SUFFIX}`,
   ansattnummer: '12345678',
-  upn: 'larer.laresen@fisfylke.no',
+  upn: `larer.laresen@${FEIDENAVN_SUFFIX}`,
   navn: 'Lærer Læresen',
   fornavn: 'Lærer',
   etternavn: 'Læresen',
@@ -15,9 +16,9 @@ const mockTeacher = {
   fodselsdato: '1978-01-26T00:00:00Z',
   alder: 45,
   kjonn: '1',
-  larerEpostadresse: 'larer.laresen@fisfylke.no',
+  larerEpostadresse: `larer.laresen@${FEIDENAVN_SUFFIX}`,
   larerMobiltelefonnummer: null,
-  kontaktEpostadresse: 'larer.laresen@fisfylke.no',
+  kontaktEpostadresse: `larer.laresen@${FEIDENAVN_SUFFIX}`,
   kontaktMobiltelefonnummer: null,
   privatEpostadresse: null,
   privatMobiltelefonnummer: '12345678',
@@ -104,7 +105,7 @@ const mockTeacher = {
               navn: 'Elev Elevesen',
               fornavn: 'Elev',
               etternavn: 'Elevesen',
-              feidenavn: 'ele0102@fisfylke.no',
+              feidenavn: `ele0102@${FEIDENAVN_SUFFIX}`,
               elevnummer: '1234567',
               kontaktlarer: true
             },
@@ -112,7 +113,7 @@ const mockTeacher = {
               navn: 'Frodo Baggins',
               fornavn: 'Frodo',
               etternavn: 'Baggins',
-              feidenavn: 'fro12345@fisfylke.no',
+              feidenavn: `fro12345@${FEIDENAVN_SUFFIX}`,
               elevnummer: '1234568',
               kontaktlarer: false
             }
@@ -206,7 +207,7 @@ const mockTeacher = {
               navn: 'Elev Elevesen',
               fornavn: 'Elev',
               etternavn: 'Elevesen',
-              feidenavn: 'ele0102@fisfylke.no',
+              feidenavn: `ele0102@${FEIDENAVN_SUFFIX}`,
               elevnummer: '1234567',
               kontaktlarer: true
             },
@@ -214,7 +215,7 @@ const mockTeacher = {
               navn: 'Frodo Baggins',
               fornavn: 'Frodo',
               etternavn: 'Baggins',
-              feidenavn: 'fro12345@fisfylke.no',
+              feidenavn: `fro12345@${FEIDENAVN_SUFFIX}`,
               elevnummer: '1234568',
               kontaktlarer: false
             }
@@ -303,7 +304,7 @@ const mockTeacher = {
               navn: 'Sarumann Sauronsen',
               fornavn: 'Sarumann',
               etternavn: 'Sauronsen',
-              feidenavn: 'sar0398@fisfylke.no',
+              feidenavn: `sar0398@${FEIDENAVN_SUFFIX}`,
               elevnummer: '1234569',
               kontaktlarer: false
             },
@@ -311,7 +312,7 @@ const mockTeacher = {
               navn: 'Frodo Baggins',
               fornavn: 'Frodo',
               etternavn: 'Baggins',
-              feidenavn: 'fro12345@fisfylke.no',
+              feidenavn: `fro12345@${FEIDENAVN_SUFFIX}`,
               elevnummer: '1234568',
               kontaktlarer: false
             },
@@ -319,7 +320,7 @@ const mockTeacher = {
               navn: 'Elev Elevesen',
               fornavn: 'Elev',
               etternavn: 'Elevesen',
-              feidenavn: 'ele0102@fisfylke.no',
+              feidenavn: `ele0102@${FEIDENAVN_SUFFIX}`,
               elevnummer: '1234567',
               kontaktlarer: false
             }

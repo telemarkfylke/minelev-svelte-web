@@ -1,10 +1,19 @@
 <script>
+    import { browser } from "$app/environment";
     import { goto } from "$app/navigation"
     import axios from "axios";
     import { onMount } from "svelte";
     
+    export const sleep = (ms) => {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms)
+        })
+    }
+
     const apicall = async () => {
         try {
+            console.log('Kjører apicall')
+            await sleep(2000)
             const { data } = await axios.get('/api/elever/hahah')
             console.log(data)
             return data
@@ -59,13 +68,15 @@
 </div>
 
 <div>
-    {#await apicall()}
-        Laster...
-    {:then response}
-        {JSON.stringify(response)}
-    {:catch apierror}
-        {apierror.toString()}
-    {/await}
+    {#if browser}
+        {#await apicall()}
+            Laster...
+        {:then response}
+            {JSON.stringify(response)}
+        {:catch apierror}
+            {apierror.toString()}
+        {/await}
+    {/if}
 </div>
 
 
@@ -83,20 +94,5 @@
 </div>
 
 <style>
-    .color1 {
-        background-color: rgb(25, 99, 112);
-        width: 100px;
-        height: 100px;
-    }
-    .color2 {
-        background-color: rgb(26, 51, 112);
-        width: 100px;
-        height: 100px;
-    }
-    .color3 {
-        background-color: rgb(0, 82, 96);
-        width: 100px;
-        height: 100px;
-    }
 </style>
 
