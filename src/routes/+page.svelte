@@ -1,11 +1,43 @@
 <script>
     import { goto } from "$app/navigation"
+    import axios from "axios";
     
+    const apicall = async () => {
+        try {
+            const { data } = await axios.get('/api/elever/hahah', { withCredentials: true })
+            console.log(data)
+            return data
+        } catch (error) {
+            console.log(error)
+            return error.response?.data || error.stack || error.toString()   
+        }
+    }
+    const hallois = async () => {
+        return "Hallo alle sammen!"
+    }
+
 </script>
 
-<!--Material web is accessible Svelte does not understand it-->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div>
+    {#await hallois()}
+        <p>Laster...</p>
+    {:then result}
+        <pre>{JSON.stringify(result)}</pre>
+    {:catch error}
+        {error.toString()}
+    {/await}
+</div>
+
+<div>
+    {#await apicall()}
+        Laster...
+    {:then response}
+        {JSON.stringify(response)}
+    {:catch apierror}
+        {apierror.toString()}
+    {/await}
+</div>
+
 <p>Her er hovedsiden</p>
 <div class="color1"></div>
 <div class="color2"></div>
