@@ -1,14 +1,17 @@
 <script>
     import { goto } from "$app/navigation"
     import axios from "axios";
+    import { onMount } from "svelte";
     
     const apicall = async () => {
         try {
-            const { data } = await axios.get('/api/elever/hahah', { withCredentials: true })
+            const { data } = await axios.get('/api/elever/hahah')
             console.log(data)
             return data
         } catch (error) {
-            console.log(error)
+            console.log('EORROROROROROROROROROR')
+            console.log(error.toString())
+
             return error.response?.data || error.stack || error.toString()   
         }
     }
@@ -16,22 +19,11 @@
         return "Hallo alle sammen!"
     }
 
-    const apicallWithoutCredentials = async () => {
-        try {
-            const { data } = await axios.get('/api/elever/hahah', { withCredentials: false })
-            console.log(data)
-            return data
-        } catch (error) {
-            console.log(error)
-            return error.response?.data || error.stack || error.toString()
-        }
-    }
-
     let someButtonData
 
     const updateButtonData = async () => {
         try {
-            const { data } = await axios.get('/api/elever/hahah', { withCredentials: true })
+            const { data } = await axios.get('/api/elever/hahah')
             someButtonData = data.user?.principalName
         } catch (error) {
             console.log(error)
@@ -39,17 +31,20 @@
         }
     }
 
-    let someButtonDataNoCred
+    let someMountData
 
-    const updateButtonDataNoCred = async () => {
+    onMount(async () => {
+        console.log('Mounta!')
         try {
-            const { data } = await axios.get('/api/elever/hahah', { withCredentials: false })
-            someButtonDataNoCred = data.user?.principalName
+            const { data } = await axios.get('/api/elever/hahah')
+            someMountData = data.user?.name
         } catch (error) {
             console.log(error)
-            someButtonDataNoCred = error.response?.data || error.stack || error.toString()
+            someMountData = error.response?.data || error.stack || error.toString()
         }
-    }
+    })
+
+
 
 </script>
 
@@ -73,33 +68,19 @@
     {/await}
 </div>
 
-<div>
-    <p>UTEN credentials</p>
-    {#await apicallWithoutCredentials()}
-        Laster...
-    {:then response}
-        {JSON.stringify(response)}
-    {:catch apierror}
-        {apierror.toString()}
-    {/await}
-</div>
-
-<p>Her er hovedsiden</p>
-<div class="color1"></div>
-<div class="color2"></div>
-<div class="color3"></div>
-
 
 <p>Hvordan blir dette her seesnenene ut da</p>
 <button on:click={updateButtonData}>With credentials</button>
 {#if someButtonData}
     {JSON.stringify(someButtonData)}
 {/if}
-<br />
-<button on:click={updateButtonDataNoCred}>Without credentials</button>
-{#if someButtonDataNoCred}
-    {JSON.stringify(someButtonDataNoCred)}
-{/if}
+
+<div>
+    <p>Litt data som kommer på onmount</p>
+    {#if someMountData}
+        {JSON.stringify(someMountData)}
+    {/if}
+</div>
 
 <style>
     .color1 {
