@@ -2,13 +2,12 @@ import { error } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { getMsalToken } from '$lib/msal-token'
 import { sleep } from '$lib/api'
-import { FEIDENAVN_SUFFIX } from '$env/static/private'
 
 const mockStudents = [
   {
-    feidenavn: `ele0102@${FEIDENAVN_SUFFIX}`,
+    feidenavn: `ele0102@${env.FEIDENAVN_SUFFIX}`,
     elevnummer: '12345678',
-    upn: `ele0102@skole.${FEIDENAVN_SUFFIX}`,
+    upn: `ele0102@skole.${env.FEIDENAVN_SUFFIX}`,
     navn: 'Elev Elevesen',
     fornavn: 'Elev',
     etternavn: 'Elevesen',
@@ -36,7 +35,7 @@ const mockStudents = [
     },
     kontaktlarere: [
       {
-        feidenavn: `sauron@${FEIDENAVN_SUFFIX}`,
+        feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
         ansattnummer: '1111111',
         navn: 'Sauron Hanson',
         fornavn: 'Sauron',
@@ -140,7 +139,7 @@ const mockStudents = [
             },
             undervisningsforhold: [
               {
-                feidenavn: `sauron@${FEIDENAVN_SUFFIX}`,
+                feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
                 ansattnummer: '1111111',
                 navn: 'Sauron Hanson',
                 fornavn: 'Sauron',
@@ -204,7 +203,7 @@ const mockStudents = [
             },
             undervisningsforhold: [
               {
-                feidenavn: `nasgul@${FEIDENAVN_SUFFIX}`,
+                feidenavn: `nasgul@${env.FEIDENAVN_SUFFIX}`,
                 ansattnummer: '1234566',
                 navn: 'Nasgul Gulesen',
                 fornavn: 'Nasgul',
@@ -291,7 +290,7 @@ const mockStudents = [
             },
             undervisningsforhold: [
               {
-                feidenavn: `sauron@${FEIDENAVN_SUFFIX}`,
+                feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
                 ansattnummer: '11111111',
                 navn: 'Sauron Hanson',
                 fornavn: 'Sauron',
@@ -305,9 +304,9 @@ const mockStudents = [
     ]
   },
   {
-    feidenavn: `sar0398@${FEIDENAVN_SUFFIX}`,
+    feidenavn: `sar0398@${env.FEIDENAVN_SUFFIX}`,
     elevnummer: '1234569',
-    upn: `sar0398@skole.${FEIDENAVN_SUFFIX}`,
+    upn: `sar0398@skole.${env.FEIDENAVN_SUFFIX}`,
     navn: 'Sarumann Sauronsen',
     fornavn: 'Sarumann',
     etternavn: 'Sauronsen',
@@ -335,7 +334,7 @@ const mockStudents = [
     },
     kontaktlarere: [
       {
-        feidenavn: `sauron@${FEIDENAVN_SUFFIX}`,
+        feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
         ansattnummer: '1111111',
         navn: 'Sauron Hanson',
         fornavn: 'Sauron',
@@ -439,7 +438,7 @@ const mockStudents = [
             },
             undervisningsforhold: [
               {
-                feidenavn: `sauron@${FEIDENAVN_SUFFIX}`,
+                feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
                 ansattnummer: '1111111',
                 navn: 'Sauron Hanson',
                 fornavn: 'Sauron',
@@ -503,7 +502,7 @@ const mockStudents = [
             },
             undervisningsforhold: [
               {
-                feidenavn: `nasgul@${FEIDENAVN_SUFFIX}`,
+                feidenavn: `nasgul@${env.FEIDENAVN_SUFFIX}`,
                 ansattnummer: '1234566',
                 navn: 'Nasgul Gulesen',
                 fornavn: 'Nasgul',
@@ -565,7 +564,7 @@ const mockStudents = [
             },
             undervisningsforhold: [
               {
-                feidenavn: `larer.laresen@${FEIDENAVN_SUFFIX}`,
+                feidenavn: `larer.laresen@${env.FEIDENAVN_SUFFIX}`,
                 ansattnummer: '12345678',
                 navn: 'Lærer Læresen',
                 fornavn: 'Lærer',
@@ -658,7 +657,7 @@ const mockStudents = [
             },
             undervisningsforhold: [
               {
-                feidenavn: `sauron@${FEIDENAVN_SUFFIX}`,
+                feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
                 ansattnummer: '11111111',
                 navn: 'Sauron Hanson',
                 fornavn: 'Sauron',

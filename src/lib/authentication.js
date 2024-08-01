@@ -2,7 +2,6 @@ import { env } from '$env/dynamic/private'
 import { error } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'
 import { getActiveRole, getAdminImpersonation } from './api'
-import { FEIDENAVN_SUFFIX } from '$env/static/private'
 
 /**
  *
@@ -11,7 +10,7 @@ import { FEIDENAVN_SUFFIX } from '$env/static/private'
 export const getAuthenticatedUser = async (headers) => {
   if (env.MOCK_AUTH === 'true' && env.NODE_ENV !== 'production') {
     logger('warn', ['env.MOCK_AUTH is true, injecting MS auth headers, enjoy your local testing - if this in prod, pray and delete everything'])
-    headers.set('x-ms-client-principal-name', `demo.spokelse@${FEIDENAVN_SUFFIX}`)
+    headers.set('x-ms-client-principal-name', `demo.spokelse@${env.FEIDENAVN_SUFFIX}`)
     headers.set('x-ms-client-principal-id', '12345-4378493-fjdiofjd')
 
     // Create mock claims with necessary values
@@ -20,7 +19,7 @@ export const getAuthenticatedUser = async (headers) => {
       claims: [
         {
           typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
-          val: `demo.spokelse@${FEIDENAVN_SUFFIX}`
+          val: `demo.spokelse@${env.FEIDENAVN_SUFFIX}`
         },
         {
           typ: 'name',
@@ -32,7 +31,7 @@ export const getAuthenticatedUser = async (headers) => {
         },
         {
           typ: 'preferred_username',
-          val: `demo.spokelse@${FEIDENAVN_SUFFIX}`
+          val: `demo.spokelse@${env.FEIDENAVN_SUFFIX}`
         }
       ],
       name_typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',

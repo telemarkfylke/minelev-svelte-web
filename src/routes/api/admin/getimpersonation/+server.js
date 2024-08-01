@@ -1,4 +1,3 @@
-import { FEIDENAVN_SUFFIX } from "$env/static/private"
 import { getAdminImpersonation } from "$lib/api"
 import { getAuthenticatedUser } from "$lib/authentication"
 import { json } from "@sveltejs/kit"

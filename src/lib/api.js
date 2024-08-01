@@ -7,7 +7,6 @@ import { ObjectId } from 'mongodb'
 import { getMockDb } from './mock-db'
 import { logger } from '@vtfk/logger'
 import { getInternalCache } from './internal-cache'
-import { ADMIN_ROLE, DEFAULT_ROLE, LEDER_ROLE, FEIDENAVN_SUFFIX } from '$env/static/private'
 
 export const sleep = (ms) => {
   return new Promise((resolve) => {
@@ -113,7 +112,7 @@ export const getUserData = async (user) => {
   }
 
   // If regular teacher or administrator impersonating teacher
-  if (user.activeRole === DEFAULT_ROLE || (user.hasAdminRole && user.impersonating?.type === 'larer')) {
+  if (user.activeRole === env.DEFAULT_ROLE || (user.hasAdminRole && user.impersonating?.type === 'larer')) {
     const teacherUpn = user.hasAdminRole && user.impersonating?.type === 'larer' ? user.impersonating.target : user.principalName 
     const teacher = await fintTeacher(teacherUpn)
 
@@ -163,7 +162,7 @@ export const getUserData = async (user) => {
   }
 
   // TODO - finn ut av leder rådgiver
-  if (user.activeRole === LEDER_ROLE) {
+  if (user.activeRole === env.LEDER_ROLE) {
     console.log('En leder rådgiver aiaiai')
   }
 
@@ -338,7 +337,7 @@ export const getAdminImpersonation = (user) => {
 export const setAdminImpersonation = async (user, target, type) => {
   if (!user.hasAdminRole) throw new Error('You do not have permission to do this')
   if (typeof target !== 'string') throw new Error('target må værra string')
-  if (!target.endsWith(`@${FEIDENAVN_SUFFIX}`)) throw new Error(`Target må ende på @${FEIDENAVN_SUFFIX}`)
+  if (!target.endsWith(`@${env.FEIDENAVN_SUFFIX}`)) throw new Error(`Target må ende på @${env.FEIDENAVN_SUFFIX}`)
   if (!['larer', 'leder'].includes(type)) throw new Error('type må værra "larer" eller "leder"')
   const internalCache = getInternalCache()
   internalCache.set(`${user.principalId}-impersonation`, { target, type })
