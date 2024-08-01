@@ -16,6 +16,41 @@
         return "Hallo alle sammen!"
     }
 
+    const apicallWithoutCredentials = async () => {
+        try {
+            const { data } = await axios.get('/api/elever/hahah', { withCredentials: false })
+            console.log(data)
+            return data
+        } catch (error) {
+            console.log(error)
+            return error.response?.data || error.stack || error.toString()
+        }
+    }
+
+    let someButtonData
+
+    const updateButtonData = async () => {
+        try {
+            const { data } = await axios.get('/api/elever/hahah', { withCredentials: true })
+            someButtonData = data.user?.principalName
+        } catch (error) {
+            console.log(error)
+            someButtonData = error.response?.data || error.stack || error.toString()
+        }
+    }
+
+    let someButtonDataNoCred
+
+    const updateButtonDataNoCred = async () => {
+        try {
+            const { data } = await axios.get('/api/elever/hahah', { withCredentials: false })
+            someButtonDataNoCred = data.user?.principalName
+        } catch (error) {
+            console.log(error)
+            someButtonDataNoCred = error.response?.data || error.stack || error.toString()
+        }
+    }
+
 </script>
 
 <div>
@@ -38,6 +73,17 @@
     {/await}
 </div>
 
+<div>
+    <p>UTEN credentials</p>
+    {#await apicallWithoutCredentials()}
+        Laster...
+    {:then response}
+        {JSON.stringify(response)}
+    {:catch apierror}
+        {apierror.toString()}
+    {/await}
+</div>
+
 <p>Her er hovedsiden</p>
 <div class="color1"></div>
 <div class="color2"></div>
@@ -45,8 +91,15 @@
 
 
 <p>Hvordan blir dette her seesnenene ut da</p>
-<button on:click={() => goto('/tull')}>Klikk på meg for tull</button>
-<button on:click={() => goto('/tull')}>Klikk på meg for tull</button>
+<button on:click={updateButtonData}>With credentials</button>
+{#if someButtonData}
+    {JSON.stringify(someButtonData)}
+{/if}
+<br />
+<button on:click={updateButtonDataNoCred}>Without credentials</button>
+{#if someButtonDataNoCred}
+    {JSON.stringify(someButtonDataNoCred)}
+{/if}
 
 <style>
     .color1 {
