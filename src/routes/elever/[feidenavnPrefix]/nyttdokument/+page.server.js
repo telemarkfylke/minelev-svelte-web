@@ -10,6 +10,8 @@ import { documentTypeId } from "$lib/document-types/Elevsamtale.svelte";
 
 const currentRoute = "/nytt"
 
+// IKKE I BRUK DETTE HER OBS OBS!!
+/*
 const getServerData = async (event) => {
   const user = getAuthenticatedUser(event.request.headers)
   const { teacher, students, classes } = await getTeacher(user)
@@ -23,8 +25,6 @@ const getServerData = async (event) => {
     studentData
   }
 }
-
-
 
 // Må itj brukes, men kan :)
 const generateDocumentAction = async (event, documentTypeId) => {
@@ -75,9 +75,12 @@ const generateDocumentAction = async (event, documentTypeId) => {
   logger('info', [loggerPrefix, `Saved document to db. Id: ${documentId}. Redirecting user back to student page`])
   
   redirect(303, `/elever/${teacherStudent.feidenavnPrefix}`)
-}
+}*/
+
 
 /** @type {import('./$types').Actions} */
+
+/*
 export const actions = {
   "varsel-fag": async (event) => {
     await generateDocumentAction(event, 'varsel-fag')
@@ -104,3 +107,4 @@ export const actions = {
     }
   }
 }
+*/

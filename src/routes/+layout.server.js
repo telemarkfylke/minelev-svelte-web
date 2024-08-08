@@ -22,7 +22,7 @@ export async function load ({ request }) {
       ...userData
     }
   } catch (err) {
-    logger('error', ['Could not get authentication info...', err.response?.data || err.stack || err.toString()])
-    throw error(500, `Could not get authentication info... ${err.toString()}`)
+    logger('error', ['Could not get data...', err.response?.data || err.stack || err.toString()])
+    throw error(500, `Could not get data... ${err.toString()}`)
   }
 }

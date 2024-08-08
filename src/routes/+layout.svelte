@@ -95,9 +95,9 @@
       <div class="userContainer">
         <div class="displayName">
           <span>
-            {data.user.name} {data.user.impersonating ? `( ${data.user.impersonating} )` : ''}
+            {data.user.name} {data.user.impersonating ? `( ${data.user.impersonating.target} )` : ''}
           </span>
-          <span style="font-size: var(--font-size-small);">{data.user.roles.find(role => role.value === data.user.activeRole).roleName}</span>
+          <span style="font-size: var(--font-size-small);">{data.user.roles.find(role => role.value === data.user.activeRole).roleName} {data.user.impersonating ? `( ${data.user.impersonating.type} )` : ''}</span>
         </div>
         <!-- Note the position: relative style -->
         <button class="action{showUsermenu ? ' cheatActive' : ''}" on:click={() => {showUsermenu = !showUsermenu}} use:clickOutside on:click_outside={() => {showUsermenu = false}}>
@@ -106,7 +106,7 @@
             {#each getAvailableRoles(data.user.roles, data.user.activeRole) as availableRole}
               <form method="POST" action="/?/changeActiveRole">
                 <input type="hidden" value="{availableRole.value}" name="active_role" />
-                <button class="blank userMenuOption inward-focus-within">Bytt til rolle: {availableRole.roleName}</button>
+                <button type="submit" class="blank userMenuOption inward-focus-within">Bytt til rolle: {availableRole.roleName}</button>
               </form>
             {/each}
             <button class="blank userMenuOption inward-focus-within">Logg ut</button>

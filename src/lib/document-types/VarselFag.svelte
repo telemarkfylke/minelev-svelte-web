@@ -1,162 +1,183 @@
 <script>
-  import { objectToFormdata } from "$lib/object-to-formdata";
+  import axios from "axios";
   import PdfPreview from "../components/PDFPreview.svelte";
   import { periods, courseReasons } from "./data/document-data";
-  import { documentTypes, generateDocument } from "./document-types";
+  import { documentTypes } from "./document-types";
+  import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
+  import { goto } from "$app/navigation";
 
-  export let faggrupper
-  export let probableFaggrupper
-  export let documentTypeId
-  export let teacherStudent
-  export let studentData
-  export let teacher
-  export let user
+  export let documentTypeId = null
+  export let studentFeidenavnPrefix = null
+  export let selectedSchoolNumber = null
+  export let faggrupper = []
+  export let probableFaggrupper = []
+  export let isCompletedDocument = false
+  export let documentContent = null
 
   let displayAllFaggrupper = false
   let showPreview = false
-  let loading = false
+  let sendLoading = false
+  let previewLoading = false
 
   let showData = false
-
   let errorMessage = ""
 
   const otherFaggrupper = faggrupper.filter(gruppe => !probableFaggrupper.some(group => group.systemId === gruppe.systemId))
   
   const getProbableFaggrupper = (schoolNumber) => {
-    return probableFaggrupper.filter(gruppe => gruppe.skole.skolenummer === schoolNumber)
+    return probableFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber)
   }
   const getTheRestOfFaggrupper = (schoolNumber) => {
-    return otherFaggrupper.filter(gruppe => gruppe.skole.skolenummer === schoolNumber)
+    return otherFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber)
   }
-
-  const documentType = documentTypes.find(docType => docType.id === documentTypeId)
-  const availableSchools = teacherStudent.availableDocumentTypes.find(docType => docType.id === documentTypeId).schools
 
   let canClickSend = false
 
   // Content data
   const varsel = {
-    schoolNumber:  availableSchools.length > 1 ? "" : availableSchools[0].skolenummer,
     periodId: "",
-    courses: [],
-    reasons: []
+    courseIds: [],
+    reasonIds: []
   }
 
-  const resetVarsel = () => {
-    varsel.periodId = ""
+  const resetVarsel = (schoolNumber) => {
     varsel.courses = []
-    varsel.reasons = []
   }
 
-  $: canClickSend = Boolean(varsel.schoolNumber && varsel.periodId && varsel.courses.length > 0 && varsel.reasons.length > 0)
+  // Reactive statements
+  $: resetVarsel(selectedSchoolNumber)
 
-  const validate = () => {
+  $: canClickSend = Boolean(varsel.periodId && varsel.courseIds.length > 0 && varsel.reasonIds.length > 0)
+
+  let previewBase64
+  const sendVarsel = async (preview=false) => {
     errorMessage = ""
     try {
-      const formData = objectToFormdata(varsel)
-
-      const document = generateDocument({ 
+      //  documentTypeId, type, variant, schoolNumber, documentData, preview
+      const payload = {
         documentTypeId,
         type: 'varsel',
         variant: 'fag',
-        school: teacherStudent.skoler.find(school => school.skolenummer === varsel.schoolNumber),
-        user,
-        teacherStudent,
-        studentData,
-        teacher,
-        formData
-      })
-      return document
+        schoolNumber: selectedSchoolNumber,
+        documentData: varsel,
+        preview
+      }
+      const { data } = await axios.post(`/api/students/${studentFeidenavnPrefix}/newDocument`, payload)
+      // If ok then do something
+      if (preview) {
+        previewBase64 = data
+        previewLoading = false
+        showPreview = true
+      } else {
+        // Maybe just redirect from API? or maybe here? Based on returned id, probs the best in regards to API-first tankegang
+        sendLoading = false
+        //goto(`/elever/${studentFeidenavnPrefix}/dokumenter/${data.insertedId}`)
+        goto(`/elever/${studentFeidenavnPrefix}`)
+      }
     } catch (error) {
-      errorMessage = error.response?.data || error.stack || error.message?.message || error.toString() 
+      previewLoading = false
+      sendLoading = false
+      errorMessage = error.response?.data || error.stack || error.toString()
     }
   }
-
-  // $: if (varsel.courses && varsel.courses.length > 0) validate()
-
-  // Faggrupper, kan de matches på fag i undervisninggrupper, ved navne-matching?? La oss teste
-  // IDEEN - vi henter alle faggruppene til en elev - så matcher vi på navn (prefixen til undervisningsgrupep). Har vi en knapp for å vise alle fag - dersom faglærer ikke får opp sitt fag. MEN hva når vi skal vise sendte varsler.
-  // Vi begynner med ideen over, og får ta det som det kommer.
 </script>
 
 {#if showData}
   <pre>{JSON.stringify(varsel, null, 2)}</pre>
 {/if}
 
+{#if isCompletedDocument}
+  <section>
+    <h4>
+      Periode
+    </h4>
+    <input type="radio" id="period" name="periodId" disabled checked />
+    <label for="period">{documentContent.period.nb}</label><br>
+  </section>
+{:else}
+  <section>
+    <h4>
+      Velg periode
+    </h4>
+    {#each periods as period}
+      <input type="radio" id="period-{period.id}" bind:group={varsel.periodId} name="periodId" value="{period.id}" required />
+      <label for="period-{period.id}">{period.value.nb}</label><br>
+    {/each}
+  </section>
+{/if}
 
-<form method="post" action="?/varsel-fag">
-  {#if availableSchools.length > 1}
-    <section>
-      <h4>Velg skole</h4>
-      {#each availableSchools as school}
-        <input type="radio" on:change={resetVarsel} id="school-{school.skolenummer}" name="schoolNumber" bind:group={varsel.schoolNumber} value="{school.skolenummer}" required />
-        <label for="school-{school.skolenummer}">{school.navn}</label><br>
-      {/each}
-    </section>
-  {:else}
-    <input type="hidden" name="school" value="{availableSchools[0].skolenummer}" />
-  {/if}
-
-  <!--Ikke noe poeng å vise resten før skole er valgt -->
-  {#if varsel.schoolNumber}
-    <section>
-      <h4>
-        Velg periode
-      </h4>
-      {#each periods as period}
-        <input type="radio" id="period-{period.id}" bind:group={varsel.periodId} name="periodId" value="{period.id}" required />
-        <label for="period-{period.id}">{period.value.nb}</label><br>
-      {/each}
-    </section>
-    
-    <section>
-      <h4>Hvilke fag gjelder varselet?</h4>
-      {#each getProbableFaggrupper(varsel.schoolNumber) as faggruppe}
-        <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courses} name="courses" value="{faggruppe.systemId}" />
+{#if isCompletedDocument}
+  <section>
+    <h4>Fag</h4>
+    {#each documentContent.classes as faggruppe}
+      <input type="checkbox" id="{faggruppe.id}" name="courses" disabled checked />
+      <label for="{faggruppe.id}">{faggruppe.nb} ({faggruppe.name})</label><br>
+    {/each}
+  </section>
+{:else}
+  <section>
+    <h4>Hvilke fag gjelder varselet?</h4>
+    {#each getProbableFaggrupper(selectedSchoolNumber) as faggruppe}
+      <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courseIds} name="courses" value="{faggruppe.systemId}" />
+      <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
+    {/each}
+    {#if displayAllFaggrupper}
+      {#each getTheRestOfFaggrupper(selectedSchoolNumber) as faggruppe}
+        <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courseIds} name="courses" value="{faggruppe.systemId}" />
         <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
       {/each}
-      {#if displayAllFaggrupper}
-        {#each getTheRestOfFaggrupper(varsel.schoolNumber) as faggruppe}
-          <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courses} name="courses" value="{faggruppe.systemId}" />
-          <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
-        {/each}
-        <p><button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis kun dine fag for eleven</button></p>
-      {:else}
-        <p>Ser du ikke faget du er ute etter?<button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis alle fag for eleven</button></p>
-      {/if}
-    </section>
-
-    <section>
-      <h4>Hva er årsaken til varselet</h4>
-      {#each courseReasons as reason}
-        <input type="checkbox" id="reason-{reason.id}" bind:group={varsel.reasons} name="reasons" value="{reason.id}" />
-        <label for="reason-{reason.id}">{reason.description.nb}</label><br>
-      {/each}
-    </section>
-
-    {#if errorMessage}
-      <section class="error">
-        <h4>Noe er galt 😩</h4>
-        <p>{errorMessage}</p>
-      </section>
+      <p><button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis kun dine fag for eleven</button></p>
+    {:else}
+      <p>Ser du ikke faget du er ute etter?<button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis alle fag for eleven</button></p>
     {/if}
+  </section>
+{/if}
 
-    <div class="form-buttons">
-      {#if canClickSend}
-        <button on:click={(e) => {e.preventDefault(); showPreview = true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
-        <button type="submit" class="filled" on:click={(e) => { loading = true; }}><span class="material-symbols-outlined">send</span>Send</button>
+{#if isCompletedDocument}
+  <section>
+    <h4>Årsaken til varselet</h4>
+    {#each documentContent.reasons as reason}
+      <input type="checkbox" id="reason-{reason.id}" name="reasons" disabled checked />
+      <label for="reason-{reason.id}">{reason.nb}</label><br>
+    {/each}
+  </section>
+{:else}
+  <section>
+    <h4>Hva er årsaken til varselet</h4>
+    {#each courseReasons as reason}
+      <input type="checkbox" id="reason-{reason.id}" bind:group={varsel.reasonIds} name="reasons" value="{reason.id}" />
+      <label for="reason-{reason.id}">{reason.description.nb}</label><br>
+    {/each}
+  </section>
+{/if}
+
+{#if errorMessage}
+  <section class="error">
+    <h4>En feil har oppstått 😩</h4>
+    <p>{JSON.stringify(errorMessage)}</p>
+  </section>
+{/if}
+
+{#if !isCompletedDocument}
+  <div class="form-buttons">
+    {#if canClickSend}
+      {#if previewLoading}
+        <button disabled><LoadingSpinner width={"1.5"} />Forhåndsvisning</button>
       {:else}
-        <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
-        <button disabled><span class="material-symbols-outlined">send</span>Send</button>
+        <button on:click={() => {sendVarsel(true); previewLoading=true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
       {/if}
-      {#if loading}
-        LASTER
+      {#if sendLoading}
+        <button disabled><LoadingSpinner width={"1.5"} />Send</button>
+      {:else}
+        <button type="submit" class="filled" on:click={() => {sendVarsel(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
       {/if}
-    </div>
-  {/if}
-</form>
-<PdfPreview getDataFunction={validate} {showPreview} closePreview={() => {showPreview = false}} />
-
+    {:else}
+      <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+      <button disabled><span class="material-symbols-outlined">send</span>Send</button>
+    {/if}
+  </div>
+  <PdfPreview {showPreview} base64Data={previewBase64} closePreview={() => {showPreview = false}} />
+{/if}
 
 <style>
   h4 {

@@ -1,7 +1,19 @@
 # MinElev WEB
 SvelteKit Web app
 
-Deploy som Azure Web App, med authentication enabled
+Deploy som Azure Web App, med authentication enabled via microsoft authentication
+
+## Ny ide
+- Lag api-ruter for å hente data
+- Hent disse dynamisk
+api/elever/{feidenavn}
+validering av rettigheter i api-kall basert på event injected headers
+Må da bruke dynamisk js i frontend, men det er jo mye diggere... (evt gjør den det selv i backend mon tro? Nei det er vel load - men kan kanskje legge til rette for at det fungerer ved å flytte funksjoner ut? Så de kan påkalles i load der vi vil ha SSR)
+
+Tester noen api-ruter
+API-first
+Decoupling
+Men på samme server. Tester litt
 
 ## Notater
 - Hvordan løse dokumentdriten
@@ -9,6 +21,21 @@ Når elever hentes, hent også skoler, og per skole, hvilke dokumenttyper som er
 elev: {
   kontaktlærer: ja/nei
 }
+
+## PÅ elev/feidenavn/nyttdokument
+- Hent data som trengs
+- Egen validering per felt som fylles ut
+
+## På api/elev/feidenavn/nyttdokument
+- Får all data som trengs?
+- Valider og kose seg
+
+## På api/elev/feidenavn/nyttdokument?preview=true
+- Får all data som trengs
+- Quick return med pdf-preview
+
+## Tanmker
+- HAr allerede gyldige dokumenttyper (men basert på documentTypes.js, trenger vi egt documentTypes.js??). Hva om vi bare putter det rett i api.js. UserData lager opp hvilke typer man har lov til (trenger dog litt ekstra data på de da... )
 
 
 ## Behovet for løsningen

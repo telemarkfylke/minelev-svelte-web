@@ -35,7 +35,8 @@ const validateObject = (content, contentValidator, resultArray, parentKey='') =>
   } catch (error) {
     console.log('tryna i validering')
     console.log(JSON.stringify(content))
-    console.log(error) 
+    console.log(error)
+    throw error
   }
 }
 

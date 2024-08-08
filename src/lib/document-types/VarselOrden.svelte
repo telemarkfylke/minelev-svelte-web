@@ -1,7 +1,7 @@
 <script>
   import axios from "axios";
   import PdfPreview from "../components/PDFPreview.svelte";
-  import { conversationStatuses } from "./data/document-data";
+  import { periods, orderReasons } from "./data/document-data";
   import { documentTypes } from "./document-types";
   import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
   import { goto } from "$app/navigation";
@@ -11,7 +11,6 @@
   export let selectedSchoolNumber = null
   export let isCompletedDocument = false
   export let documentContent = null
-  export let documentVariant = null
 
   let showPreview = false
   let sendLoading = false
@@ -23,23 +22,24 @@
   let canClickSend = false
 
   // Content data
-  const elevsamtale = {
-    conversationStatus: ""
+  const varsel = {
+    periodId: "",
+    reasonIds: []
   }
 
   // Reactive statements
-  $: canClickSend = Boolean(elevsamtale.conversationStatus)
+  $: canClickSend = Boolean(varsel.periodId && varsel.reasonIds.length > 0)
 
   let previewBase64
-  const sendElevsamtale = async (preview=false) => {
+  const sendVarsel = async (preview=false) => {
     errorMessage = ""
     try {
       const payload = {
         documentTypeId,
-        type: 'samtale',
-        variant: elevsamtale.conversationStatus,
+        type: 'varsel',
+        variant: 'orden',
         schoolNumber: selectedSchoolNumber,
-        documentData: {},
+        documentData: varsel,
         preview
       }
       const { data } = await axios.post(`/api/students/${studentFeidenavnPrefix}/newDocument`, payload)
@@ -63,25 +63,43 @@
 </script>
 
 {#if showData}
-  <pre>{JSON.stringify(elevsamtale, null, 2)}</pre>
+  <pre>{JSON.stringify(varsel, null, 2)}</pre>
 {/if}
 
 {#if isCompletedDocument}
   <section>
     <h4>
-      Er det gjennomført en elevsamtale?
+      Periode
     </h4>
-    <input type="radio" id="conversationStatus" name="conversationStatus" disabled checked />
-    <label for="conversationStatus">{conversationStatuses.find(status => status.id === documentVariant)?.value.nb}</label><br>
+    <input type="radio" id="period" name="periodId" disabled checked />
+    <label for="period">{documentContent.period.nb}</label><br>
   </section>
 {:else}
   <section>
     <h4>
-      Er det gjennomført en elevsamtale?
+      Velg periode
     </h4>
-    {#each conversationStatuses as conversationStatus}
-      <input type="radio" id="conversationStatus-{conversationStatus.id}" bind:group={elevsamtale.conversationStatus} name="periodId" value="{conversationStatus.id}" required />
-      <label for="conversationStatus-{conversationStatus.id}">{conversationStatus.value.nb}</label><br>
+    {#each periods as period}
+      <input type="radio" id="period-{period.id}" bind:group={varsel.periodId} name="periodId" value="{period.id}" required />
+      <label for="period-{period.id}">{period.value.nb}</label><br>
+    {/each}
+  </section>
+{/if}
+
+{#if isCompletedDocument}
+  <section>
+    <h4>Årsaken til varselet</h4>
+    {#each documentContent.reasons as reason}
+      <input type="checkbox" id="reason-{reason.id}" name="reasons" disabled checked />
+      <label for="reason-{reason.id}">{reason.nb}</label><br>
+    {/each}
+  </section>
+{:else}
+  <section>
+    <h4>Hva er årsaken til varselet</h4>
+    {#each orderReasons as reason}
+      <input type="checkbox" id="reason-{reason.id}" bind:group={varsel.reasonIds} name="reasons" value="{reason.id}" />
+      <label for="reason-{reason.id}">{reason.description.nb}</label><br>
     {/each}
   </section>
 {/if}
@@ -99,12 +117,12 @@
       {#if previewLoading}
         <button disabled><LoadingSpinner width={"1.5"} />Forhåndsvisning</button>
       {:else}
-        <button on:click={() => {sendElevsamtale(true); previewLoading=true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        <button on:click={() => {sendVarsel(true); previewLoading=true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
       {/if}
       {#if sendLoading}
         <button disabled><LoadingSpinner width={"1.5"} />Send</button>
       {:else}
-        <button type="submit" class="filled" on:click={() => {sendElevsamtale(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
+        <button type="submit" class="filled" on:click={() => {sendVarsel(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
       {/if}
     {:else}
       <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>

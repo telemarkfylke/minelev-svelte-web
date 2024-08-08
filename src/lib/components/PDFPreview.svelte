@@ -1,7 +1,6 @@
 <script>
-  import { error } from "@sveltejs/kit";
 
-  export let getDataFunction
+  export let base64Data
   export let showPreview = false
   export let closePreview = () => {
     showPreview = false
@@ -13,54 +12,35 @@
     return (await fetch(`data:${type};base64,${base64}`)).blob()
   }
 
-  const getPdfPreview = async () => {
-    /* HVA ER GALT MED MEG??? */
-    const pdfData = getDataFunction()
-
-    console.log(pdfData)
-
-    const pdfPreview = await fetch('?/preview', {
-      method: 'POST',
-      body: JSON.stringify(pdfData)
-    })
-    const result = await pdfPreview.json()
-    if (!result.status === 'success') {
-      throw error('Feielleel')
-    }
-    const base64 = JSON.parse(result.data)[0]
-    const blob = await b64toBlob(base64, 'application/pdf')
-    return blob
-  }
-
   $: if (showPreview) previewModal.showModal()
 
 </script>
 
 <dialog bind:this={previewModal}>
   <form method="dialog">
-      <div class="modalTitle">
-          <h2>Forhåndsvisning</h2>
-          <button on:click={closePreview} title="Lukk modal"><span class="material-symbols-outlined">close</span>Lukk</button>
-      </div>
-      <div class="rawData">
-        {#if showPreview}
-          {#await getPdfPreview()}
-            Laster pdf...
-          {:then pdfResponse}
-              <object aria-label="PDF preview" class="pdf-preview" data='{URL.createObjectURL(pdfResponse)}'>
-                <p>Din nettleser støtter ikke PDF-visning</p>
-                <p>
-                  Last ned filen <a href="{URL.createObjectURL(pdfResponse)}" download="preview.pdf">her</a>
-                </p>
-              </object>
-          {:catch err}
-            Feila
-            {err.message}
-            <pre>{JSON.stringify(err, null, 2)}</pre>
-          {/await}
-        {/if}
-      </div>
-      <!--<pre>{JSON.stringify(test.result.raw, null, 2)}</pre>-->
+    <div class="modalTitle">
+      <h2>Forhåndsvisning</h2>
+      <button on:click={closePreview} title="Lukk modal"><span class="material-symbols-outlined">close</span>Lukk</button>
+    </div>
+    <div class="rawData">
+      {#if showPreview}
+        {#await b64toBlob(base64Data, 'application/pdf')}
+          Laster pdf...
+        {:then blobResponse}
+            <object aria-label="PDF preview" class="pdf-preview" data='{URL.createObjectURL(blobResponse)}'>
+              <p>Din nettleser støtter ikke PDF-visning</p>
+              <p>
+                Last ned filen <a href="{URL.createObjectURL(blobResponse)}" download="preview.pdf">her</a>
+              </p>
+            </object>
+        {:catch err}
+          Feila
+          {err.message}
+          <pre>{JSON.stringify(err, null, 2)}</pre>
+        {/await}
+      {/if}
+  </div>
+  <!--<pre>{JSON.stringify(test.result.raw, null, 2)}</pre>-->
   </form>
 </dialog>
 
