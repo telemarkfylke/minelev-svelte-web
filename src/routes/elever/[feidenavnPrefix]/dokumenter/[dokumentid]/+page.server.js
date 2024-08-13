@@ -11,6 +11,7 @@ export async function load ({ params, request }) {
     const user = await getAuthenticatedUser(request.headers)
     const studentFeidenavn = `${params.feidenavnPrefix}@${env.FEIDENAVN_SUFFIX}`
     const documentId = params.dokumentId
+    logger('info', ['HAR VI PARAMS DA??', params])
     const document = await getDocument(user, studentFeidenavn, documentId)
     return { document }
   } catch (err) {
