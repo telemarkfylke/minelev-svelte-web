@@ -24,6 +24,7 @@
 		"@azure/msal-node": "^2.9.1",
 		"@material/material-color-utilities": "^0.2.7",
 		"@material/web": "^1.5.1-nightly.4f7ff4f.0",
+		"@vtfk/encryption": "^1.0.3",
 		"@vtfk/logger": "^6.1.0",
 		"axios": "^1.7.2",
 		"mongodb": "^6.8.0",

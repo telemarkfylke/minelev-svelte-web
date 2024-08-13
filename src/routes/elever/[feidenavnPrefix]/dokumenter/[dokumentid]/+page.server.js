@@ -1,5 +1,4 @@
 import { getDocument, getStudent } from '$lib/api'
-import { getTeacher } from '$lib/api'
 import { getAuthenticatedUser } from '$lib/authentication'
 import { error } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'

@@ -24,11 +24,15 @@
 
   const otherFaggrupper = faggrupper.filter(gruppe => !probableFaggrupper.some(group => group.systemId === gruppe.systemId))
   
-  const getProbableFaggrupper = (schoolNumber) => {
-    return probableFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber)
+  const getProbableAndOtherChosenFaggrupper = (schoolNumber) => {
+    const probable = probableFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber)
+    return probable
   }
   const getTheRestOfFaggrupper = (schoolNumber) => {
     return otherFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber)
+  }
+  const getChosenFromRestOfFaggrupper = (schoolNumber, courseIds) => {
+    return otherFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber && courseIds.includes(gruppe.systemId))
   }
 
   let canClickSend = false
@@ -117,7 +121,7 @@
 {:else}
   <section>
     <h4>Hvilke fag gjelder varselet?</h4>
-    {#each getProbableFaggrupper(selectedSchoolNumber) as faggruppe}
+    {#each getProbableAndOtherChosenFaggrupper(selectedSchoolNumber) as faggruppe}
       <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courseIds} name="courses" value="{faggruppe.systemId}" />
       <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
     {/each}
@@ -126,8 +130,12 @@
         <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courseIds} name="courses" value="{faggruppe.systemId}" />
         <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
       {/each}
-      <p><button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis kun dine fag for eleven</button></p>
+      <p><button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis færre fag</button></p>
     {:else}
+      {#each getChosenFromRestOfFaggrupper(selectedSchoolNumber, varsel.courseIds) as faggruppe}
+        <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courseIds} name="courses" value="{faggruppe.systemId}" />
+        <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
+      {/each}
       <p>Ser du ikke faget du er ute etter?<button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis alle fag for eleven</button></p>
     {/if}
   </section>

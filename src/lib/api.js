@@ -1,6 +1,6 @@
 import { fintTeacher } from './fintfolk-api/teacher'
 import { fintStudent } from './fintfolk-api/student'
-import { documentTypes } from './document-types/document-types'
+import { documentTypes, getCurrentSchoolYear } from './document-types/document-types'
 import { closeMongoClient, getMongoClient } from './mongo-client'
 import { env } from '$env/dynamic/private'
 import { ObjectId } from 'mongodb'
@@ -9,6 +9,7 @@ import { logger } from '@vtfk/logger'
 import { getInternalCache } from './internal-cache'
 import axios from 'axios'
 import { validateContent } from './document-types/content-validation'
+import { encryptContent } from '@vtfk/encryption'
 
 export const sleep = (ms) => {
   return new Promise((resolve) => {
@@ -32,74 +33,24 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
   const availableDocumentTypes = []
   for (const docType of documentTypes) {
     if (docType.accessCondition === 'isContactTeacher') {
-      const docTypeShools = student.skoler.filter(skole => skole.kontaktlarer) // Kun skoler der læreren er kontaktlærer for eleven
-      if (docTypeShools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, schools: docTypeShools })
+      const docTypeSchools = student.skoler.filter(skole => skole.kontaktlarer) // Kun skoler der læreren er kontaktlærer for eleven
+      if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools })
     }
     if (docType.accessCondition === 'hasUndervisningsgruppe') {
-      const docTypeShools = student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe').map(klasse => klasse.skole)
-      if (docTypeShools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, schools: docTypeShools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
+      const docTypeSchools = []
+      for (const school of student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe').map(klasse => klasse.skole)) { // Skoler der læreren har eleven i en undervisningsgruppe
+        if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
+          docTypeSchools.push(school)
+        }
+      }
+      if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
     }
     if (docType.accessCondition === 'yff') {
-      const docTypeShools = student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe').map(klasse => klasse.skole) // LEGG INN YFF KRITERIE HER
-      // if (docTypeShools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, schools: docTypeShools })
+      const docTypeSchools = student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe').map(klasse => klasse.skole) // LEGG INN YFF KRITERIE HER
+      // if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
     }
   }
   return availableDocumentTypes
-}
-
-/**
- *
- * @param {Object} user
- */
-export const getTeacher = async (userPrincipalName) => {
-  const teacher = await fintTeacher(userPrincipalName)
-  const repackedTeacher = {
-    upn: teacher.upn,
-    feidenavn: teacher.feidenavn,
-    ansattnummer: teacher.ansattnummer,
-    name: teacher.navn,
-    firstName: teacher.fornavn,
-    lastName: teacher.etternavn
-  }
-
-  let students = []
-  const classes = []
-  for (const undervisningsforhold of teacher.undervisningsforhold.filter(forhold => forhold.aktiv)) {
-    for (const basisgruppe of undervisningsforhold.basisgrupper.filter(gruppe => gruppe.aktiv)) {
-      classes.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, fag: ['Basisgruppe'], skole: basisgruppe.skole.navn })
-      for (const elev of basisgruppe.elever) {
-        // I tilfelle eleven er med i flere basisgrupper
-        const existingStudent = students.find(student => student.elevnummer === elev.elevnummer)
-        if (existingStudent) {
-          existingStudent.klasser.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, skole: repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer) })
-          if (!existingStudent.skoler.some(skole => skole.skolenummer === undervisningsforhold.skole.skolenummer)) existingStudent.skoler.push(repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer))
-        } else {
-          students.push({ ...elev, klasser: [{ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, skole: repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer) }], skoler: [repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer)] })
-        }
-      }
-    }
-    for (const undervisningsgruppe of undervisningsforhold.undervisningsgrupper.filter(gruppe => gruppe.aktiv)) {
-      classes.push({ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, fag: undervisningsgruppe.fag.map(f => f.navn), skole: undervisningsgruppe.skole.navn })
-      for (const elev of undervisningsgruppe.elever) {
-        // I tilfelle eleven er med i flere basisgrupper
-        const existingStudent = students.find(student => student.elevnummer === elev.elevnummer)
-        if (existingStudent) {
-          existingStudent.klasser.push({ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, skole: repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer) })
-          if (!existingStudent.skoler.find(skole => skole.skolenummer === undervisningsforhold.skole.skolenummer)) existingStudent.skoler.push(repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer))
-        } else {
-          students.push({ ...elev, klasser: [{ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, skole: repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer) }], skoler: [repackMiniSchool(undervisningsforhold.skole, elev.kontaktlarer)] })
-        }
-      }
-    }
-  }
-  // Sleng på kort-feidenavn på alle elever, og gyldige dokumenttyper for eleven
-  students = students.map(stud => { return { ...stud, feidenavnPrefix: stud.feidenavn.substring(0, stud.feidenavn.indexOf('@')), availableDocumentTypes: getAvailableDocumentTypesForTeacher(stud) } })
-  // Lag et objekt med siste aktivitet for lærerens elever
-  return {
-    teacher: repackedTeacher,
-    students,
-    classes
-  }
 }
 
 /**
@@ -117,6 +68,7 @@ export const getUserData = async (user) => {
   if (user.activeRole === env.DEFAULT_ROLE || (user.hasAdminRole && user.impersonating?.type === 'larer')) {
     const teacherUpn = user.hasAdminRole && user.impersonating?.type === 'larer' ? user.impersonating.target : user.principalName 
     const teacher = await fintTeacher(teacherUpn)
+    if (!teacher) return userData
 
     userData.userData = {
       upn: teacher.upn,
@@ -143,6 +95,7 @@ export const getUserData = async (user) => {
         }
       }
       for (const undervisningsgruppe of undervisningsforhold.undervisningsgrupper.filter(gruppe => gruppe.aktiv)) {
+        // Note to self - læreren kan ha flere undervisningsforhold med de samme undervisningsgruppene.. Lollert, lar det være inntil videre
         classes.push({ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, fag: undervisningsgruppe.fag.map(f => f.navn), skole: undervisningsgruppe.skole.navn })
         for (const elev of undervisningsgruppe.elever) {
           // I tilfelle eleven er med i flere basisgrupper
@@ -206,8 +159,8 @@ export const getStudent = async (user, studentFeidenavn, includeSsn=false) => {
 
   // Alle faggrupper, fordi vi mangler relasjon mellom lærer og faggrupper
   let faggrupper = []
-  for (const elevforhold of student.elevforhold.filter(forhold => forhold.aktiv)) {
-    for (const faggruppe of elevforhold.faggruppemedlemskap.filter(medlemskap => medlemskap.aktiv)) {
+  for (const elevforhold of student.elevforhold.filter(forhold => forhold.aktiv || (new Date() < new Date(forhold.gyldighetsperiode.start)))) { // Aktive eller aktive i fremtiden
+    for (const faggruppe of elevforhold.faggruppemedlemskap.filter(medlemskap => medlemskap.aktiv || (new Date() < new Date(medlemskap.medlemskapgyldighetsperiode.start)))) { // Aktive eller aktive i fremtiden
       faggrupper.push({
         navn: faggruppe.navn,
         systemId: faggruppe.systemId,
@@ -217,8 +170,10 @@ export const getStudent = async (user, studentFeidenavn, includeSsn=false) => {
     }
   }
 
+  /* NEI NYTT UNDER
   // Lager først en liste med undervisningsgruppene læreren har eleven i, så filtrerer vi faggruppene på de som starter med samme prefix som undervisningsgruppene har eleven i.
   // Typ hvis læreren har undervisningsgruppe 3STK/NOR2340, så antar vi at alle faggrupper som starter med 3STK/NOR er aktuelle som faggrupper
+  // Evt sjekk om det er fullstendig match. Kan vi finne ut hvilke som typisk har 2 underliggende faggrupper a?
   const relevantUndervisningsgrupper = classes.filter(group => !group.fag.includes('Basisgruppe') && group.navn.split('/').length === 2).map(group => {
     const groupNameList = group.navn.split('/')
     return { className: groupNameList[0], undervisningsgruppeName: groupNameList[1] }
@@ -234,19 +189,20 @@ export const getStudent = async (user, studentFeidenavn, includeSsn=false) => {
     })
     return matchingUndervisningsgruppe
   })
+  */ // ENKEL OG GREIT UNDER HER 
+  
+  // Henter alle faggrupper der det er en undervisningsgruppe som heter det samme som faggruppen, resten må lærer utvide for å få se / velge. Frontend må passe på å vise alle som er valgt til en hver tid
+  const probableFaggrupper = faggrupper.filter(faggruppe => classes.some(group => group.navn === faggruppe.navn))
 
-  // Hent så alle dokumenter lærerern har tilgang på
-  const documents = [] // getDocuments(user, feidenavn) - Documents that the current user has read access to - or not - maybe just get with api :)
   return {
     student: repackedStudent,
     faggrupper,
     probableFaggrupper,
-    documents
   }
 }
 
 export const newDocument = async (user, studentFeidenavn, documentTypeId, type, variant, schoolNumber, documentData, preview=false) => {
-  let loggerPrefix = `newDocument - user: ${user.principalName} - student: ${studentFeidenavn} - preview: ${preview}`
+  let loggerPrefix = `newDocument - user: ${user.principalName} - student: ${studentFeidenavn} - ${documentTypeId} - preview: ${preview}`
   logger('info', [loggerPrefix, 'New request'])
 
   // Validate parameteres
@@ -337,6 +293,13 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
     throw error
   }
 
+  // Encrypt content if needed
+  if (currentDocumentType.isEncrypted) {
+    logger('info', [loggerPrefix, 'documenttype content need to be encrypted'])
+    content = encryptContent(content, env.ENCRYPTION_SECRET)
+    logger('info', [loggerPrefix, 'documenttype content encrypted'])
+  }
+
   logger('info', [loggerPrefix, 'Content succesfully generating, setting up entire document'])
 
   const student = studentData.student
@@ -369,7 +332,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
     modified: {
       date: now.toISOString(),
       timestamp: now,
-      createdBy: repackedUser
+      modifiedBy: repackedUser
     },
     documentTypeId,
     title: currentDocumentType.title,
@@ -379,7 +342,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
     teacher,
     content,
     school: repackedSchool,
-    isEncrypted: false,
+    isEncrypted: currentDocumentType.isEncrypted,
     status: [{ status: 'queued', timestamp: new Date().getTime() }],
     isQueued: true // Set ready for plucking by minelev-robot
   }
@@ -387,7 +350,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
   // Hvis preview, så henter vi en pdf-preview, og returnerer bare base64-en
   if (preview) {
     logger('info', [loggerPrefix, 'Preview is true, fetching preview-pdf'])
-    const preivewData = {
+    const previewData = {
       system: 'minelev',
       template: `${document.type}/${document.variant}`,
       language: 'nb',
@@ -396,7 +359,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
       data: { ...document, preview: true }
     }
     // TODO - ha en MOCK_API her også for å slippe nett??
-    const { data } = await axios.post(env.PDF_API_URL, preivewData, { headers: { 'x-functions-key': env.PDF_API_KEY } })
+    const { data } = await axios.post(env.PDF_API_URL, previewData, { headers: { 'x-functions-key': env.PDF_API_KEY } })
     logger('info', [loggerPrefix, 'Successfully got pdf-preview, returning base64'])
     const base64 = data.data.base64
     return base64
@@ -416,7 +379,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
   try {
     logger('info', [loggerPrefix, 'inserting document in db'])
     const mongoClient = await getMongoClient()
-    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_DOCUMENTS_COLLECTION)
+    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
     const insertResult = await collection.insertOne(document)
     logger('info', [loggerPrefix, `document succesfully added to db with id: ${insertResult.insertedId}`])
     return insertResult
@@ -473,8 +436,8 @@ export const getDocument = async (user, studentFeidenavn, documentId) => {
     try {
       logger('info', [loggerPrefix, `Looking for document ${documentId} in db`])
       const mongoClient = await getMongoClient()
-      const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_DOCUMENTS_COLLECTION)
-      document = await collection.findOne({ _id: ObjectId(documentId) })
+      const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
+      document = await collection.findOne({ _id: new ObjectId(documentId) })
       if (!document) throw new Error(`Could not find any document with id: ${documentId}`)
       logger('info', [loggerPrefix, `Found document ${documentId} in db`])
     } catch (error) {
@@ -512,6 +475,8 @@ export const getDocument = async (user, studentFeidenavn, documentId) => {
     logger('warn', [loggerPrefix, `No access to create this documenttype "${document.documentTypeId}" at selected school: "${document.school.shortname}"`])
     throw new Error(`No access to create this documenttype "${document.documentTypeId}" for student "${studentFeidenavn}" at selected school: "${document.school.shortname}"`)
   }
+  // stringify mongodb ObjectId
+  document._id = document._id.toString()
   logger('info', [loggerPrefix, 'Access to view document validated, returning document'])
 
   return document
@@ -546,6 +511,7 @@ export const getStudentDocuments = async (user, studentFeidenavn) => {
 
   // Then construct query based on available doctypes for student / teacher relation
   const teacherStudent = availableStudents.find(stud => stud['feidenavn'] === studentFeidenavn)
+  logger('info', [loggerPrefix, 'Access to student validated'])
 
   if (env.MOCK_API === 'true') {
     logger('info', [loggerPrefix, 'MOCK_API is true', `Looking for documents in mockdb`])
@@ -564,18 +530,30 @@ export const getStudentDocuments = async (user, studentFeidenavn) => {
     logger('info', [loggerPrefix, 'MOCK_API is true', `Found ${documents.length} available documents in mockdb - returning`])
     return documents
   } else {
-    // Hent fra mongodb!
-  }
-  try {
-    const mongoClient = await getMongoClient()
-    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_DOCUMENTS_COLLECTION)
-    // Her må vi lage en spørring som henter dokumenter som matcher alle dokumentene til eleven som læreren faktisk har tilgang på
-  } catch (error) {
-    if (error.toString().startsWith('MongoTopologyClosedError')) {
-      logger('warn', 'Oh no, topology is closed! Closing client')
-      closeMongoClient()
+    // Hent fra mongodb! Skal ha alle dokumentene med availableDocumenttype ved en gitt skole (så kan frontend få sortere på varsel-fag (prabableFaggrupper))
+    logger('info', [loggerPrefix, 'Building documentQuery based on availableDocumentTypes'])
+    try {
+      const documentTypeOr = []
+      for (const availableDocumentType of teacherStudent.availableDocumentTypes) {
+        for (const school of availableDocumentType.schools) {
+          const docTypeQuery = { documentTypeId: availableDocumentType.id, "school.id": school.skolenummer }
+          documentTypeOr.push(docTypeQuery)
+        }
+      }
+      const documentQuery = { "student.elevnummer": teacherStudent.elevnummer, $or: documentTypeOr }
+      logger('info', [loggerPrefix, 'Documentquery successfully built', documentQuery, 'Fetching from db'])
+      const mongoClient = await getMongoClient()
+      const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
+      const documents = await collection.find(documentQuery).toArray()
+      logger('info', [loggerPrefix, `Found ${documents.length} documents in db. Returning.`])
+      return documents
+    } catch (error) {
+      if (error.toString().startsWith('MongoTopologyClosedError')) {
+        logger('warn', 'Oh no, topology is closed! Closing client')
+        closeMongoClient()
+      }
+      throw error
     }
-    throw error
   }
 }
 
@@ -585,7 +563,7 @@ export const getTeacherDocuments = async (user, studentFeidenavn) => {
   if (env.MOCK_API === 'true') return 'en liste med tulledokumenter'
   try {
     const mongoClient = await getMongoClient()
-    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_DOCUMENTS_COLLECTION)
+    const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
     // Her må vi lage en spørring som henter dokumenter som matcher alle elevene til læreren, men vi tar vel kanskje panskje med en top-parameter for å være flinke?
   } catch (error) {
     if (error.toString().startsWith('MongoTopologyClosedError')) {

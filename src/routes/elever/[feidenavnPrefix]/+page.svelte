@@ -46,10 +46,12 @@
 
 <div class="actionBar">
   <a class="button" href="{$page.url.pathname}/nyttdokument"><span class="material-symbols-outlined">add</span>Nytt dokument</a>
-  <a class="button" href="{$page.url.pathname}/nyttdokument?document_type=notat"><span class="material-symbols-outlined">add</span>Nytt notat</a>
+  {#if accessTo.notat}
+    <a class="button" href="{$page.url.pathname}/nyttdokument?document_type=notat"><span class="material-symbols-outlined">add</span>Nytt notat</a>
+  {/if}
 </div>
 
-{#if accessTo.yff || true}
+{#if accessTo.yff}
   <div class="documentsBox yff">
     <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Yrkesfaglig fordypning</h3>
     <div class="boxContent">
@@ -85,7 +87,12 @@
             <a href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
               <div class="documentLine">
                 <div class="documentCol1">{prettyPrintDate(document.created.timestamp)}</div>
-                <div class="documentCol2">{document.title}</div>
+                <div class="documentCol2">
+                  {document.title}
+                  {#if document.variant === 'fag'}
+                    ({document.content.classes.length > 1 ? `flere fag` : document.content.classes[0].nb })
+                  {/if}
+                </div>
                 <div class="documentCol3">{document.content.period.nb}</div>
               </div>
             </a>
@@ -141,8 +148,14 @@
         <LoadingSpinner width="1" />
       {:else}
         {#if documents.notat.length > 0}
-          {#each documents.notat as doc}
-            <p>{JSON.stringify(doc)}</p>
+          {#each documents.notat as document}
+            <a href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
+              <div class="documentLine">
+                <div class="documentCol1">{prettyPrintDate(document.created.timestamp)}</div>
+                <div class="documentCol2">{document.title}</div>
+                <div class="documentCol3">{document.teacher.name}</div>
+              </div>
+            </a>
           {/each}
         {:else}
           Eleven har ingen tilgjengelige notater
@@ -150,7 +163,7 @@
       {/if}
     </div>
     <div class="boxAction">
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument`)}><span class="material-symbols-outlined">add</span>Nytt notat</button>
+      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=notat`)}><span class="material-symbols-outlined">add</span>Nytt notat</button>
     </div>
   </div>
 {/if}

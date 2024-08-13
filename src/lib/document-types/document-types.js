@@ -2,18 +2,18 @@ import { error, fail } from "@sveltejs/kit"
 import { periods, courseReasons, orderReasons, behaviourReasons } from "./data/document-data"
 import { validateContent } from "./content-validation"
 
-const getSchoolYearFromDate = (date) => {
+const getSchoolYearFromDate = (date, delimiter = '/') => {
   // Hvis vi er etter 15 juli inneværende år, så swapper vi til current/next. Ellers bruker vi previous/current
   const year = date.getFullYear()
   const previousYear = year - 1
   const nextYear = year + 1
   const midsommar = new Date(`${year}-07-15`)
-  if (date > midsommar) return `${year}/${nextYear}`
-  return `${previousYear}/${year}`
+  if (date > midsommar) return `${year}${delimiter}${nextYear}`
+  return `${previousYear}${delimiter}${year}`
 }
 
-const getCurrentSchoolYear = () => {
-  return getSchoolYearFromDate(new Date())
+export const getCurrentSchoolYear = (delimiter = '/') => {
+  return getSchoolYearFromDate(new Date(), delimiter)
 }
 
 // accessConditions: 'hasUndervisningsgruppe', 'isContactTeacher', 'yff'
@@ -199,6 +199,7 @@ export const documentTypes = [
     id: 'notat',
     title: 'Notat',
     accessCondition: 'isContactTeacher',
+    isEncrypted: true,
     matchContent: {
       note: "fjidsofjkldsfkldsjflks"
     },

@@ -1,6 +1,7 @@
 <script>
   import { page } from "$app/stores";
   import Elevsamtale from "$lib/document-types/Elevsamtale.svelte";
+  import Notat from "$lib/document-types/Notat.svelte";
   import VarselAtferd from "$lib/document-types/VarselAtferd.svelte";
   import VarselFag from "$lib/document-types/VarselFag.svelte";
   import VarselOrden from "$lib/document-types/VarselOrden.svelte";
@@ -76,7 +77,7 @@
     <Elevsamtale {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
   {/if}
   {#if documentTypeId === 'notat'}
-    Hallo notat
+    <Notat  {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
   {/if}
   {#if documentTypeId === 'yff'}
     Hallo yff

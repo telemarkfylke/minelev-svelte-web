@@ -2,6 +2,7 @@
     import { page } from "$app/stores";
     import { documentStatuses } from "$lib/document-types/data/document-data";
     import Elevsamtale from "$lib/document-types/Elevsamtale.svelte";
+    import Notat from "$lib/document-types/Notat.svelte";
     import VarselAtferd from "$lib/document-types/VarselAtferd.svelte";
     import VarselFag from "$lib/document-types/VarselFag.svelte";
     import VarselOrden from "$lib/document-types/VarselOrden.svelte";
@@ -34,7 +35,7 @@
     <Elevsamtale isCompletedDocument={true} documentContent={document.content} documentVariant={document.variant} />
 {/if}
 {#if document.documentTypeId === 'notat'}
-    Hallo notat
+    <Notat isCompletedDocument={true} />
 {/if}
 {#if document.documentTypeId === 'yff'}
     Hallo yff

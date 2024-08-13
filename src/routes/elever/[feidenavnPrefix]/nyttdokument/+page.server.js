@@ -3,7 +3,7 @@ import { documentTypes, generateDocument } from '$lib/document-types/document-ty
 import { redirect } from '@sveltejs/kit';
 import { env } from "$env/dynamic/private";
 import axios from "axios";
-import { getTeacher, getStudent, addDocument } from "$lib/api";
+import { getStudent, addDocument } from "$lib/api";
 import { getAuthenticatedUser } from "$lib/authentication";
 import { logger } from "@vtfk/logger";
 import { documentTypeId } from "$lib/document-types/Elevsamtale.svelte";
@@ -14,7 +14,6 @@ const currentRoute = "/nytt"
 /*
 const getServerData = async (event) => {
   const user = getAuthenticatedUser(event.request.headers)
-  const { teacher, students, classes } = await getTeacher(user)
   const studentFeidenavn = `${event.params.feidenavnPrefix}@${env.FEIDENAVN_SUFFIX}`
   const { student, documents, faggrupper, probableFaggrupper } = await getStudent(studentFeidenavn, classes)
   const studentData = { student, documents, faggrupper, probableFaggrupper }

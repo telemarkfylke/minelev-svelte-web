@@ -368,6 +368,13 @@ export const fintTeacher = async (userPrincipalName) => {
     return mockTeacher
   }
   const accessToken = await getMsalToken({ scope: env.FINTFOLK_API_SCOPE })
-  const { data } = await axios.get(`${env.FINTFOLK_API_URL}/teacher/upn/${identifier}`, { headers: { Authorization: `Bearer ${accessToken}` } })
-  return data
+  try {
+    const { data } = await axios.get(`${env.FINTFOLK_API_URL}/teacher/upn/${identifier}`, { headers: { Authorization: `Bearer ${accessToken}` } })
+    return data    
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return null
+    }
+    throw error
+  }
 }

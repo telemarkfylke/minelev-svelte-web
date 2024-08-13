@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { getMsalToken } from '$lib/msal-token'
 import { sleep } from '$lib/api'
+import axios from 'axios'
 
 const mockStudents = [
   {
@@ -684,6 +685,14 @@ export const fintStudent = async (feidenavn) => {
     if (!mockStudent) throw error(404, `Could not find student with feidenavn ${feidenavn}`)
     return mockStudent
   }
-  const accessToken = await getMsalToken({ scope: 'fint-folk-scope' }) // Change to env!
-  return accessToken
+  const accessToken = await getMsalToken({ scope: env.FINTFOLK_API_SCOPE })
+  try {
+    const { data } = await axios.get(`${env.FINTFOLK_API_URL}/student/feidenavn/${feidenavn}`, { headers: { Authorization: `Bearer ${accessToken}` } })
+    return data
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return null
+    }
+    throw error
+  }
 }

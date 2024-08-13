@@ -188,7 +188,7 @@
     display: none;
   }
   .menuLink, .logoLink {
-    border-bottom: 1px solid var(--primary-color);
+    /*border-bottom: 1px solid var(--primary-color);*/
     text-decoration: none;
     color: var(--font-color);
   }
