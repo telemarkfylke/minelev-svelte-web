@@ -47,11 +47,11 @@
 <style>
   object {
     width: 100%;
-    min-height: 50rem;
+    min-height: 80vh;
   }
   dialog {
-    width: 80vw;
-    height: 80vh;
+    width: 90vw;
+    height: 90vh;
     margin: auto;
     border: none;
     padding: 32px
