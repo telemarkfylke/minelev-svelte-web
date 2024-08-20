@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/private'
-import { getUserData } from '$lib/api'
 import { getAuthenticatedUser } from '$lib/authentication'
+import { getUserData } from '$lib/minelev-api/get-user-data'
 import { error } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'
 
@@ -11,10 +11,11 @@ export async function load ({ request }) {
 
     // If maintenance no need to return data
     if (env.MAINTENANCE_MODE === 'true') {
-      result.maintenanceMode = true
-      return result
+      return {
+        user,
+        maintenanceMode: true
+      }
     }
-
     const userData = await getUserData(user)
 
     return {

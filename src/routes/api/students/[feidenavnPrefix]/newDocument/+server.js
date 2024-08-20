@@ -1,7 +1,7 @@
-import { env } from "$env/dynamic/private"
-import { getStudent, newDocument } from "$lib/api"
-import { getAuthenticatedUser } from "$lib/authentication"
-import { json } from "@sveltejs/kit"
+import { env } from '$env/dynamic/private'
+import { getAuthenticatedUser } from '$lib/authentication'
+import { newDocument } from '$lib/minelev-api/new-document'
+import { json } from '@sveltejs/kit'
 
 export const POST = async ({ params, request, url }) => {
   try {
@@ -12,6 +12,6 @@ export const POST = async ({ params, request, url }) => {
     const newDocumentResult = await newDocument(user, studentFeidenavn, documentTypeId, type, variant, schoolNumber, documentData, preview)
     return json(newDocumentResult)
   } catch (error) {
-    return json({ message: 'Failed when creating new document', error: error.response?.data || error.stack || error.toString() }, { status: 500 }) 
+    return json({ message: 'Failed when creating new document', error: error.response?.data || error.stack || error.toString() }, { status: 500 })
   }
 }

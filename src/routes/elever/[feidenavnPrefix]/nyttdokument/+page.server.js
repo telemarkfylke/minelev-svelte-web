@@ -1,15 +1,14 @@
-import { error, fail } from "@sveltejs/kit"
-import { documentTypes, generateDocument } from '$lib/document-types/document-types';
-import { redirect } from '@sveltejs/kit';
-import { env } from "$env/dynamic/private";
-import axios from "axios";
-import { getStudent, addDocument } from "$lib/api";
-import { getAuthenticatedUser } from "$lib/authentication";
-import { logger } from "@vtfk/logger";
-import { documentTypeId } from "$lib/document-types/Elevsamtale.svelte";
+/*
+import { error, fail, redirect } from '@sveltejs/kit'
+import { documentTypes, generateDocument } from '$lib/document-types/document-types'
+import { env } from '$env/dynamic/private'
+import axios from 'axios'
+import { getAuthenticatedUser } from '$lib/authentication'
+import { logger } from '@vtfk/logger'
+import { documentTypeId } from '$lib/document-types/Elevsamtale.svelte'
 
-const currentRoute = "/nytt"
-
+const currentRoute = '/nytt'
+*/
 // IKKE I BRUK DETTE HER OBS OBS!!
 /*
 const getServerData = async (event) => {
@@ -36,23 +35,23 @@ const generateDocumentAction = async (event, documentTypeId) => {
   // Hent rektig type og variant
   let type
   let variant
-  if (documentTypeId === 'varsel-fag') { 
+  if (documentTypeId === 'varsel-fag') {
     type = 'varsel'
     variant = 'fag'
   }
-  if (documentTypeId === 'varsel-orden') { 
+  if (documentTypeId === 'varsel-orden') {
     type = 'varsel'
     variant = 'orden'
   }
-  if (documentTypeId === 'varsel-atferd') { 
+  if (documentTypeId === 'varsel-atferd') {
     type = 'varsel'
     variant = 'atferd'
   }
-  if (documentTypeId === 'elevsamtale') { 
+  if (documentTypeId === 'elevsamtale') {
     type = 'elevsamtale'
     variant = formData.get('conversationStatus')
   }
-  if (documentTypeId === 'notat') { 
+  if (documentTypeId === 'notat') {
     type = 'notat'
     variant = 'notat'
   }
@@ -72,10 +71,9 @@ const generateDocumentAction = async (event, documentTypeId) => {
   logger('info', [loggerPrefix, 'Saving document to db'])
   const documentId = await addDocument(document)
   logger('info', [loggerPrefix, `Saved document to db. Id: ${documentId}. Redirecting user back to student page`])
-  
-  redirect(303, `/elever/${teacherStudent.feidenavnPrefix}`)
-}*/
 
+  redirect(303, `/elever/${teacherStudent.feidenavnPrefix}`)
+} */
 
 /** @type {import('./$types').Actions} */
 
@@ -92,7 +90,7 @@ export const actions = {
       template: `${documentData.type}/${documentData.variant}`,
       language: 'nb',
       type: "2",
-	    version: "B",
+      version: "B",
       data: documentData
     }
     requestData.data.preview = true

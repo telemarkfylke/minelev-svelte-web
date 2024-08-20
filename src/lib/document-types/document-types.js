@@ -1,6 +1,5 @@
-import { error, fail } from "@sveltejs/kit"
-import { periods, courseReasons, orderReasons, behaviourReasons } from "./data/document-data"
-import { validateContent } from "./content-validation"
+import { error } from '@sveltejs/kit'
+import { periods, courseReasons, orderReasons, behaviourReasons } from './data/document-data'
 
 const getSchoolYearFromDate = (date, delimiter = '/') => {
   // Hvis vi er etter 15 juli inneværende år, så swapper vi til current/next. Ellers bruker vi previous/current
@@ -57,11 +56,11 @@ export const documentTypes = [
       if (typeof periodId !== 'string') throw new Error('parameter "period" must be string')
       if (!Array.isArray(courseIds) || courseIds.some(course => typeof course !== 'string')) throw new Error('parameter "courses" must be Array of strings')
       if (!Array.isArray(reasonIds) || reasonIds.some(reason => typeof reason !== 'string')) throw new Error('parameter "reasons" must be Array of strings')
-      
+
       let period = periods.find(p => p.id === periodId)
       if (!period) throw error(400, `Chosen period "${period}" is not a valid period`)
       period = { id: period.id, ...period.value }
-      
+
       const courses = courseIds.map(courseId => {
         const course = student.faggrupper.find(gruppe => gruppe.systemId === courseId)
         if (!course) throw error(400, `Could not find course for student with systemId: "${courseId}"`)
@@ -115,14 +114,14 @@ export const documentTypes = [
     generateContent: (student, content) => {
       if (!student) throw new Error('Missing required argumnet "student"')
       const { periodId, reasonIds } = content
-      if (!(periodId &&  reasonIds)) throw new Error('Missing required argument(s) "periodId" and/or "reasonIds"')
+      if (!(periodId && reasonIds)) throw new Error('Missing required argument(s) "periodId" and/or "reasonIds"')
       if (typeof periodId !== 'string') throw new Error('parameter "period" must be string')
       if (!Array.isArray(reasonIds) || reasonIds.some(reason => typeof reason !== 'string')) throw new Error('parameter "reasons" must be Array of strings')
-      
+
       let period = periods.find(p => p.id === periodId)
       if (!period) throw error(400, `Chosen period "${period}" is not a valid period`)
       period = { id: period.id, ...period.value }
-      
+
       const reasons = reasonIds.map(reasonId => {
         const reason = orderReasons.find(r => r.id === reasonId)
         if (!reason) throw error(400, `Could not find orderReason with id: "${reasonId}"`)
@@ -160,14 +159,14 @@ export const documentTypes = [
     generateContent: (student, content) => {
       if (!student) throw new Error('Missing required argumnet "student"')
       const { periodId, reasonIds } = content
-      if (!(periodId &&  reasonIds)) throw new Error('Missing required argument(s) "periodId" and/or "reasonIds"')
+      if (!(periodId && reasonIds)) throw new Error('Missing required argument(s) "periodId" and/or "reasonIds"')
       if (typeof periodId !== 'string') throw new Error('parameter "period" must be string')
       if (!Array.isArray(reasonIds) || reasonIds.some(reason => typeof reason !== 'string')) throw new Error('parameter "reasons" must be Array of strings')
-      
+
       let period = periods.find(p => p.id === periodId)
       if (!period) throw error(400, `Chosen period "${period}" is not a valid period`)
       period = { id: period.id, ...period.value }
-      
+
       const reasons = reasonIds.map(reasonId => {
         const reason = behaviourReasons.find(r => r.id === reasonId)
         if (!reason) throw error(400, `Could not find behaviourReason with id: "${reasonId}"`)
@@ -201,7 +200,7 @@ export const documentTypes = [
     accessCondition: 'isContactTeacher',
     isEncrypted: true,
     matchContent: {
-      note: "fjidsofjkldsfkldsjflks"
+      note: 'fjidsofjkldsfkldsjflks'
     },
     generateContent: (student, content) => {
       if (!student) throw new Error('Missing required argumnet "student"')

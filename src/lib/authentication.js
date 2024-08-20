@@ -1,11 +1,37 @@
 import { env } from '$env/dynamic/private'
 import { error } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'
-import { getActiveRole, getAdminImpersonation } from './api'
+import { getActiveRole } from './minelev-api/roles'
+import { getAdminImpersonation } from './minelev-api/admin-impersonation'
+
+/**
+ * @typedef Role
+ * @property {string} value
+ * @property {string} roleName
+ */
+
+/**
+ * @typedef Impersonation
+ * @property {string} target
+ * @property {"larer" | "leder"} type
+ */
+
+/**
+ * @typedef User
+ * @property {string} principalName upn
+ * @property {string} principalId objectId
+ * @property {string} name displayName
+ * @property {string} activeRole activeRole value
+ * @property {Role[]} roles list of available roles
+ * @property {boolean} hasAdminRole if user has admin role
+ * @property {Impersonation} [impersonating] is adminuser impersonating another user
+ *
+*/
 
 /**
  *
  * @param {Headers} headers
+ * @returns {User} current user
  */
 export const getAuthenticatedUser = async (headers) => {
   if (env.MOCK_AUTH === 'true' && env.NODE_ENV !== 'production') {
@@ -93,7 +119,7 @@ export const getAuthenticatedUser = async (headers) => {
         activeRole = activeDbRole
       }
     }
-    // Check that activeRole is present in current roles as well. If so - set as active, if not, just set first role as 
+    // Check that activeRole is present in current roles as well. If so - set as active, if not, just set first role as
   } else {
     activeRole = roles[0]
   }
@@ -110,7 +136,6 @@ export const getAuthenticatedUser = async (headers) => {
       roleName
     }
   })
-
 
   let impersonating = null
 

@@ -177,7 +177,7 @@
       {#if sendLoading}
         <button disabled><LoadingSpinner width={"1.5"} />Send</button>
       {:else}
-        <button type="submit" class="filled" on:click={() => {sendVarsel(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
+        <button class="filled" on:click={() => {sendVarsel(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
       {/if}
     {:else}
       <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>

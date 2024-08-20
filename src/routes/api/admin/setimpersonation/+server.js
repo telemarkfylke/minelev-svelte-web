@@ -1,6 +1,6 @@
-import { setAdminImpersonation } from "$lib/api"
-import { getAuthenticatedUser } from "$lib/authentication"
-import { json } from "@sveltejs/kit"
+import { getAuthenticatedUser } from '$lib/authentication'
+import { setAdminImpersonation } from '$lib/minelev-api/admin-impersonation'
+import { json } from '@sveltejs/kit'
 
 export const POST = async ({ params, request, url }) => {
   try {
@@ -13,6 +13,6 @@ export const POST = async ({ params, request, url }) => {
 
     return json({ target, type })
   } catch (error) {
-    return json({ message: 'Failed when setting user impersonation', error: error.response?.data || error.stack || error.toString() }, { status: 400 }) 
+    return json({ message: 'Failed when setting user impersonation', error: error.response?.data || error.stack || error.toString() }, { status: 400 })
   }
 }

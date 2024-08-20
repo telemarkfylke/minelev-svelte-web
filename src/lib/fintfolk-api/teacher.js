@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { getMsalToken } from '$lib/msal-token'
-import { sleep } from '$lib/api'
 import axios from 'axios'
+import { sleep } from '$lib/helpers/sleep'
 
 const mockTeacher = {
   feidenavn: `larer.laresen@${env.FEIDENAVN_SUFFIX}`,
@@ -34,7 +34,7 @@ const mockTeacher = {
   undervisningsforhold: [
     {
       systemId: '26017341--1--20230512',
-      beskrivelse: 'Lærer -',
+      beskrivelse: 'Lærer',
       aktiv: true,
       arbeidsforhold: {
         arbeidsforholdstype: {
@@ -106,7 +106,8 @@ const mockTeacher = {
               etternavn: 'Elevesen',
               feidenavn: `ele0102@${env.FEIDENAVN_SUFFIX}`,
               elevnummer: '1234567',
-              kontaktlarer: true
+              kontaktlarer: true,
+              fodselsnummer: '12345678910'
             },
             {
               navn: 'Frodo Baggins',
@@ -114,7 +115,8 @@ const mockTeacher = {
               etternavn: 'Baggins',
               feidenavn: `fro12345@${env.FEIDENAVN_SUFFIX}`,
               elevnummer: '1234568',
-              kontaktlarer: false
+              kontaktlarer: false,
+              fodselsnummer: '12345678911'
             }
           ]
         }
@@ -164,6 +166,9 @@ const mockTeacher = {
           aktiv: true,
           fag: [
             {
+              systemId: {
+                identifikatorverdi: 'KRO1018'
+              },
               navn: 'Kroppsøving vg2',
               grepreferanse: [
                 'https://psi.udir.no/kl06/KRO1018'
@@ -208,7 +213,8 @@ const mockTeacher = {
               etternavn: 'Elevesen',
               feidenavn: `ele0102@${env.FEIDENAVN_SUFFIX}`,
               elevnummer: '1234567',
-              kontaktlarer: true
+              kontaktlarer: true,
+              fodselsnummer: '12345678910'
             },
             {
               navn: 'Frodo Baggins',
@@ -216,7 +222,8 @@ const mockTeacher = {
               etternavn: 'Baggins',
               feidenavn: `fro12345@${env.FEIDENAVN_SUFFIX}`,
               elevnummer: '1234568',
-              kontaktlarer: false
+              kontaktlarer: false,
+              fodselsnummer: '12345678911'
             }
           ]
         }
@@ -224,7 +231,7 @@ const mockTeacher = {
     },
     {
       systemId: '26017341--1--20230513',
-      beskrivelse: 'Lærer -',
+      beskrivelse: 'Adjunkt',
       aktiv: true,
       arbeidsforhold: {
         arbeidsforholdstype: {
@@ -261,6 +268,9 @@ const mockTeacher = {
           aktiv: true,
           fag: [
             {
+              systemId: {
+                identifikatorverdi: 'MAT1017'
+              },
               navn: 'Mat og hobbiter vg2',
               grepreferanse: [
                 'https://psi.udir.no/kl06/MAT1017'
@@ -305,7 +315,8 @@ const mockTeacher = {
               etternavn: 'Sauronsen',
               feidenavn: `sar0398@${env.FEIDENAVN_SUFFIX}`,
               elevnummer: '1234569',
-              kontaktlarer: false
+              kontaktlarer: false,
+              fodselsnummer: '12345678912'
             },
             {
               navn: 'Frodo Baggins',
@@ -313,7 +324,8 @@ const mockTeacher = {
               etternavn: 'Baggins',
               feidenavn: `fro12345@${env.FEIDENAVN_SUFFIX}`,
               elevnummer: '1234568',
-              kontaktlarer: false
+              kontaktlarer: false,
+              fodselsnummer: '12345678911'
             },
             {
               navn: 'Elev Elevesen',
@@ -321,7 +333,235 @@ const mockTeacher = {
               etternavn: 'Elevesen',
               feidenavn: `ele0102@${env.FEIDENAVN_SUFFIX}`,
               elevnummer: '1234567',
-              kontaktlarer: false
+              kontaktlarer: false,
+              fodselsnummer: '12345678910'
+            }
+          ]
+        },
+        {
+          navn: '1ALA/IOP4000/1',
+          systemId: '120419277',
+          aktiv: true,
+          fag: [
+            {
+              systemId: {
+                identifikatorverdi: 'IOP4000'
+              },
+              navn: 'Indiv. opplæringsplan 4. år',
+              grepreferanse: [
+                'https://psi.udir.no/kl06/IOP4000'
+              ]
+            }
+          ],
+          skole: {
+            navn: 'Hobbittun videregående skole',
+            skolenummer: '12346',
+            hovedskole: false
+          },
+          termin: [
+            {
+              kode: 'H1',
+              gyldighetsperiode: {
+                start: '2022-08-01T00:00:00Z',
+                slutt: '2023-01-13T00:00:00Z',
+                aktiv: false
+              }
+            },
+            {
+              kode: 'H2',
+              gyldighetsperiode: {
+                start: '2023-01-14T00:00:00Z',
+                slutt: '2023-07-31T00:00:00Z',
+                aktiv: true
+              }
+            }
+          ],
+          skolear: {
+            kode: '20222023',
+            gyldighetsperiode: {
+              start: '2022-08-01T00:00:00Z',
+              slutt: '2023-07-31T00:00:00Z',
+              aktiv: true
+            }
+          },
+          elever: [
+            {
+              navn: 'Gollum Smeagol',
+              fornavn: 'Gollum',
+              etternavn: 'Smeagol',
+              feidenavn: `gol1234@${env.FEIDENAVN_SUFFIX}`,
+              elevnummer: '1234570',
+              kontaktlarer: false,
+              fodselsnummer: '12345678913'
+            }
+          ]
+        }
+      ]
+    },
+    {
+      systemId: '26017341--1--20230516',
+      beskrivelse: 'Renholder',
+      aktiv: true,
+      arbeidsforhold: {
+        arbeidsforholdstype: {
+          kode: 'FA',
+          navn: 'Fast ansatt'
+        },
+        gyldighetsperiode: {
+          start: '2023-05-01T00:00:00Z',
+          slutt: null,
+          aktiv: true
+        },
+        arbeidsforholdsperiode: {
+          start: '2019-08-01T00:00:00Z',
+          slutt: null,
+          aktiv: true
+        },
+        ansettelsesprosent: 6000,
+        lonnsprosent: 6000
+      },
+      skole: {
+        navn: 'Hobbittun videregående skole',
+        kortnavn: 'OF-HOB',
+        skolenummer: '12346',
+        organisasjonsnummer: '974568024',
+        organisasjonsId: '24',
+        hovedskole: false
+      },
+      basisgrupper: [],
+      kontaktlarergrupper: [],
+      undervisningsgrupper: [
+        {
+          navn: '2STB/MAT1017',
+          systemId: '120419232',
+          aktiv: true,
+          fag: [
+            {
+              systemId: {
+                identifikatorverdi: 'MAT1017'
+              },
+              navn: 'Mat og hobbiter vg2',
+              grepreferanse: [
+                'https://psi.udir.no/kl06/MAT1017'
+              ]
+            }
+          ],
+          skole: {
+            navn: 'Hobbittun videregående skole',
+            skolenummer: '12346',
+            hovedskole: false
+          },
+          termin: [
+            {
+              kode: 'H1',
+              gyldighetsperiode: {
+                start: '2022-08-01T00:00:00Z',
+                slutt: '2023-01-13T00:00:00Z',
+                aktiv: false
+              }
+            },
+            {
+              kode: 'H2',
+              gyldighetsperiode: {
+                start: '2023-01-14T00:00:00Z',
+                slutt: '2023-07-31T00:00:00Z',
+                aktiv: true
+              }
+            }
+          ],
+          skolear: {
+            kode: '20222023',
+            gyldighetsperiode: {
+              start: '2022-08-01T00:00:00Z',
+              slutt: '2023-07-31T00:00:00Z',
+              aktiv: true
+            }
+          },
+          elever: [
+            {
+              navn: 'Sarumann Sauronsen',
+              fornavn: 'Sarumann',
+              etternavn: 'Sauronsen',
+              feidenavn: `sar0398@${env.FEIDENAVN_SUFFIX}`,
+              elevnummer: '1234569',
+              kontaktlarer: false,
+              fodselsnummer: '12345678912'
+            },
+            {
+              navn: 'Frodo Baggins',
+              fornavn: 'Frodo',
+              etternavn: 'Baggins',
+              feidenavn: `fro12345@${env.FEIDENAVN_SUFFIX}`,
+              elevnummer: '1234568',
+              kontaktlarer: false,
+              fodselsnummer: '12345678911'
+            },
+            {
+              navn: 'Elev Elevesen',
+              fornavn: 'Elev',
+              etternavn: 'Elevesen',
+              feidenavn: `ele0102@${env.FEIDENAVN_SUFFIX}`,
+              elevnummer: '1234567',
+              kontaktlarer: false,
+              fodselsnummer: '12345678910'
+            }
+          ]
+        },
+        {
+          navn: '1ALA/IOP4000/1',
+          systemId: '120419277',
+          aktiv: true,
+          fag: [
+            {
+              systemId: {
+                identifikatorverdi: 'IOP4000'
+              },
+              navn: 'Indiv. opplæringsplan 4. år',
+              grepreferanse: [
+                'https://psi.udir.no/kl06/IOP4000'
+              ]
+            }
+          ],
+          skole: {
+            navn: 'Hobbittun videregående skole',
+            skolenummer: '12346',
+            hovedskole: false
+          },
+          termin: [
+            {
+              kode: 'H1',
+              gyldighetsperiode: {
+                start: '2022-08-01T00:00:00Z',
+                slutt: '2023-01-13T00:00:00Z',
+                aktiv: false
+              }
+            },
+            {
+              kode: 'H2',
+              gyldighetsperiode: {
+                start: '2023-01-14T00:00:00Z',
+                slutt: '2023-07-31T00:00:00Z',
+                aktiv: true
+              }
+            }
+          ],
+          skolear: {
+            kode: '20222023',
+            gyldighetsperiode: {
+              start: '2022-08-01T00:00:00Z',
+              slutt: '2023-07-31T00:00:00Z',
+              aktiv: true
+            }
+          },
+          elever: [
+            {
+              navn: 'Gollum Smeagol',
+              fornavn: 'Gollum',
+              etternavn: 'Smeagol',
+              feidenavn: `gol1234@${env.FEIDENAVN_SUFFIX}`,
+              elevnummer: '1234570',
+              kontaktlarer: false,
+              fodselsnummer: '12345678913'
             }
           ]
         }
@@ -343,7 +583,7 @@ function makeid (length) {
   return result
 }
 
-for (let i = 0; i < 100; i++) {
+for (let i = 0; i < 2000; i++) {
   mockTeacher.undervisningsforhold[0].undervisningsgrupper[0].elever.push(
     {
       navn: makeid(5),
@@ -351,11 +591,13 @@ for (let i = 0; i < 100; i++) {
       etternavn: 'Baggins',
       feidenavn: 'fro12345@domene.no',
       elevnummer: makeid(5),
+      fodselsnummer: '12345*****',
       kontaktlarer: false
     }
   )
 }
 */
+
 /**
  *
  * @param {Object} user
@@ -369,8 +611,8 @@ export const fintTeacher = async (userPrincipalName) => {
   }
   const accessToken = await getMsalToken({ scope: env.FINTFOLK_API_SCOPE })
   try {
-    const { data } = await axios.get(`${env.FINTFOLK_API_URL}/teacher/upn/${identifier}`, { headers: { Authorization: `Bearer ${accessToken}` } })
-    return data    
+    const { data } = await axios.get(`${env.FINTFOLK_API_URL}/teacher/upn/${identifier}?includeStudentSsn=true`, { headers: { Authorization: `Bearer ${accessToken}` } })
+    return data
   } catch (error) {
     if (error.response?.status === 404) {
       return null

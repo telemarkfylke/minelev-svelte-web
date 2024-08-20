@@ -1,8 +1,8 @@
 export const objectToFormdata = (obj) => {
   const formData = new FormData()
-  
+
   buildFormData(formData, obj)
-  
+
   return formData
 }
 

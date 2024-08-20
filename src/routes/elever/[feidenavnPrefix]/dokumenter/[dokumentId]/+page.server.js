@@ -1,9 +1,8 @@
-import { getDocument, getStudent } from '$lib/api'
 import { getAuthenticatedUser } from '$lib/authentication'
 import { error } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'
 import { env } from '$env/dynamic/private'
-
+import { getDocument } from '$lib/minelev-api/get-document'
 
 /** @type {import('./$types').LayoutServerLoad} */
 export async function load ({ params, request }) {
@@ -11,7 +10,6 @@ export async function load ({ params, request }) {
     const user = await getAuthenticatedUser(request.headers)
     const studentFeidenavn = `${params.feidenavnPrefix}@${env.FEIDENAVN_SUFFIX}`
     const documentId = params.dokumentId
-    logger('info', ['HAR VI PARAMS DA??', params])
     const document = await getDocument(user, studentFeidenavn, documentId)
     return { document }
   } catch (err) {

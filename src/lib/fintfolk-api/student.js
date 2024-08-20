@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit'
 import { env } from '$env/dynamic/private'
 import { getMsalToken } from '$lib/msal-token'
-import { sleep } from '$lib/api'
 import axios from 'axios'
+import { sleep } from '$lib/helpers/sleep'
 
 const mockStudents = [
   {
@@ -235,6 +235,11 @@ const mockStudents = [
             }
           },
           {
+            medlemskapgyldighetsperiode: {
+              start: '2023-08-21T00:00:00Z',
+              slutt: '9999-12-31T00:00:00Z',
+              aktiv: true
+            },
             navn: '3STK/NOR1267',
             systemId: '34451',
             fag: {

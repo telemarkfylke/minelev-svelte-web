@@ -6,7 +6,7 @@ export const validateContent = (content, contentValidator) => {
   return { valid: resultArray.length === 0, result: resultArray }
 }
 
-const validateObject = (content, contentValidator, resultArray, parentKey='') => {
+const validateObject = (content, contentValidator, resultArray, parentKey = '') => {
   if (typeof content !== 'object') return
   if ((typeof content !== typeof contentValidator) || Array.isArray(content) !== Array.isArray(contentValidator)) {
     resultArray.push({ [`${parentKey || 'content'}`]: 'wrong type' })
@@ -26,7 +26,7 @@ const validateObject = (content, contentValidator, resultArray, parentKey='') =>
         validateObject(content[key], contentValidator[Array.isArray(contentValidator) ? '0' : key], resultArray, `${parentKey}${key}.`)
       }
     }
-    for (const [key, value] of Object.entries(contentValidator)) {
+    for (const key of Object.keys(contentValidator)) {
       if (content[key] === undefined) {
         resultArray.push({ [`${parentKey}${key}`]: 'missing' })
         continue
