@@ -49,6 +49,7 @@ export const getStudentDocuments = async (user, studentFeidenavn) => {
     const documentIds = mockDb.keys()
     for (const id of documentIds) {
       const document = mockDb.get(id)
+      if (!document.mockDocument) continue
       if (document.student.feidenavn !== studentFeidenavn) continue
       const availableDocumentType = teacherStudent.availableDocumentTypes.find(docType => docType.id === document.documentTypeId)
       if (!availableDocumentType) continue
@@ -74,10 +75,15 @@ export const getStudentDocuments = async (user, studentFeidenavn) => {
       const mongoClient = await getMongoClient()
       const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
       const documents = await collection.find(documentQuery).toArray()
-      // SHOULDNT WE REMOVE SSN???
 
-      // TODO REMOVE SSN!!
-      logger('info', [loggerPrefix, `Found ${documents.length} documents in db. Returning.`])
+      logger('info', [loggerPrefix, `Found ${documents.length} documents in db. Filtering out data that shouldnt be retuned.`])
+
+      documents.forEach(doc => {
+        if (doc.student?.personalIdNumber) delete doc.student.personalIdNumber
+      })
+
+      logger('info', [loggerPrefix, `Done filtering. Returning ${documents.length} documents.`])
+
       return documents
     } catch (error) {
       if (error.toString().startsWith('MongoTopologyClosedError')) {
