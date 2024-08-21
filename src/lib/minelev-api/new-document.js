@@ -124,17 +124,29 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
   logger('info', [loggerPrefix, 'Content succesfully generating, setting up entire document'])
 
   const student = studentData.student
+
   const teacher = userData.personData
   const school = teacherStudent.skoler.find(school => school.skolenummer === schoolNumber)
   if (!school) {
     logger('error', [loggerPrefix, `Could not find school with schoolNumber ${schoolNumber}`])
     throw new Error(`Could not find school with schoolNumber ${schoolNumber}`)
   }
+
+  // Expand student with basisgruppe at chosen school
+  const schoolBasisgruppe = studentData.basisgrupper.find(gruppe => gruppe.skole.skolenummer === schoolNumber)
+  if (!schoolBasisgruppe) {
+    logger('info', [loggerPrefix, `Could not find student basisgruppe for school: ${schoolNumber}. Simply using school shortshortname instead`])
+    student.basisgruppe = school.kortkortnavn
+  } else {
+    student.basisgruppe = `${school.kortkortnavn}:${schoolBasisgruppe.navn}`
+  }
+
   // Repack school to nicer format for db
   const repackedSchool = {
     name: school.navn,
     id: school.skolenummer,
-    shortname: school.kortnavn
+    shortname: school.kortnavn,
+    shortshortName: school.kortkortnavn
   }
   const repackedUser = {
     principalName: user.principalName,
@@ -192,6 +204,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
     logger('info', [loggerPrefix, 'MOCK_API is true, inserting document in mockDb'])
     const mockDb = getMockDb()
     const randomId = new ObjectId().toString()
+    document.mockDocument = true // To separate from other mockDb elements
     document._id = randomId
     mockDb.set(randomId, document)
     logger('info', [loggerPrefix, `MOCK_API is true, document successfully added to mockDb with id: ${randomId}`])
