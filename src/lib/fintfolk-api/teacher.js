@@ -589,7 +589,7 @@ for (let i = 0; i < 2000; i++) {
       navn: makeid(5),
       fornavn: 'Frodo',
       etternavn: 'Baggins',
-      feidenavn: 'fro12345@domene.no',
+      feidenavn: `fro${makeid(5)}@domene.no`,
       elevnummer: makeid(5),
       fodselsnummer: '12345*****',
       kontaktlarer: false
