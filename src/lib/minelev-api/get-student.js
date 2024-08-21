@@ -14,9 +14,15 @@ import { getUserData, repackMiniSchool } from './get-user-data'
  * @typedef Faggruppe
  * @property {string} navn
  * @property {string} systemId
- * @property {string} upn
  * @property {Fag} fag
- * @property {Fag} fag
+ * @property {import("./get-user-data").MiniSchool} skole
+ */
+
+/**
+ * @typedef Basisgruppe
+ * @property {string} navn
+ * @property {string} systemId
+ * @property {string} trinn
  * @property {import("./get-user-data").MiniSchool} skole
  */
 
@@ -34,6 +40,7 @@ import { getUserData, repackMiniSchool } from './get-user-data'
 /**
  * @typedef StudentData
  * @property {Student} student
+ * @property {Basisgruppe[]} basisgrupper
  * @property {Faggruppe[]} faggrupper
  * @property {Faggruppe[]} probableFaggrupper
  *
@@ -79,7 +86,16 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
 
   // Alle faggrupper, fordi vi mangler relasjon mellom lærer og faggrupper
   const faggrupper = []
+  const basisgrupper = []
   for (const elevforhold of student.elevforhold.filter(forhold => forhold.aktiv || (new Date() < new Date(forhold.gyldighetsperiode.start)))) { // Aktive eller aktive i fremtiden
+    for (const basisgruppe of elevforhold.basisgruppemedlemskap.filter(medlemskap => medlemskap.aktiv || (new Date() < new Date(medlemskap.medlemskapgyldighetsperiode.start)))) { // Aktive eller aktive i fremtiden
+      basisgrupper.push({
+        navn: basisgruppe.navn,
+        systemId: basisgruppe.systemId,
+        trinn: basisgruppe.trinn,
+        skole: repackMiniSchool(elevforhold.skole)
+      })
+    }
     for (const faggruppe of elevforhold.faggruppemedlemskap.filter(medlemskap => medlemskap.aktiv || (new Date() < new Date(medlemskap.medlemskapgyldighetsperiode.start)))) { // Aktive eller aktive i fremtiden
       faggrupper.push({
         navn: faggruppe.navn,
@@ -119,6 +135,7 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
 
   return {
     student: repackedStudent,
+    basisgrupper,
     faggrupper,
     probableFaggrupper
   }
