@@ -74,7 +74,7 @@ export const getStudentDocuments = async (user, studentFeidenavn) => {
       logger('info', [loggerPrefix, 'Documentquery successfully built', documentQuery, 'Fetching from db'])
       const mongoClient = await getMongoClient()
       const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
-      const documents = await collection.find(documentQuery).toArray()
+      const documents = await collection.find(documentQuery).sort({ _id: -1 }).toArray()
 
       logger('info', [loggerPrefix, `Found ${documents.length} documents in db. Filtering out data that shouldnt be retuned.`])
 

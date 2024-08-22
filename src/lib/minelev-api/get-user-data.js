@@ -215,9 +215,10 @@ export const getUserData = async (user) => {
       students = students.filter(stud => stud.feidenavn)
     }
 
-    logger('info', [loggerPrefix, `Done repacking fint data - found ${students.length} students available for user. Adding feidenavnPrefix for all students.`])
+    logger('info', [loggerPrefix, `Done repacking fint data - found ${students.length} students available for user. Adding feidenavnPrefix for all students. And sorting students alphabetically`])
     // Sleng på kort-feidenavn på alle elever, og gyldige dokumenttyper for eleven
     students = students.map(stud => { return { ...stud, feidenavnPrefix: stud.feidenavn.substring(0, stud.feidenavn.indexOf('@')), availableDocumentTypes: getAvailableDocumentTypesForTeacher(stud) } })
+    students.sort((a, b) => (a.navn > b.navn) ? 1 : (b.navn > a.navn) ? -1 : 0)
     logger('info', [loggerPrefix, 'Finished. Returning userData'])
 
     userData.classes = classes

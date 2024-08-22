@@ -84,10 +84,10 @@
       {:else}
         {#if documents.varsel.length > 0}
           {#each documents.varsel as document}
-            <a href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
+            <a class="documentLineLink" href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
               <div class="documentLine">
-                <div class="documentCol1">{prettyPrintDate(document.created.timestamp)}</div>
-                <div class="documentCol2">
+                <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                <div class="columnLong">
                   {document.title}
                   {#if document.variant === 'fag'}
                     ({document.content.classes.length > 1 ? `flere fag` : document.content.classes[0].nb })
@@ -122,11 +122,10 @@
       {:else}
         {#if documents.elevsamtale.length > 0}
           {#each documents.elevsamtale as document}
-            <a href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
+            <a class="documentLineLink" href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
               <div class="documentLine">
-                <div class="documentCol1">{prettyPrintDate(document.created.timestamp)}</div>
-                <div class="documentCol2">{document.title}</div>
-                <div class="documentCol3">{conversationStatuses.find(status => status.id === document.variant)?.value.nb}</div>
+                <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                <div class="columnLong">{conversationStatuses.find(status => status.id === document.variant)?.value.nb}</div>
               </div>
             </a>
           {/each}
@@ -149,10 +148,9 @@
       {:else}
         {#if documents.notat.length > 0}
           {#each documents.notat as document}
-            <a href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
+            <a class="documentLineLink" href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
               <div class="documentLine">
-                <div class="documentCol1">{prettyPrintDate(document.created.timestamp)}</div>
-                <div class="documentCol2">{document.title}</div>
+                <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
                 <div class="documentCol3">{document.teacher.name}</div>
               </div>
             </a>
@@ -184,7 +182,7 @@
     background-color: var(--secondary-color-20);
   }
   .boxTitle {
-    margin: 0rem 0rem 2rem 0rem;
+    margin: 0rem 0rem 1.2rem 0rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -197,6 +195,29 @@
   }
   .documentLine {
     display: flex;
-    gap: 2rem;
+    gap: 0rem 1rem;
+    border-bottom: 1px solid var(--primary-color);
+    flex-wrap: wrap;
+  }
+  .documentLineLink {
+    text-decoration: none;
+  }
+  .documentDate, .columnRegular, .columnLong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .documentDate {
+    width: 6.5rem;
+  }
+  .columnRegular {
+    width: 7rem;
+  }
+  .columnLong {
+    width: 13rem;
+  }
+  .columnShort {
+    width: 4.5rem;
   }
 </style>

@@ -17,6 +17,14 @@
     return false
   }
 
+  const getInitials = (name) => {
+    const firstInitial = name.substring(0,1)
+    const nameList = name.split(' ')
+    if (nameList.length < 2) return firstInitial
+    const lastInitial = nameList[nameList.length-1].substring(0,1)
+    return `${firstInitial}.${lastInitial}`
+  }
+
   const getPathLinks = (path) => {
     const parts = path.split('/')
     const pathLinks = [
@@ -89,6 +97,18 @@
       </a>
     {/each}
   </div>
+  <!-- MOBILE MENU -->
+  <div class="menubarMobile">
+    {#each sideMenuItems as menuItem}
+      <a href={menuItem.href} class="menuLinkMobile inward-focus-within">
+        <div class="menuItemMobile{isActiveRoute(menuItem.href, $page.url.pathname) ? ' active' : ''}">
+          <span class="material-symbols-outlined">{menuItem.icon}</span>
+          <div>{menuItem.title}</div>
+        </div>
+      </a>
+    {/each}
+  </div>
+  <!-- END MOBILE MENU -->
   <div class="pageContent">
     <div class="topbar">
       <h1>Min Elev</h1>
@@ -96,6 +116,12 @@
         <div class="displayName">
           <span>
             {data.user.name} {data.user.impersonating ? `( ${data.user.impersonating.target} )` : ''}
+          </span>
+          <span style="font-size: var(--font-size-small);">{data.user.roles.find(role => role.value === data.user.activeRole).roleName} {data.user.impersonating ? `( ${data.user.impersonating.type} )` : ''}</span>
+        </div>
+        <div class="displayNameMobile">
+          <span>
+            {getInitials(data.user.name)} {data.user.impersonating ? `( ${data.user.impersonating.target} )` : ''}
           </span>
           <span style="font-size: var(--font-size-small);">{data.user.roles.find(role => role.value === data.user.activeRole).roleName} {data.user.impersonating ? `( ${data.user.impersonating.type} )` : ''}</span>
         </div>
@@ -166,6 +192,9 @@
   .sidebar {
     position: fixed;
   }
+  .menubarMobile {
+    display: none;
+  }
   .logoLink {
     padding-bottom: 2rem;
   }
@@ -183,11 +212,11 @@
       display: none;
     }
   }
-  */ 
+  */
   .logoDarkmode {
     display: none;
   }
-  .menuLink, .logoLink {
+  .menuLink, .menuLinkMobile, .logoLink {
     /*border-bottom: 1px solid var(--primary-color);*/
     text-decoration: none;
     color: var(--font-color);
@@ -203,11 +232,11 @@
   .menuItem span {
     font-size: 1.5rem;
   }
-  .menuItem.active {
+  .menuItem.active, .menuItemMobile.active {
     font-weight: bold;
     background-color: var(--secondary-color-30);
   }
-  .menuItem:hover {
+  .menuItem:hover, .menuItemMobile:hover {
     background-color: var(--secondary-color-10);
   }
   .pageContent {
@@ -237,9 +266,13 @@
     position: relative;
   }
 
-  .userContainer .displayName {
+  .userContainer .displayName, .displayNameMobile {
     display: flex;
     flex-direction: column;
+  }
+
+  .displayNameMobile {
+    display: none;
   }
 
   .cheatActive {
@@ -286,5 +319,49 @@
   }
   .hidden {
     display: none;
+  }
+
+  /* Smaller devices */
+  @media only screen and (max-width: 768px) {
+    .fakesidebartotakeupspace, .sidebar {
+      display: none;
+    }
+    .menubarMobile {
+      position: fixed;
+      bottom: 0px;
+      align-items: center;
+      justify-content: space-between;
+      display: flex;
+      width: 100vw;
+      background-color: var(--secondary-color-20);
+    }
+    .menuLinkMobile {
+      flex-grow: 1;
+    }
+    .menuItemMobile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 1rem;
+      cursor: pointer;
+    }
+    .menuItem span {
+      font-size: 1.5rem;
+    }
+    .topbar {
+      padding: 0rem 1rem;
+    }
+    .contentContainer {
+      padding: 1rem 1rem 5rem 1rem;
+    }
+    .pathtracker {
+      padding: 0.4rem 1rem;
+    }
+    .userContainer .displayName {
+      display: none;
+    }
+    .userContainer .displayNameMobile {
+      display: flex;
+    }
   }
 </style>

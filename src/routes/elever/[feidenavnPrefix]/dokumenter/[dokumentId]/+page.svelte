@@ -63,7 +63,7 @@
 <section>
     <h4>Status</h4>
     {#each document.status as status}
-        {prettyPrintDate(status.timestamp, true)} - {documentStatuses.find(s => s.id === status.status)?.short.nb || 'Ukjent status'}
+        {prettyPrintDate(status.timestamp, { includeTime: true })} - {documentStatuses.find(s => s.id === status.status)?.short.nb || 'Ukjent status'}
     {/each}
 </section>
 

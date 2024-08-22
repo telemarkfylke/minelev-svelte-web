@@ -58,4 +58,15 @@
     flex-wrap: wrap;
     gap: 0.5rem;
   }
+
+  @media only screen and (max-width: 768px) {
+    .studentIcon {
+      width: 2rem;
+      height: 2rem;
+      padding: 0.5rem;
+    }
+    .studentIcon span {
+      font-size: 2rem;
+    }
+  }
 </style>
