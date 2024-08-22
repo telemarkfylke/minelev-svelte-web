@@ -95,6 +95,7 @@
 		display: flex;
 		align-items: center;
 		padding: 1rem 2rem;
+		gap: 0.5rem;
 	}
 	.studentRow.header {
 		padding: 1rem 2rem 0rem 2rem;
