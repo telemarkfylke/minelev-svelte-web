@@ -226,7 +226,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1rem 0px;
+    padding: 1rem 0rem;
     cursor: pointer;
   }
   .menuItem span {
@@ -328,12 +328,13 @@
     }
     .menubarMobile {
       position: fixed;
-      bottom: 0px;
+      bottom: 0rem;
       align-items: center;
       justify-content: space-between;
       display: flex;
       width: 100vw;
       background-color: var(--secondary-color-20);
+      overflow: scroll;
     }
     .menuLinkMobile {
       flex-grow: 1;
