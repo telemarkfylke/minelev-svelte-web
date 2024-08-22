@@ -54,7 +54,7 @@
     height: 90vh;
     margin: auto;
     border: none;
-    padding: 32px
+    padding: 2rem
   }
   dialog::backdrop {
     background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7));
