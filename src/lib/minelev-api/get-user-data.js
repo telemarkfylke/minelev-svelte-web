@@ -1,6 +1,7 @@
 import { env } from '$env/dynamic/private'
 import { documentTypes } from '$lib/document-types/document-types'
 import { fintTeacher } from '$lib/fintfolk-api/teacher'
+import { getSystemInfo } from '$lib/system-info'
 import { logger } from '@vtfk/logger'
 
 const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1']
@@ -120,6 +121,7 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
 
 /**
  * @typedef UserData
+ * @property {import('$lib/system-info').SystemInfo} systemInfo
  * @property {PersonData} personData
  * @property {TeacherStudent[]} students
  * @property {LarerKlasse[]} classes
@@ -136,6 +138,7 @@ export const getUserData = async (user) => {
   let loggerPrefix = `getUserData - user: ${user.principalName}`
   logger('info', [loggerPrefix, 'New request'])
   const userData = {
+    systemInfo: getSystemInfo(),
     personData: null,
     students: [],
     classes: [],
@@ -223,6 +226,7 @@ export const getUserData = async (user) => {
 
     userData.classes = classes
     userData.students = students
+
     return userData
   }
 

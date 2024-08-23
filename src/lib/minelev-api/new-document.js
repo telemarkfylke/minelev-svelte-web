@@ -124,6 +124,9 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
   logger('info', [loggerPrefix, 'Content succesfully generating, setting up entire document'])
 
   const student = studentData.student
+  // Add feidenavnPrefix for simpler frontend handling
+  const studentFeidenavnPrefix = studentFeidenavn.substring(0, studentFeidenavn.indexOf('@'))
+  student.feidenavnPrefix = studentFeidenavnPrefix
 
   const teacher = userData.personData
   const school = teacherStudent.skoler.find(school => school.skolenummer === schoolNumber)

@@ -1,98 +1,133 @@
 <script>
-    import { browser } from "$app/environment";
-    import { goto } from "$app/navigation"
+    import { goto } from "$app/navigation";
+    import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
+    import { prettyPrintDate } from "$lib/helpers/pretty-date";
     import axios from "axios";
     import { onMount } from "svelte";
-    
-    export const sleep = (ms) => {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms)
-        })
-    }
 
-    const apicall = async () => {
-        try {
-            console.log('Kjører apicall')
-            await sleep(2000)
-            const { data } = await axios.get('/api/elever/hahah')
-            console.log(data)
-            return data
-        } catch (error) {
-            console.log('EORROROROROROROROROROR')
-            console.log(error.toString())
+    /** @type {import('./$types').PageData} */
+    export let data;
 
-            return error.response?.data || error.stack || error.toString()   
-        }
-    }
-    const hallois = async () => {
-        return "Hallo alle sammen!"
-    }
-
-    let someButtonData
-
-    const updateButtonData = async () => {
-        try {
-            const { data } = await axios.get('/api/elever/hahah')
-            someButtonData = data.user?.principalName
-        } catch (error) {
-            console.log(error)
-            someButtonData = error.response?.data || error.stack || error.toString()
-        }
-    }
-
-    let someMountData
+    let documents = [];
+    let loadingDocuments = true;
+    let documentErrorMessage = "";
 
     onMount(async () => {
-        console.log('Mounta!')
         try {
-            const { data } = await axios.get('/api/elever/hahah')
-            someMountData = data.user?.name
+            const documentResult = await axios.get(`/api/latestactivity`);
+            documents = documentResult.data;
         } catch (error) {
-            console.log(error)
-            someMountData = error.response?.data || error.stack || error.toString()
+            documentErrorMessage = `Det skjedde en feil ved henting av siste aktivitet: ${error.toString()}`;
         }
-    })
+        loadingDocuments = false;
+    });
 
-
-
+    const getDocumentSubtitle = (document) => {
+        if (document.documentTypeId === 'varsel-fag') {
+            const courses = document.content.classes.map(course => course.nb)
+            if (courses.length > 1) return 'Flere fag'
+            return courses[0]
+        }
+        return null
+    }
 </script>
 
-<div>
-    {#await hallois()}
-        <p>Laster...</p>
-    {:then result}
-        <pre>{JSON.stringify(result)}</pre>
-    {:catch error}
-        {error.toString()}
-    {/await}
-</div>
-
-<div>
-    {#if browser}
-        {#await apicall()}
-            Laster...
-        {:then response}
-            {JSON.stringify(response)}
-        {:catch apierror}
-            {apierror.toString()}
-        {/await}
+<h2>Hei, {data.user.name}</h2>
+<div class="infoBox">
+    <h3 class="boxTitle">Om MinElev</h3>
+    <div class="textBox">
+        Her kan du opprette varsler, notater, eller dokumentere elevsamtaler.
+    </div>
+    <br />
+    {#if data.systemInfo.YFF_ENABLED}
+        <h3 class="boxTitle">Om YFF-modulen</h3>
+        <div class=textBox>
+            YFF-modulen for å håndtere elevens utplasseringer er ikke klar,
+            dette jobbes med.
+        </div>
     {/if}
 </div>
 
-
-<p>Hvordan blir dette her seesnenene ut da</p>
-<button on:click={updateButtonData}>With credentials</button>
-{#if someButtonData}
-    {JSON.stringify(someButtonData)}
-{/if}
-
+<h2 class="boxTitle">
+    <span class="material-symbols-outlined">list</span>
+    Aktivitetslogg
+</h2>
 <div>
-    <p>Litt data som kommer på onmount</p>
-    {#if someMountData}
-        {JSON.stringify(someMountData)}
+    {#if documentErrorMessage}
+    <div class="error-box">
+        <h4>En feil har oppstått 😩</h4>
+        <p>{documentErrorMessage}</p>
+    </div>
+    {:else}
+        {#if loadingDocuments}
+        <LoadingSpinner width="3" />
+        {:else if documents.length > 0}
+            {#each documents as document}
+                <div class="documentContainer">
+                    <div class="documentInfo">
+                        <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                        <div class="documentTitle"><a href="/elever/{document.student.feidenavnPrefix}/dokumenter/{document._id}">{document.title}</a></div>
+                        {#if getDocumentSubtitle(document)}
+                            <div class="documentSubtitle">{getDocumentSubtitle(document)}</div>
+                        {/if}
+                        <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
+                    </div>
+                    <div class="documentStudent">
+                        <span class="material-symbols-outlined">school</span>
+                        <a href="/elever/{document.student.feidenavnPrefix}">{document.student.name}</a>
+                    </div>
+                </div>
+            {/each}
+        {:else}
+            Det har ikke skjedd stort enda...
+        {/if}
     {/if}
 </div>
 
 <style>
-</style>
+    .infoBox {
+        padding: 2rem 2rem;
+        background-color: var(--tertiary-color-20);
+        margin-bottom: 2rem;
+    }
+    .boxTitle {
+        margin: 0rem 0rem 1.2rem 0rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .documentContainer {
+        display: flex;
+        padding: 1rem 2rem;
+        align-items: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+    .documentContainer:nth-child(odd) {
+        background-color: var(--primary-color-10);
+    }
+    .documentDate, .createdBy {
+        font-size: var(--font-size-small);
+    }
+    .documentTitle {
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+    .documentTitle a, .documentStudent a {
+        text-decoration: none;
+    }
+    .documentStudent {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        width: 16rem;
+    }
 
+    @media only screen and (max-width: 768px) {
+        .documentContainer {
+            gap: 0.5rem;
+        }
+    }
+
+
+</style>

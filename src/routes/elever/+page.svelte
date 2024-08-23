@@ -52,7 +52,7 @@
 	{:else}
 	<div class="studentRow header">
 		<div class="studentInfo">Navn</div>
-		<div>Skole / Klasse</div>
+		<div class="classes">Skole / Klasse</div>
 		<div class="studentAction">Handling</div>
 	</div>
 		{#each students.slice(currentPage * studentsPerPage, (currentPage * studentsPerPage) + studentsPerPage) as student}
@@ -66,7 +66,7 @@
 					</div>
 					<div class="studentId">{student.feidenavnPrefix}</div>
 				</div>
-				<div>
+				<div class="classes">
 					{#each student.klasser as group}
 						<div class="classGroup">
 							<a href="/klasser/{group.systemId}">{`${group.skole.kortkortnavn}:${group.navn}`}</a>
@@ -80,7 +80,7 @@
 					{#if studentMenus[student.elevnummer]}
 						<div class="studentMenu">
 							<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument`)}}>Nytt dokument</button>
-							<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument?type=notat`)}}>Nytt notat</button>
+							<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument?document_type=notat`)}}>Nytt notat</button>
 						</div>
 					{/if}
 				</div>
@@ -101,8 +101,7 @@
 		padding: 1rem 2rem 0rem 2rem;
 	}
 	.studentInfo {
-		max-width: 11rem;
-		flex-grow: 1;
+		width: 15rem;
 	}
 	.contactTeacher {
 		font-size: var(--font-size-extra-small);
@@ -116,6 +115,12 @@
 	.studentAction {
 		position: relative;
 		margin-left: auto;
+	}
+	.studentName {
+		font-weight: bold;
+	}
+	.studentName a {
+		text-decoration: none;
 	}
 	.studentRow:nth-child(even) {
 		background-color: var(--primary-color-10);
@@ -143,4 +148,13 @@
     padding: 1rem;
     background-color: var(--primary-color-10);
   }
+
+	@media only screen and (max-width: 768px) {
+      .classes {
+				display: none;
+			}
+			.studentInfo {
+				width: 8rem;;
+			}
+    }
 </style>

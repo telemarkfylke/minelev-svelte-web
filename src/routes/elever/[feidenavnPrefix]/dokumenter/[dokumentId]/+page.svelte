@@ -15,13 +15,6 @@
 
 <h2>{document.title}</h2>
 
-{JSON.stringify($page.params)}
-<br/>
-<br/>
-<br/>
-
-{JSON.stringify(document)}
-
 <section>
     <h4>Skole</h4>
     <p>{document.school.name}</p>

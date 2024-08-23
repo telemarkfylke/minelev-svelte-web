@@ -1,11 +1,11 @@
 <script>
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
-    import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
-    import { conversationStatuses } from "$lib/document-types/data/document-data";
-    import { prettyPrintDate } from "$lib/helpers/pretty-date";
-    import axios from "axios";
-    import { onMount } from "svelte";
+  import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
+  import { conversationStatuses } from "$lib/document-types/data/document-data";
+  import { prettyPrintDate } from "$lib/helpers/pretty-date";
+  import axios from "axios";
+  import { onMount } from "svelte";
   /** @type {import('./$types').PageData} */
   export let data
 
@@ -36,8 +36,7 @@
       documents.elevsamtale = data.filter(doc => doc.type === 'samtale')
       documents.notat = data.filter(doc => doc.type === 'notat')
     } catch (error) {
-      const errorMsg = error.response?.data || error.stack || error.toString()
-      documentErrorMessage = errorMsg
+      documentErrorMessage = `Det skjedde en feil ved henting av elevens dokumenter: ${error.toString()}`
     }
     loadingDocuments = false
   })
@@ -50,6 +49,13 @@
     <a class="button" href="{$page.url.pathname}/nyttdokument?document_type=notat"><span class="material-symbols-outlined">add</span>Nytt notat</a>
   {/if}
 </div>
+
+{#if documentErrorMessage}
+  <div class="error-box">
+    <h4>En feil har oppstått 😩</h4>
+    <p>{documentErrorMessage}</p>
+  </div>
+{/if}
 
 {#if accessTo.yff}
   <div class="documentsBox yff">

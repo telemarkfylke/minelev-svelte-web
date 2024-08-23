@@ -50,9 +50,9 @@
 			{#each classes.slice(currentPage * classesPerPage, (currentPage * classesPerPage) + classesPerPage) as classgroup}
 				<div class=classRow>
 					<div class="classInfo">
-						<a href="/klasser/{classgroup.systemId}" style="position: relative;">
-							<div class="className">{classgroup.navn}</div>
-						</a>
+						<div class="className">
+							<a href="/klasser/{classgroup.systemId}">{classgroup.navn}</a>
+						</div>
 						<div class="classSchool">{classgroup.skole}</div>
 					</div>
 					<div>
@@ -81,6 +81,12 @@
 	.classInfo {
 		max-width: 15rem;
 		flex-grow: 1;
+	}
+	.className {
+		font-weight: bold;
+	}
+	.className a {
+		text-decoration: none;
 	}
 	.classRow:nth-child(even) {
 		background-color: var(--primary-color-10);

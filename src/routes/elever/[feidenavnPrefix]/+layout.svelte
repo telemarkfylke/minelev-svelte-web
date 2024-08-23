@@ -68,5 +68,8 @@
     .studentIcon span {
       font-size: 2rem;
     }
+    .classes {
+      display: none;
+    }
   }
 </style>

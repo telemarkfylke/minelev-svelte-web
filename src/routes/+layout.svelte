@@ -1,5 +1,6 @@
 <script>
   import '../app.css' // Add global css (and make it hot reload)
+  import '../style.css' // Add custom css (and make it hot reload in dev)
   import logo from '$lib/assets/logo.svg'
   import logoDarkmode from '$lib/assets/logo-darkmode.svg'
   import { page } from '$app/stores'
@@ -254,6 +255,7 @@
   }
   .pathtracker {
     display: flex;
+    flex-wrap: wrap;
     padding: 0.4rem 2rem;
   }
   .pathtrackerlink {
@@ -327,6 +329,7 @@
       display: none;
     }
     .menubarMobile {
+      z-index: 100;
       position: fixed;
       bottom: 0rem;
       align-items: center;
