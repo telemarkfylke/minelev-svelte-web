@@ -3,6 +3,8 @@ SvelteKit Web app
 
 Deploy som Azure Web App, med authentication enabled via microsoft authentication
 
+Heihie
+
 ## Ny ide
 - Lag api-ruter for å hente data
 - Hent disse dynamisk
