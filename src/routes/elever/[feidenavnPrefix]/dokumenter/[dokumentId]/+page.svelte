@@ -55,9 +55,11 @@
 
 <section>
     <h4>Status</h4>
-    {#each document.status as status}
-        {prettyPrintDate(status.timestamp, { includeTime: true })} - {documentStatuses.find(s => s.id === status.status)?.short.nb || 'Ukjent status'}
-    {/each}
+    <div class="statuses">
+        {#each document.status as status}
+            <div>{prettyPrintDate(status.timestamp, { includeTime: true })} - {documentStatuses.find(s => s.id === status.status)?.short.nb || 'Ukjent status'}{status.message ? ` - ${status.message}` : ''}</div>
+        {/each}
+    </div>
 </section>
 
 <style>
