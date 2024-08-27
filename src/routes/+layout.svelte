@@ -6,11 +6,13 @@
   import { page } from '$app/stores'
   import { navigating } from '$app/stores'
   import { clickOutside } from '$lib/helpers/click-outside'
+  import { goto } from '$app/navigation';
 
   /** @type {import('./$types').PageData} */
 	export let data
 
   let showUsermenu = false
+  let showUndervisningsgruppeWarning = true
 
   const isActiveRoute = (route, currentRoute) => {
     if (currentRoute === route) return true
@@ -137,11 +139,11 @@
               <button type="submit" class="blank userMenuOption inward-focus-within">Bytt til rolle: {availableRole.roleName}</button>
             </form>
           {/each}
-          <button class="blank userMenuOption inward-focus-within">Logg ut</button>
+          <button class="blank userMenuOption inward-focus-within" on:click={() => goto('/.auth/logout')}>Logg ut</button>
         </div>
       </div>
     </div>
-    <!--<md-divider role="separator"></md-divider>-->
+
     <div class="pathtracker">
       {#each getPathLinks($page.url.pathname) as pathlink}
         {#if pathlink.addSlashBefore}
@@ -152,6 +154,26 @@
         </a>
       {/each}
     </div>
+
+    <!-- WARNINGS -->
+    {#if Array.isArray(data.invalidUndervisningsforhold) && data.invalidUndervisningsforhold.length > 0 && Array.isArray(data.students) && data.students.length === 0 && showUndervisningsgruppeWarning}
+      <div class="warning-box">
+        <div style="display:flex;justify-content:space-between;">
+          <h4>Advarsel</h4>
+          <button class="link" on:click={() => {showUndervisningsgruppeWarning = false}}>Lukk</button>
+        </div>
+        <div>
+          Du har undervisningsforhold som ikke er knyttet til stilling som lærer, og har derfor ikke tilgang til elever i disse undervisningsforhold(ene):
+          <br />
+          {#each data.invalidUndervisningsforhold as invalid}
+            • SystemId: <strong>{invalid.systemId}</strong> - knyttet til stilling: <strong>{invalid.beskrivelse}</strong>
+            <br />
+          {/each}
+          Har du spørsmål til dette? Ta kontakt med din nærmeste leder.
+        </div>
+      </div>
+    {/if}
+
     <div class="contentContainer">
       <div class="content">
         {#if $navigating}
