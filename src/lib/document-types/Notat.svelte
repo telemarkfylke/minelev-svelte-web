@@ -3,6 +3,7 @@
   import { documentTypes } from "./document-types";
   import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
   import { goto } from "$app/navigation";
+  import { env } from "$env/dynamic/public";
 
   export let documentTypeId = null
   export let studentFeidenavnPrefix = null
@@ -55,7 +56,7 @@
     <h4>
       Notat
     </h4>
-    <p>Notatets innhold finner du igjen i Elevdok og i Public 360 (legg inn lenke)</p>
+    <p>Notatets innhold finner du igjen i <a href="{`${env.PUBLIC_ELEVDOK_URL}/elever/${studentFeidenavnPrefix}` || 'https://elevdok.vestfoldfylke.no'}" target="_blank">Elevdok</a></p>
   </section>
 {:else}
   <section>
