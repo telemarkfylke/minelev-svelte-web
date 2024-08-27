@@ -43,6 +43,10 @@
 	--link-color-hover: rgb(0, 0, 0);
 	--error-color: rgb(183, 23, 61);
 	--error-background-color: rgb(241, 209, 216);
+	--warning-color: rgb(188, 119, 38);
+	--warning-background-color: rgb(242, 228, 212);
+	--success-color: rgb(47, 117, 66);
+	--success-background-color: rgb(242, 228, 212);
 
 	/* SIZES */
 	--font-size-root: 1rem;
@@ -121,7 +125,7 @@ button, a.button {
 	color: var(--primary-color);
 	border: 1px solid var(--primary-color);
 	border-radius: 2rem;
-	height: 3rem;
+	min-height: 3rem;
 	padding: 0px var(--spacing-large);
 	cursor: pointer;
 	text-decoration: none; /* Remove from link button (a) */
@@ -186,7 +190,13 @@ button.link {
   text-decoration: underline;
 	padding: 0rem;
 	border: 0px;
-	height: auto;
+	min-height: auto;
+	background-color: inherit;
+}
+
+button.link:disabled, button.link:disabled:hover {
+	cursor: not-allowed;
+	color: grey;
 }
 
 button.link:hover {
