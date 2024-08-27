@@ -49,10 +49,8 @@
         previewLoading = false
         showPreview = true
       } else {
-        // Maybe just redirect from API? or maybe here? Based on returned id, probs the best in regards to API-first tankegang
         sendLoading = false
-        //goto(`/elever/${studentFeidenavnPrefix}/dokumenter/${data.insertedId}`)
-        goto(`/elever/${studentFeidenavnPrefix}`)
+        goto(`/elever/${studentFeidenavnPrefix}/dokumenter/${data.insertedId}`) // Hm muligens bedre det ja
       }
     } catch (error) {
       previewLoading = false

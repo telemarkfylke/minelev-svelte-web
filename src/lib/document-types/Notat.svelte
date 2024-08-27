@@ -15,6 +15,8 @@
   let showData = false
   let errorMessage = ""
 
+
+
   let canClickSend = false
 
   // Content data
@@ -37,9 +39,7 @@
       }
       const { data } = await axios.post(`/api/students/${studentFeidenavnPrefix}/newDocument`, payload)
       sendLoading = false
-      //goto(`/elever/${studentFeidenavnPrefix}/dokumenter/${data.insertedId}`)
-      goto(`/elever/${studentFeidenavnPrefix}`)
-
+      goto(`/elever/${studentFeidenavnPrefix}/dokumenter/${data.insertedId}`)
     } catch (error) {
       sendLoading = false
       errorMessage = error.response?.data || error.stack || error.toString()
@@ -63,7 +63,7 @@
     <h4>
       Notat
     </h4>
-    <textarea bind:value={notat.note} id="story" name="story" rows="5" cols="33" placeholder="Skriv notatet her"></textarea>
+    <textarea class="noteTextArea" bind:value={notat.note} id="story" name="story" rows="10" cols="60" placeholder="Skriv notatet her"></textarea>
   </section>
 {/if}
 
@@ -104,5 +104,8 @@
     color: var(--error-color);
     background-color: var(--error-background-color);
     padding: 0.5rem 1rem;
+  }
+  .noteTextArea {
+    width: 80%;
   }
 </style>
