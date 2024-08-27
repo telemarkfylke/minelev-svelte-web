@@ -11,6 +11,8 @@
     export let data
 
     const document = data.document
+    const studentFeidenavnPrefix = $page.params.feidenavnPrefix
+
 </script>
 
 <h2>{document.title}</h2>
@@ -21,19 +23,19 @@
 </section>
 
 {#if document.documentTypeId === 'varsel-fag'}
-    <VarselFag isCompletedDocument={true} documentContent={document.content} />
+    <VarselFag isCompletedDocument={true} documentContent={document.content} {studentFeidenavnPrefix} />
 {/if}
 {#if document.documentTypeId === 'varsel-orden'}
-    <VarselOrden isCompletedDocument={true} documentContent={document.content} />
+    <VarselOrden isCompletedDocument={true} documentContent={document.content} {studentFeidenavnPrefix} />
 {/if}
 {#if document.documentTypeId === 'varsel-atferd'}
-    <VarselAtferd isCompletedDocument={true} documentContent={document.content} />
+    <VarselAtferd isCompletedDocument={true} documentContent={document.content} {studentFeidenavnPrefix} />
 {/if}
 {#if document.documentTypeId === 'samtale'}
-    <Elevsamtale isCompletedDocument={true} documentContent={document.content} documentVariant={document.variant} />
+    <Elevsamtale isCompletedDocument={true} documentContent={document.content} documentVariant={document.variant} {studentFeidenavnPrefix} />
 {/if}
 {#if document.documentTypeId === 'notat'}
-    <Notat isCompletedDocument={true} />
+    <Notat isCompletedDocument={true} {studentFeidenavnPrefix} />
 {/if}
 {#if document.documentTypeId === 'yff'}
     Hallo yff
