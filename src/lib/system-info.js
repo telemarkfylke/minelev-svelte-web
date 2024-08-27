@@ -1,5 +1,4 @@
 import { env } from '$env/dynamic/private'
-import { ACTIVITY_LOG_LIMIT } from '$env/static/private'
 import { version } from '../../package.json'
 
 /**
