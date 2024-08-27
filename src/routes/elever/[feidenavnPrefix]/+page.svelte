@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
-  import { conversationStatuses } from "$lib/document-types/data/document-data";
+  import { conversationStatuses, documentStatuses } from "$lib/document-types/data/document-data";
   import { prettyPrintDate } from "$lib/helpers/pretty-date";
   import axios from "axios";
   import { onMount } from "svelte";
@@ -67,7 +67,7 @@
       {:else}
         {#if documents.yff.length > 0}
           {#each documents.yff as doc}
-            <div class="documentLine">{JSON.stringify(doc)}</div>
+            <div>{JSON.stringify(doc)}</div>
           {/each}
         {:else}
           Ingen tilgjengelige yff-dokumenter
@@ -90,18 +90,21 @@
       {:else}
         {#if documents.varsel.length > 0}
           {#each documents.varsel as document}
-            <a class="documentLineLink" href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
-              <div class="documentLine">
-                <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
-                <div class="columnLong">
-                  {document.title}
-                  {#if document.variant === 'fag'}
-                    ({document.content.classes.length > 1 ? `flere fag` : document.content.classes[0].nb })
-                  {/if}
-                </div>
-                <div class="documentCol3">{document.content.period.nb}</div>
+            <div class="documentContainer">
+              <div class="documentInfo">
+                  <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                  <div class="documentTitle"><a href="/elever/{document.student.feidenavnPrefix}/dokumenter/{document._id}">{document.title}</a></div>
+                  <div class="documentStatus">{documentStatuses.find(s => s.id === document.status[document.status.length - 1].status)?.short.nb || 'Ukjent status'}</div>
+                  <div class="mobileCreatedBy">Opprettet av: {document.created.createdBy.name}</div>
               </div>
-            </a>
+              <div class="documentDetails">
+                  {#if document.variant === 'fag'}
+                    <div><strong>{document.content.classes.length > 1 ? `Flere fag` : document.content.classes[0].nb }</strong></div>
+                  {/if}
+                  <div>{document.content.period.nb}</div>
+                  <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+            </div>
           {/each}
         {:else}
           Eleven har ingen tilgjengelige varsler
@@ -128,12 +131,18 @@
       {:else}
         {#if documents.elevsamtale.length > 0}
           {#each documents.elevsamtale as document}
-            <a class="documentLineLink" href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
-              <div class="documentLine">
-                <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
-                <div class="columnLong">{conversationStatuses.find(status => status.id === document.variant)?.value.nb}</div>
+            <div class="documentContainer">
+              <div class="documentInfo">
+                  <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                  <div class="documentTitle"><a href="/elever/{document.student.feidenavnPrefix}/dokumenter/{document._id}">{document.title}</a></div>
+                  <div class="documentStatus">{documentStatuses.find(s => s.id === document.status[document.status.length - 1].status)?.short.nb || 'Ukjent status'}</div>
+                  <div class="mobileCreatedBy">Opprettet av: {document.created.createdBy.name}</div>
               </div>
-            </a>
+              <div class="documentDetails">
+                  <div>{conversationStatuses.find(status => status.id === document.variant)?.value.nb}</div>
+                  <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+            </div>
           {/each}
         {:else}
           Eleven har ingen tilgjengelige elevsamtaler
@@ -154,12 +163,17 @@
       {:else}
         {#if documents.notat.length > 0}
           {#each documents.notat as document}
-            <a class="documentLineLink" href="/elever/{$page.params.feidenavnPrefix}/dokumenter/{document._id}">
-              <div class="documentLine">
-                <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
-                <div class="documentCol3">{document.teacher.name}</div>
+            <div class="documentContainer">
+              <div class="documentInfo">
+                  <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                  <div class="documentTitle"><a href="/elever/{document.student.feidenavnPrefix}/dokumenter/{document._id}">{document.title}</a></div>
+                  <div class="documentStatus">{documentStatuses.find(s => s.id === document.status[document.status.length - 1].status)?.short.nb || 'Ukjent status'}</div>
+                  <div class="mobileCreatedBy">Opprettet av: {document.created.createdBy.name}</div>
               </div>
-            </a>
+              <div class="documentDetails">
+                  <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+            </div>
           {/each}
         {:else}
           Eleven har ingen tilgjengelige notater
@@ -188,7 +202,7 @@
     background-color: var(--secondary-color-20);
   }
   .boxTitle {
-    margin: 0rem 0rem 1.2rem 0rem;
+    margin: 0rem 0rem 0.5rem 0rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -199,31 +213,43 @@
     margin: 2rem 0rem 0rem 0rem;
     flex-wrap: wrap;
   }
-  .documentLine {
+  .documentContainer {
     display: flex;
-    gap: 0rem 1rem;
+    padding: 0.5rem;
     border-bottom: 1px solid var(--primary-color);
+    align-items: center;
+    gap: 2rem;
     flex-wrap: wrap;
   }
-  .documentLineLink {
-    text-decoration: none;
+  .documentDate, .createdBy {
+    font-size: var(--font-size-small);
   }
-  .documentDate, .columnRegular, .columnLong {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .documentTitle {
+    font-size: 1rem;
+    font-weight: bold;
+  }
+  .documentStatus {
+    font-size: var(--font-size-small);
+  }
+  .documentDetails {
+    font-size: var(--font-size-small);
+    width: 16rem;
+  }
+  .mobileCreatedBy {
+    font-size: var(--font-size-small);
+    display: none;
   }
 
-  .documentDate {
-    width: 6.5rem;
-  }
-  .columnRegular {
-    width: 7rem;
-  }
-  .columnLong {
-    width: 13rem;
-  }
-  .columnShort {
-    width: 4.5rem;
+  @media only screen and (max-width: 768px) {
+    .documentContainer {
+        gap: 0.5rem;
+    }
+    .documentDetails {
+      display: none;
+    }
+    .mobileCreatedBy {
+      font-size: var(--font-size-small);
+      display: block;
+    }
   }
 </style>
