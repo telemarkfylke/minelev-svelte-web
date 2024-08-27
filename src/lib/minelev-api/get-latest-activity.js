@@ -20,6 +20,12 @@ export const getLatestActivity = async (user) => {
     throw new Error('Missing required argument "user"')
   }
 
+  // If just administrator, return empty array
+  if (user.activeRole === env.ADMIN_ROLE && !user.impersonating) {
+    logger('info', [loggerPrefix, 'User is only administrator right now, returnign empty array'])
+    return []
+  }
+
   // Check if regular teacher or administrator impersonating teacher or leder
   const canViewDocuments = user.activeRole === env.DEFAULT_ROLE || user.activeRole === env.LEDER_ROLE || (user.hasAdminRole && user.impersonating?.type === 'larer') || (user.hasAdminRole && user.impersonating?.type === 'leder')
   if (!canViewDocuments) {
