@@ -17,11 +17,11 @@
       {#if student.kontaktlarer}
         <div title="Du er kontaktlærer for denne eleven" class="studentId"><strong>Kontaktlærer</strong></div>
       {/if}
-      <h1 class="studentTitle">{student.navn}</h1>
+      <h1 class="studentTitle"><a title="Til elevsiden" href="/elever/{$page.params.feidenavnPrefix}">{student.navn}</a></h1>
       <p class="subinfo">{student.feidenavnPrefix}</p>
       <div class="classes">
         {#each student.klasser as classgroup}
-          <a href="/klasser/{classgroup.systemId}">{classgroup.skole.kortkortnavn}:{classgroup.navn}</a>
+          <a title="Til klassesiden" href="/klasser/{classgroup.systemId}">{classgroup.skole.kortkortnavn}:{classgroup.navn}</a>
         {/each}
       </div>
     </div>
@@ -48,6 +48,9 @@
   .studentTitle {
     padding: 0rem;
     margin: 0rem;
+  }
+  .studentTitle a {
+    text-decoration: none;
   }
   .subinfo {
     padding: 0rem;
