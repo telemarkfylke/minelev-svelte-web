@@ -38,6 +38,9 @@
     <div class="textBox">
         Her kan du opprette varsler, notater, eller dokumentere elevsamtaler.
     </div>
+    <div class="textBox">
+        Tilgang til elever og klasser i MinElev styres fra Visma InSchool. Ta kontakt med Visma InSchool ansvarlig på skolen din, så hjelper de deg!
+    </div>
     <br />
     {#if data.systemInfo.YFF_ENABLED}
         <h3 class="boxTitle">Om YFF-modulen</h3>
