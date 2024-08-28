@@ -111,18 +111,16 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
   const probableFaggrupper = faggrupper.filter(faggruppe => {
     if (classes.some(group => group.navn === faggruppe.navn)) return true
     const faggruppeNameList = faggruppe.navn.split('/')
-    if (faggruppeNameList.length !== 3) return false // Antar faggruppe navn lik "{klasse}/{fagnavn}/{fagkode}"
+    if (faggruppeNameList.length !== 3 && faggruppeNameList.length !== 2) return false // Antar faggruppe navn lik "{klasse}/{fagnavn}/{fagkode}" eller "{klasse}/{fagkode}"
     const faggruppeClassName = faggruppeNameList[0]
-    // const faggruppeCourseName = faggruppeNameList[1]
-    const faggruppeCourseCode = faggruppeNameList[2]
+    const faggruppeCourseCode = faggruppeNameList.length === 3 ? faggruppeNameList[2] : faggruppeNameList[1]
     const specialMatch = classes.some(group => {
       const groupNameList = group.navn.split('/')
-      if (groupNameList.length !== 3) return false // Antar undervisningsgruppenavn lik "{klasse}/{gruppenavn}/{fagkode}"
+      if (groupNameList.length !== 3 && groupNameList.length !== 2) return false // Antar undervisningsgruppenavn lik "{klasse}/{gruppenavn}/{fagkode}" eller "{klasse}/{fagkode}"
       const groupClassName = groupNameList[0]
-      // const groupCourseName = groupNameList[1]
-      const groupCourseCode = groupNameList[2]
+      const groupCourseCode = groupNameList.length === 3 ? groupNameList[2] : groupNameList[1]
       if (faggruppeClassName === groupClassName && faggruppeCourseCode === groupCourseCode) {
-        console.log(`${faggruppeClassName} er lik ${groupClassName} og ${faggruppeCourseCode} er lik ${groupCourseCode} - match`)
+        // console.log(`${faggruppeClassName} er lik ${groupClassName} og ${faggruppeCourseCode} er lik ${groupCourseCode} - match`)
         return true
       }
       // Norsk undervisningsgrupper har flere faggrupper under ofte, kan legge til flere special cases her og evt
