@@ -611,7 +611,7 @@ export const fintTeacher = async (userPrincipalName) => {
   }
   const accessToken = await getMsalToken({ scope: env.FINTFOLK_API_SCOPE })
   try {
-    const { data } = await axios.get(`${env.FINTFOLK_API_URL}/teacher/upn/${identifier}?includeStudentSsn=true`, { headers: { Authorization: `Bearer ${accessToken}` } })
+    const { data } = await axios.get(`${env.FINTFOLK_API_URL}/teacher/upn/${identifier}`, { headers: { Authorization: `Bearer ${accessToken}` } })
     return data
   } catch (error) {
     if (error.response?.status === 404) {

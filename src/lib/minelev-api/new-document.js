@@ -85,7 +85,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
   }
   logger('info', [loggerPrefix, 'Access to create document for student validated, getting student data (with ssn)'])
 
-  const studentData = await getStudent(user, studentFeidenavn, true)
+  const studentData = await getStudent(user, studentFeidenavn, true) // Include ssn here, only server side and not returned
 
   logger('info', [loggerPrefix, 'Got studentdata, generating content'])
   const documentType = documentTypes.find(docType => docType.id === documentTypeId)
