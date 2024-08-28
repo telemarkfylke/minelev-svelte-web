@@ -69,8 +69,10 @@ export const getLatestActivity = async (user) => {
             documentTypeOr.push(docTypeQuery)
           }
         }
-        const studentQuery = { 'student.elevnummer': teacherStudent.elevnummer, $or: documentTypeOr }
-        studentOr.push(studentQuery)
+        if (documentTypeOr.length > 0) { // Don't add if no documentTypes available for student (e.g if student only present in basisgruppe, but teacher is not contact teacher)
+          const studentQuery = { 'student.elevnummer': teacherStudent.elevnummer, $or: documentTypeOr }
+          studentOr.push(studentQuery)
+        }
       }
       const documentQuery = { $or: studentOr }
 
