@@ -106,30 +106,35 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
     }
   }
 
-  /* NEI NYTT UNDER
-  // Lager først en liste med undervisningsgruppene læreren har eleven i, så filtrerer vi faggruppene på de som starter med samme prefix som undervisningsgruppene har eleven i.
-  // Typ hvis læreren har undervisningsgruppe 3STK/NOR2340, så antar vi at alle faggrupper som starter med 3STK/NOR er aktuelle som faggrupper
-  // Evt sjekk om det er fullstendig match. Kan vi finne ut hvilke som typisk har 2 underliggende faggrupper a?
-  const relevantUndervisningsgrupper = classes.filter(group => !group.fag.includes('Basisgruppe') && group.navn.split('/').length === 2).map(group => {
-    const groupNameList = group.navn.split('/')
-    return { className: groupNameList[0], undervisningsgruppeName: groupNameList[1] }
-  })
-  const probableFaggrupper = faggrupper.filter(gruppe => {
-    const nameList = gruppe.navn.split('/')
-    if (nameList.length !== 2) return false // We assume name {klassenavn}/{faggruppenavn}
-    const className = nameList[0]
-    const faggruppeName = nameList[1]
-    const matchingUndervisningsgruppe = relevantUndervisningsgrupper.some(undervisningsgruppe => {
-      if (undervisningsgruppe.className === className && undervisningsgruppe.undervisningsgruppeName.substring(0, 3) === faggruppeName.substring(0, 3)) return true
+  logger('info', [loggerPrefix, `Finsihed repacking ${faggrupper.length} faggrupper, finding faggrupper teacher probably teaches`])
+  // Henter alle faggrupper der det er en undervisningsgruppe som heter det samme som faggruppen eller har special match, resten må lærer utvide for å få se / velge. Frontend må passe på å vise alle som er valgt til en hver tid
+  const probableFaggrupper = faggrupper.filter(faggruppe => {
+    if (classes.some(group => group.navn === faggruppe.navn)) return true
+    const faggruppeNameList = faggruppe.navn.split('/')
+    if (faggruppeNameList.length !== 3) return false // Antar faggruppe navn lik "{klasse}/{fagnavn}/{fagkode}"
+    const faggruppeClassName = faggruppeNameList[0]
+    // const faggruppeCourseName = faggruppeNameList[1]
+    const faggruppeCourseCode = faggruppeNameList[2]
+    const specialMatch = classes.some(group => {
+      const groupNameList = group.navn.split('/')
+      if (groupNameList.length !== 3) return false // Antar undervisningsgruppenavn lik "{klasse}/{gruppenavn}/{fagkode}"
+      const groupClassName = groupNameList[0]
+      // const groupCourseName = groupNameList[1]
+      const groupCourseCode = groupNameList[2]
+      if (faggruppeClassName === groupClassName && faggruppeCourseCode === groupCourseCode) {
+        console.log(`${faggruppeClassName} er lik ${groupClassName} og ${faggruppeCourseCode} er lik ${groupCourseCode} - match`)
+        return true
+      }
+      // Norsk undervisningsgrupper har flere faggrupper under ofte, kan legge til flere special cases her og evt
+      if (faggruppeClassName === groupClassName && faggruppeCourseCode.startsWith('NOR') && groupCourseCode.startsWith('NOR') && faggruppeCourseCode.startsWith(groupCourseCode.substring(0, 5))) {
+        // console.log(`${faggruppeClassName} er lik ${groupClassName} og ${faggruppeCourseCode} starter med NOR, og ${groupCourseCode} starter med NOR, og ${faggruppeCourseCode} starter med ${groupCourseCode.substring(0, 5)} - match`)
+        return true
+      }
       return false
     })
-    return matchingUndervisningsgruppe
+    if (specialMatch) return true
+    return false
   })
-
-  */ // ENKEL OG GREIT UNDER HER
-  logger('info', [loggerPrefix, `Finsihed repacking ${faggrupper.length} faggrupper, finding faggrupper teacher probably teaches`])
-  // Henter alle faggrupper der det er en undervisningsgruppe som heter det samme som faggruppen, resten må lærer utvide for å få se / velge. Frontend må passe på å vise alle som er valgt til en hver tid
-  const probableFaggrupper = faggrupper.filter(faggruppe => classes.some(group => group.navn === faggruppe.navn))
 
   logger('info', [loggerPrefix, `Found ${probableFaggrupper.length} probable faggrupper. Returning data`])
 
