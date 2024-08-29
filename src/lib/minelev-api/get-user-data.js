@@ -4,7 +4,7 @@ import { fintTeacher } from '$lib/fintfolk-api/teacher'
 import { getSystemInfo } from '$lib/system-info'
 import { logger } from '@vtfk/logger'
 
-const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1']
+const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1', 'Spesialkonsulent']
 
 /**
  * @typedef MiniSchool
