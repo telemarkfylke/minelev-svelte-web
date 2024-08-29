@@ -1,54 +1,14 @@
 # MinElev WEB
 SvelteKit Web app
 
-Deploy som Azure Web App, med authentication enabled via microsoft authentication
-
-Heihie
-
-## Ny ide
-- Lag api-ruter for å hente data
-- Hent disse dynamisk
-api/elever/{feidenavn}
-validering av rettigheter i api-kall basert på event injected headers
-Må da bruke dynamisk js i frontend, men det er jo mye diggere... (evt gjør den det selv i backend mon tro? Nei det er vel load - men kan kanskje legge til rette for at det fungerer ved å flytte funksjoner ut? Så de kan påkalles i load der vi vil ha SSR)
-
-Tester noen api-ruter
-API-first
-Decoupling
-Men på samme server. Tester litt
-
-## Notater
-- Hvordan løse dokumentdriten
-Når elever hentes, hent også skoler, og per skole, hvilke dokumenttyper som er lovlige:
-elev: {
-  kontaktlærer: ja/nei
-}
-
-## PÅ elev/feidenavn/nyttdokument
-- Hent data som trengs
-- Egen validering per felt som fylles ut
-
-## På api/elev/feidenavn/nyttdokument
-- Får all data som trengs?
-- Valider og kose seg
-
-## På api/elev/feidenavn/nyttdokument?preview=true
-- Får all data som trengs
-- Quick return med pdf-preview
-
-## Tanmker
-- HAr allerede gyldige dokumenttyper (men basert på documentTypes.js, trenger vi egt documentTypes.js??). Hva om vi bare putter det rett i api.js. UserData lager opp hvilke typer man har lov til (trenger dog litt ekstra data på de da... )
-
-
-## Behovet for løsningen
-- Sende varselbrev (fag, orden, atferd) til elever (med arkivering og utsending SvarUT)
-- Dokumentere om eleven har hatt elevsamtale / ikke ønsker elevsamtale
-- YFF-modul for skoler som ønsker
-  - Opprett og send bekreftelse på utplassering YFF
-  - Opprett og send læreplan i YFF
-  - Opprett og send tilbakemelding på læreplan i YFF
+## Deployment
+Deploy som Azure Web App, med authentication enabled via microsoft authentication. Authentication modulen injecter 
+Startup command: `node /home/site/wwwroot/build/` (evt `ORIGIN=https://{minelevurl}.no node /home/site/wwwroot/build/` dersom du deployer bak app gateway / load balancer ellerno)
 
 ## Løsningsbeskrivelse
+### Hjem
+- Backend henter brukerdata + elever, klasser, og gyldige dokumenttyper som bruker har tilgang på
+- 
 - Starter med hovedside der en lærer / rådgiver / admin logger på
 ### Hjem
 - Lærer
