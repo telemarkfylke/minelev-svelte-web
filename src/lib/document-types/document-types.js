@@ -197,7 +197,7 @@ export const documentTypes = [
   {
     id: 'notat',
     title: 'Notat',
-    accessCondition: 'isContactTeacher',
+    accessCondition: 'hasUndervisningsgruppe',
     isEncrypted: true,
     matchContent: {
       note: 'fjidsofjkldsfkldsjflks'
