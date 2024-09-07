@@ -210,5 +210,56 @@ export const documentTypes = [
         note
       }
     }
+  },
+  {
+    id: 'yff-bekreftelse',
+    title: 'YFF - Bekreftelse på utplassering',
+    accessCondition: 'yffEnabled',
+    isEncrypted: false,
+    matchContent: {
+      note: 'fjidsofjkldsfkldsjflks'
+    },
+    generateContent: (student, content) => {
+      if (!student) throw new Error('Missing required argumnet "student"')
+      const { note } = content
+      if (!note) throw new Error('Missing required argument "content.note"')
+      return {
+        note
+      }
+    }
+  },
+  {
+    id: 'yff-laereplan',
+    title: 'YFF - Lokal læreplan',
+    accessCondition: 'yffEnabled',
+    isEncrypted: false,
+    matchContent: {
+      note: 'fjidsofjkldsfkldsjflks'
+    },
+    generateContent: (student, content) => {
+      if (!student) throw new Error('Missing required argumnet "student"')
+      const { note } = content
+      if (!note) throw new Error('Missing required argument "content.note"')
+      return {
+        note
+      }
+    }
+  },
+  {
+    id: 'yff-tilbakemelding',
+    title: 'YFF - Tilbakemelding på utplassering',
+    accessCondition: 'yffEnabled',
+    isEncrypted: false,
+    matchContent: {
+      note: 'fjidsofjkldsfkldsjflks'
+    },
+    generateContent: (student, content) => {
+      if (!student) throw new Error('Missing required argumnet "student"')
+      const { note } = content
+      if (!note) throw new Error('Missing required argument "content.note"')
+      return {
+        note
+      }
+    }
   }
 ]

@@ -5,6 +5,7 @@
   import VarselAtferd from "$lib/document-types/VarselAtferd.svelte";
   import VarselFag from "$lib/document-types/VarselFag.svelte";
   import VarselOrden from "$lib/document-types/VarselOrden.svelte";
+    import YffBekreftelse from "$lib/document-types/YFFBekreftelse.svelte";
   import { documentTypes } from "$lib/document-types/document-types";
   /** @type {import('./$types').PageData} */
   export let data
@@ -15,7 +16,16 @@
 
   let documentTypeId = $page.url.searchParams.get('document_type') || undefined
 
-  //let availableSchools
+  // OBS OBS Vi får inn yff-schools først fra studentData, gjør en egen validering her med hvilke skoler de egt kan opprette yff-er på
+  if (data.systemInfo.YFF_ENABLED) {
+    teacherStudent.availableDocumentTypes.forEach(docType => {
+      if (docType.id.startsWith('yff')) {
+        // Filtrerer vekk skoler der læreren ikke har tilgang til yff for eleven
+        docType.schools = docType.schools.filter(school => studentData.yffSchools.some(yffSchool => school.skolenummer === yffSchool.skolenummer))
+      }
+    })
+    teacherStudent.availableDocumentTypes = teacherStudent.availableDocumentTypes.filter(docType => docType.schools.length > 0)
+  }
 
   const getAvailableSchools = (documentTypeId) => {
     const availableSchools = documentTypeId ? teacherStudent.availableDocumentTypes.find(docType => docType.id === documentTypeId).schools : []
@@ -79,7 +89,13 @@
   {#if documentTypeId === 'notat'}
     <Notat  {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
   {/if}
-  {#if documentTypeId === 'yff'}
+  {#if documentTypeId === 'yff-bekreftelse'}
+    <YffBekreftelse {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
+  {/if}
+  {#if documentTypeId === 'yff-laereplan'}
+    Hallo yff
+  {/if}
+  {#if documentTypeId === 'yff-tilbakemelding'}
     Hallo yff
   {/if}
 {/if}

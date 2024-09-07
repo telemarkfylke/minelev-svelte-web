@@ -1,6 +1,8 @@
 import { fintStudent } from '$lib/fintfolk-api/student'
 import { logger } from '@vtfk/logger'
 import { getUserData, repackMiniSchool } from './get-user-data'
+import { env } from '$env/dynamic/private'
+import { callGrep } from '$lib/grep'
 
 /**
  * @typedef Fag
@@ -43,6 +45,8 @@ import { getUserData, repackMiniSchool } from './get-user-data'
  * @property {Basisgruppe[]} basisgrupper
  * @property {Faggruppe[]} faggrupper
  * @property {Faggruppe[]} probableFaggrupper
+ * @property {boolean} [hasYff]
+ * @property {import('./get-user-data').MiniSchool[]} [yffSchools]
  *
  */
 
@@ -55,12 +59,14 @@ import { getUserData, repackMiniSchool } from './get-user-data'
 export const getStudent = async (user, studentFeidenavn, includeSsn = false) => {
   const loggerPrefix = `getStudent - user: ${user.principalName} - student: ${studentFeidenavn}`
   logger('info', [loggerPrefix, 'New request'])
+
   // First validate access to student
   const userData = await getUserData(user)
 
   const availableStudents = userData.students
   logger('info', [loggerPrefix, 'Validating access to student'])
-  const allowedToView = availableStudents.find(stud => stud.feidenavn === studentFeidenavn)
+  const teacherStudent = availableStudents.find(stud => stud.feidenavn === studentFeidenavn)
+  const allowedToView = teacherStudent
   if (!allowedToView) {
     logger('warn', [loggerPrefix, 'no access to student, or student does not exist'])
     throw new Error('No access to student, or student is not registered')
@@ -134,12 +140,67 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
     return false
   })
 
-  logger('info', [loggerPrefix, `Found ${probableFaggrupper.length} probable faggrupper. Returning data`])
+  logger('info', [loggerPrefix, `Found ${probableFaggrupper.length} probable faggrupper. Creating result object with results`])
 
-  return {
+  const studentData = {
     student: repackedStudent,
     basisgrupper,
     faggrupper,
     probableFaggrupper
   }
+
+  // Så henter vi skoler læreren underviser eleven, og der eleven har yrkesfaglig elevforhold? Returner disse skolene som yff-schools. Disse brukes i kombo for å validere om læreren kan produsere yff-greier for eleven
+  if (env.YFF_ENABLED === 'true') {
+    const yffSchools = []
+    logger('info', [loggerPrefix, 'YFF_ENABLED is true, checking for elevforhold with "yrkesfaglig" utdanningsprogram, at schools teacher have access to'])
+    const elevforholdToCheckForYFF = student.elevforhold.filter(forhold => teacherStudent.skoler.some(school => school.skolenummer === forhold.skole.skolenummer))
+    for (const elevforhold of elevforholdToCheckForYFF) {
+      // Sjekker først om vi har yff på denne skolen alledere, i så fall kan vi skippe
+      if (yffSchools.some(school => school.skolenummer === elevforhold.skole.skolenummer)) continue
+      let grepReferanser = []
+      for (const programomraade of elevforhold.programomrademedlemskap) {
+        for (const program of programomraade.utdanningsprogram) {
+          grepReferanser.push(...program.grepreferanse)
+        }
+      }
+      if (grepReferanser.length === 0) {
+        logger('warn', [loggerPrefix, `Found ${grepReferanser.length} grepReferanser for elevforhold ${elevforhold.systemId} - adding school to yffSchools because we don't know if yrkesfaglig or not...`])
+        yffSchools.push(teacherStudent.skoler.find(school => school.skolenummer === elevforhold.skole.skolenummer))
+        continue
+      }
+      logger('info', [`Found ${grepReferanser.length} grepReferanser to check for elevforhold ${elevforhold.systemId}, checking grep-values ${grepReferanser.join(', ')} from udir`])
+      for (const grepReferanse of grepReferanser) {
+        // Sjekker først om vi har yff på denne skolen alledere, i så fall kan vi skippe
+        if (yffSchools.some(school => school.skolenummer === elevforhold.skole.skolenummer)) continue
+        try {
+          const utdanningsCode = grepReferanse.substring(grepReferanse.lastIndexOf('/') + 1) // Grep is on the format "https://psi.udir.no/kl06/TP"
+          const grepResult = await callGrep(`utdanningsprogram/${utdanningsCode}`)
+          const utdanningsprogram = grepResult['type-utdanningsprogram']?.uri || 'Ukjent'
+          const hasYff = utdanningsprogram.endsWith('yrkesfaglig') || utdanningsprogram === 'Ukjent'
+          if (hasYff) {
+            logger('info', [loggerPrefix, `Found yrkesfaglig utdannningsprogram or ukjent: ${utdanningsprogram} - student has YFF at school`])
+            yffSchools.push(teacherStudent.skoler.find(school => school.skolenummer === elevforhold.skole.skolenummer))
+          } else {
+            logger('info', [loggerPrefix, `No yrkesfaglig utdannningsprogram found on: ${utdanningsprogram}`])
+          }
+        } catch (error) {
+          logger('error', [loggerPrefix, `Failed when fetching grep resource utdanningsprogram/${'tp'}`, 'Dont know if we have YFF - should we set True? We dont do it yet at least...', error.response?.data || error.stack || error.toString()])
+          // yffSchools.push(teacherStudent.skoler.find(school => school.skolenummer === elevforhold.skole.skolenummer))
+        }
+      }
+    }
+    if (yffSchools.length > 0) {
+      logger('info', [loggerPrefix, `Teacher has student in ${yffSchools.length} YFF-schools, setting yffData in response`])
+      studentData.hasYff = true
+      studentData.yffSchools = yffSchools
+    } else {
+      logger('info', [loggerPrefix, 'Teacher does not have student in any YFF-schools, setting yffData to none in response'])
+      studentData.hasYff = false
+      studentData.yffSchools = yffSchools
+    }
+  }
+
+  logger('info', [loggerPrefix, `All is good, returning data`])
+
+  return studentData
 }

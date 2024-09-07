@@ -11,7 +11,7 @@
 
   let student = data.students.find(stud => stud.feidenavnPrefix === $page.params.feidenavnPrefix)
   const accessTo = {
-    yff: student.availableDocumentTypes.some(docType => docType.id === 'yff'),
+    yff: data.studentData.hasYff,
     varsel: student.availableDocumentTypes.some(docType => docType.id.startsWith('varsel')),
     varselFag: student.availableDocumentTypes.some(docType => docType.id === 'varsel-fag'),
     varselOrden: student.availableDocumentTypes.some(docType => docType.id === 'varsel-orden'),

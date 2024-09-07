@@ -136,13 +136,17 @@ button:hover, a.button:hover {
 	background-color: var(--primary-color-20);
 }
 
-button.filled, a.button.filled {
+button.filled, a.button.filled, .button-input button {
 	background-color: var(--primary-color);
 	color: var(--font-color-inverted);
 }
 
-button.filled:hover, a.button.filled:hover {
+button.filled:hover, a.button.filled:hover, .button-input button:hover {
 	background-color: var(--primary-color-80);
+}
+
+button.squared {
+	border-radius: 0.4rem;
 }
 
 button:disabled, button:disabled:hover {
@@ -215,19 +219,33 @@ input {
 	border-radius: 0.4rem;
 }
 
-input:hover, .icon-input:hover {
+input:hover, .icon-input:hover, .button-input:hover {
 	background-color: var(--primary-color-10);
 }
 
-.icon-input:hover input {
+.icon-input:hover input, .button-input:hover input {
 	background-color: var(--primary-color-10);
 }
 
-.icon-input {
+.icon-input, .button-input {
 	display: flex;
 	align-items: center;
 	border: 2px solid var(--primary-color);
 	border-radius: 0.4rem;
+}
+
+.button-input button {
+	align-self: stretch;
+	border-top: 0px;
+	border-right: 0px;
+	border-bottom: 0px;
+	border-left: 2px solid var(--primary-color);
+	border-radius: 0rem;
+}
+
+.button-input input {
+	border: 0px solid var(--primary-color);
+	flex-grow: 1;
 }
 
 .icon-input input {
@@ -236,27 +254,35 @@ input:hover, .icon-input:hover {
 	flex-grow: 1;
 }
 
-.icon-input:focus-within {
+.icon-input:focus-within, .button-input:focus-within {
 	outline: 4px solid var(--primary-color);
 	outline-offset: 1px;
 }
 
-.icon-input input:focus-visible {
+.icon-input input:focus-visible, .button-input input:focus-visible {
 	border: 0px solid var(--primary-color);
 	outline: 0px;
 }
 
-.icon-input span {
+.icon-input span, .button-input span {
 	padding: 0rem 0.5rem;
 	font-size: 1.5rem;
 }
 
-.icon-input.round {
+.icon-input.round, .button-input.round {
 	border-radius: 3rem;
 	padding: 0rem var(--spacing);
 }
 
-.icon-input.round input {
+.button-input.round, .icon-input.button-input.round {
+	padding: 0rem 0rem 0rem var(--spacing);
+}
+
+.button-input.round button {
+	border-radius: 0rem 3rem 3rem 0rem;
+}
+
+.icon-input.round input, .button-input.round input {
 	border-radius: 3rem;
 }
 

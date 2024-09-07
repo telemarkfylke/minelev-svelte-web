@@ -3,6 +3,7 @@ import { documentTypes } from '$lib/document-types/document-types'
 import { fintTeacher } from '$lib/fintfolk-api/teacher'
 import { getSystemInfo } from '$lib/system-info'
 import { logger } from '@vtfk/logger'
+import vtfkSchoolsInfo from 'vtfk-schools-info'
 
 const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1', 'Spesialkonsulent']
 
@@ -34,6 +35,11 @@ export const repackMiniSchool = (school, kontaktlarer) => {
 }
 
 // Tar inn en elev en lærer har i en basisgruppe og/eller en undervisningsgruppe - returnerer en liste over dokumenttyper som læreren har tilgang på for en elev, og ved hvilke skoler
+/**
+ *
+ * @param {TeacherStudent} student
+ * @returns {AvailableDocumentType[]}
+ */
 export const getAvailableDocumentTypesForTeacher = (student) => {
   const availableDocumentTypes = []
   for (const docType of documentTypes) {
@@ -50,9 +56,23 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
       }
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
     }
-    if (docType.accessCondition === 'yff') {
-      const docTypeSchools = student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe').map(klasse => klasse.skole) // LEGG INN YFF KRITERIE HER
-      // if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
+    if ((env.YFF_ENABLED && env.YFF_ENABLED === 'true') && docType.accessCondition === 'yffEnabled') {
+      // Yff blir også validert på elev-nivå ved henting av elev, samt ved innsending og henting av yff-data, her blir det kun sjekket at skolen har YFF, og at env YFF er enabled
+      // Sjekker hvilke skoler som har yff
+      const docTypeSchools = student.skoler.filter(skole => {
+        if (env.MOCK_API === 'true') return true
+        const schoolsInfo = vtfkSchoolsInfo({ schoolNumber: skole.skolenummer })
+        if (!schoolsInfo) return false
+        if (!Array.isArray(schoolsInfo)) return false
+        if (schoolsInfo.length === 0) {
+          logger('warn', [`Could not find any school with schoolNumber "${skole.skolenummer}" in vtfk-schools-info!!`])
+          return false
+        }
+        const schoolInfo = schoolsInfo[0]
+        if (schoolInfo.yff) return true
+        return false
+      })
+      if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun hvis YFF er enabled, og hvis skolen har skrudd på yff i vtfk-schools-info
     }
   }
   return availableDocumentTypes
