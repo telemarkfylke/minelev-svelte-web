@@ -1,4 +1,3 @@
-import { env } from '$env/dynamic/private'
 import { getAuthenticatedUser } from '$lib/authentication'
 import { brregUnit } from '$lib/minelev-api/brreg'
 import { json } from '@sveltejs/kit'

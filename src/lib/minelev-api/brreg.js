@@ -1,21 +1,21 @@
-import { env } from "$env/dynamic/private"
-import { logger } from "@vtfk/logger"
-import axios from "axios"
+import { env } from '$env/dynamic/private'
+import { logger } from '@vtfk/logger'
+import axios from 'axios'
 
-/** 
+/**
  * @typedef BrregEnhet
  * @property {string} organisasjonsNummer
  * @property {string} navn
  * @property {string} addresse
  * @property {string} postnummer
  * @property {string} poststed
- * 
+ *
  */
 
 /**
- * 
- * @param {Object} enhet 
- * @param {"enhet" | "underenhet"} type 
+ *
+ * @param {Object} enhet
+ * @param {"enhet" | "underenhet"} type
  * @returns {BrregEnhet}
  */
 const repackEnhet = (enhet, type) => {
@@ -34,8 +34,8 @@ const repackEnhet = (enhet, type) => {
 }
 
 /**
- * @param {import("$lib/authentication").User} user 
- * @param {string} query 
+ * @param {import("$lib/authentication").User} user
+ * @param {string} query
  * @returns {BrregEnhet[]}
  */
 export const brregSearch = async (user, query) => {
@@ -75,9 +75,9 @@ export const brregSearch = async (user, query) => {
 }
 
 /**
- * @param {import("$lib/authentication").User} user 
- * @param {string} orgnr 
- * @param {"enhet" | "underenhet"} type 
+ * @param {import("$lib/authentication").User} user
+ * @param {string} orgnr
+ * @param {"enhet" | "underenhet"} type
  * @returns {BrregEnhet}
  */
 export const brregUnit = async (user, orgnr, type) => {

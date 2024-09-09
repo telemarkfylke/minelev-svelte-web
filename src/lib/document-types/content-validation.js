@@ -1,3 +1,14 @@
+export const isValidMobile = (mobile = '') =>
+  mobile.trim()
+    .replace(/ /g, '')
+    .replace(/^\+47/, '')
+    .replace(/^0047/, '')
+    .replace(/[^0-9]/g, '')
+    .length === 8
+
+export const isValidEmail = (email = '') =>
+  /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)
+
 export const validateContent = (content, contentValidator) => {
   const resultArray = []
 
@@ -7,18 +18,18 @@ export const validateContent = (content, contentValidator) => {
 }
 
 const validateObject = (content, contentValidator, resultArray, parentKey = '') => {
-  if (typeof content !== 'object') return
-  if ((typeof content !== typeof contentValidator) || Array.isArray(content) !== Array.isArray(contentValidator)) {
+  if (typeof content !== 'object') return // Okey dokey
+  if ((typeof content !== typeof contentValidator) || Array.isArray(content) !== Array.isArray(contentValidator)) { // Hvis ikke typen er lik på rot
     resultArray.push({ [`${parentKey || 'content'}`]: 'wrong type' })
     return
   }
   try {
     for (const [key, value] of Object.entries(content)) {
-      if (!Array.isArray(content) && contentValidator[key] === undefined) {
+      if (!Array.isArray(content) && contentValidator[key] === undefined) { // Hvis ikke array, og proppen ikke finnes i validatoren
         resultArray.push({ [`${parentKey}${key}`]: 'extra' })
         continue
       }
-      if (typeof contentValidator[Array.isArray(contentValidator) ? '0' : key] !== typeof value) {
+      if (typeof contentValidator[Array.isArray(contentValidator) ? '0' : key] !== typeof value) { // Hvis typen til nåværende element ikke matcher typen til matchende element i validatoren
         resultArray.push({ [`${parentKey}${key}`]: 'wrong type' })
         continue
       }
@@ -27,6 +38,7 @@ const validateObject = (content, contentValidator, resultArray, parentKey = '') 
       }
     }
     for (const key of Object.keys(contentValidator)) {
+      if (contentValidator[key] === 'optional') continue
       if (content[key] === undefined) {
         resultArray.push({ [`${parentKey}${key}`]: 'missing' })
         continue

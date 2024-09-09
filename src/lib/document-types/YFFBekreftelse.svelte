@@ -9,6 +9,7 @@
   export let documentTypeId = null
   export let studentFeidenavnPrefix = null
   export let selectedSchoolNumber = null
+  export let studentData = null
   export let isCompletedDocument = false
   export let documentContent = null
 
@@ -42,74 +43,101 @@
     brregLoading = false
   }
 
-  // Content data
-  const varsel = {
-    periodId: "",
-    reasonIds: []
+  const getStudentUtdanningsprogram = (schoolNumber) => {
+    return studentData.utdanningsprogram.filter(program => program.skole.skolenummer === schoolNumber)
   }
 
-  // Actual content data
+  const getStudentLevels = (schoolNumber) => {
+    return studentData.basisgrupper.filter(gruppe => gruppe.skole.skolenummer === schoolNumber).map(gruppe => gruppe.trinn)
+  }
+
+  // Bekreftelse content data
   const content = {
     bekreftelse: {
-      oppmotested: 'Whatever',
-      kopiPrEpost: [
-        'test@vtfk.no'
-      ],
-      fraDato: '02.02.2021',
-      tilDato: '03.02.2021',
-      daysPerWeek: '17',
+      oppmotested: '',
+      kopiPrEpost: [],
+      fraDato: null,
+      tilDato: null,
+      daysPerWeek: null,
       startTid: '08:00',
       sluttTid: '16:00',
       kontaktpersonData: [
         {
-          navn: 'Whatever',
-          telefon: '0118 999 881 999 119 7253',
-          epost: 'nei@nei.no',
-          avdeling: 'Whatever'
+          navn: '',
+          telefon: '',
+          epost: '',
+          avdeling: ''
         }
       ],
       parorendeData: [
         {
-          navn: 'Allah',
-          telefon: 'Sakesak'
+          navn: '',
+          telefon: ''
         }
       ],
       bedriftsData: null
     },
-    utdanningsprogram: {
-      kode: 'HS',
-      type: 'yrkesfaglig',
-      tittel: {
-        en: 'Helse- og oppvekstfag',
-        nb: 'Helse- og oppvekstfag',
-        nn: 'Helse- og oppvekstfag'
-      },
-      kortform: {
-        en: 'Helse- og oppvekstfag',
-        nb: 'Helse- og oppvekstfag',
-        nn: 'Helse- og oppvekstfag'
-      }
-    },
-    level: 'VG1',
-    year: '2020/2021'
+    utdanningsprogramId: getStudentUtdanningsprogram(selectedSchoolNumber).length === 1 ? getStudentUtdanningsprogram(selectedSchoolNumber)[0].id : '',
+    level: getStudentLevels(selectedSchoolNumber).length === 1 ? getStudentLevels(selectedSchoolNumber)[0] : ''
+  }
+
+  $: content.utdanningsprogramId = getStudentUtdanningsprogram(selectedSchoolNumber).length === 1 ? getStudentUtdanningsprogram(selectedSchoolNumber)[0].id : '' // In case of change of selectedSchoolNumber
+  $: content.level = getStudentLevels(selectedSchoolNumber).length === 1 ? getStudentLevels(selectedSchoolNumber)[0] : '' // In case of change of selectedSchoolNumber
+
+  const addContactPerson = () => {
+    const contactPerson = {
+      navn: '',
+      telefon: '',
+      epost: '',
+      avdeling: ''
+    }
+    content.bekreftelse.kontaktpersonData = [...content.bekreftelse.kontaktpersonData, contactPerson] // Want it reactive, so we assign it instead of push
+  }
+  const removeContactPerson = (index) => {
+    if (index === 0) throw new Error('Du må ha minst en kontaktperson ved bedriften')
+    content.bekreftelse.kontaktpersonData = content.bekreftelse.kontaktpersonData.filter((person, personIndex) => {
+      return index !== personIndex
+    })
+  }
+  const addKopimottaker = () => {
+    const kopimottaker = ''
+    content.bekreftelse.kopiPrEpost = [...content.bekreftelse.kopiPrEpost, kopimottaker] // Want it reactive, so we assign it instead of push
+  }
+  const removeKopimottaker = (index) => {
+    content.bekreftelse.kopiPrEpost = content.bekreftelse.kopiPrEpost.filter((mottaker, mottakerIndex) => {
+      return index !== mottakerIndex
+    })
+  }
+  const addParorende = () => {
+    const parorende = {
+      navn: '',
+      telefon: ''
+    }
+    content.bekreftelse.parorendeData = [...content.bekreftelse.parorendeData, parorende] // Want it reactive, so we assign it instead of push
+  }
+  const removeParorende = (index) => {
+    if (index === 0) throw new Error('Du må ha minst en pårørende for eleven')
+    content.bekreftelse.parorendeData = content.bekreftelse.parorendeData.filter((person, personIndex) => {
+      return index !== personIndex
+    })
   }
 
   // Reactive statements
-  $: canClickSend = Boolean(varsel.periodId && varsel.reasonIds.length > 0)
+  $: canClickSend = true // TODO
 
   let previewBase64
-  const sendVarsel = async (preview=false) => {
+  const sendBekreftelse = async (preview=false) => {
     errorMessage = ""
     try {
       const payload = {
         documentTypeId,
-        type: 'varsel',
-        variant: 'orden',
+        type: 'yff',
+        variant: 'bekreftelse',
         schoolNumber: selectedSchoolNumber,
-        documentData: varsel,
+        documentData: content,
         preview
       }
-      const { data } = await axios.get(`/api/students/${studentFeidenavnPrefix}/newDocument`, payload)
+      const { data } = await axios.post(`/api/students/${studentFeidenavnPrefix}/newDocument`, payload)
       // If ok then do something
       if (preview) {
         previewBase64 = data
@@ -131,6 +159,48 @@
   <pre>{JSON.stringify(content, null, 2)}</pre>
 {/if}
 
+<!--Elevens utdanningsprogram og trinn-->
+{#if isCompletedDocument}
+  <!--TODO-->
+{:else}
+  <!--Hvis læreren har eleven ved flere utdanningsprogram må hen velge-->
+  <section>
+    <h3>
+      Elevens utdanningsprogram
+    </h3>
+    <div class="label-select">
+      <label for="utdanningsprogramid">Utdanningsprogram</label>
+      <select bind:value={content.utdanningsprogramId} id="utdanningsprogramid">
+        {#if getStudentUtdanningsprogram(selectedSchoolNumber).length === 1} <!-- Hvis det bare er et utdanningsprogram, så bruker vi bare det -->
+          <option value="{getStudentUtdanningsprogram(selectedSchoolNumber)[0].id}">{getStudentUtdanningsprogram(selectedSchoolNumber)[0].tittel.nb}</option>
+        {:else}
+          <option value="">--Velg utdanningsprogram--</option>
+          <hr />
+          {#each getStudentUtdanningsprogram(selectedSchoolNumber) as program}
+            <option value="{program.id}">{program.tittel.nb}</option>
+          {/each}
+        {/if}
+        </select>
+    </div>
+    <div class="label-select">
+      <label for="trinn">Trinn</label>
+      <select bind:value={content.level} id="trinn">
+        {#if getStudentLevels(selectedSchoolNumber).length === 1} <!-- Hvis det bare er et trinn, så bruker vi bare det -->
+          <option value="{getStudentLevels(selectedSchoolNumber)[0]}">{getStudentLevels(selectedSchoolNumber)[0]}</option>
+        {:else}
+          <option value="">--Velg trinn--</option>
+          <hr />
+          {#each getStudentLevels(selectedSchoolNumber) as level}
+            <option value="{level}">{level}</option>
+          {/each}
+        {/if}
+        </select>
+    </div>
+  </section>
+
+{/if}
+
+<!--Bedriftsinformasjon-->
 {#if isCompletedDocument}
   <section>
     <h3>
@@ -139,7 +209,7 @@
     <input type="radio" id="period" name="periodId" disabled checked />
     <label for="period">{documentContent.period.nb}</label><br>
   </section>
-{:else}
+{:else if content.utdanningsprogramId && content.level}
   <section>
     <h3>
       Bedriftsinformasjon
@@ -153,14 +223,13 @@
           </button>
         </div>
       </form>
-      <br />
       {#if brregLoading}
         <LoadingSpinner width="4" />
       {:else if brregError}
         {brregError}
       {:else}
         {#each brregResult as unit}
-          <button class="brregUnit" title="Velg enhet" on:click={() => {content.bekreftelse.bedriftsData = unit}}>
+          <button class="brregUnit" title="Velg enhet" on:click={() => {content.bekreftelse.bedriftsData = unit; window.scrollTo(0, 0);}}>
               <div>{unit.organisasjonsNummer}</div>
               <div style="text-align: left;">
                 {#if unit.type === 'underenhet'}
@@ -172,65 +241,143 @@
         {/each}
       {/if}
     {:else} <!-- Da har vi bedrift -->
-        <div class="selectedBrregUnit">
-          <div class="unitTitle">{content.bekreftelse.bedriftsData.navn}</div>
-          <div>{content.bekreftelse.bedriftsData.organisasjonsNummer}</div>
-          <div>{content.bekreftelse.bedriftsData.adresse}</div>
-          <div>{content.bekreftelse.bedriftsData.postnummer} {content.bekreftelse.bedriftsData.poststed}</div>
+      <div class="selectedBrregUnit">
+        <div class="unitTitle">{content.bekreftelse.bedriftsData.navn}</div>
+        <div>{content.bekreftelse.bedriftsData.organisasjonsNummer}</div>
+        <div>{content.bekreftelse.bedriftsData.adresse}</div>
+        <div>{content.bekreftelse.bedriftsData.postnummer} {content.bekreftelse.bedriftsData.poststed}</div>
+        <div class="icon-link">
+          <span class="material-symbols-outlined">arrow_back</span><button on:click={() => { content.bekreftelse.bedriftsData = null }} class="link">Velg en annen bedrift</button>
         </div>
-        {content.bekreftelse.bedriftsData.avdeling}
-        <div class="label-input" style="display: flex;">
-          <label for="avdeling">Avdeling (valgfritt)</label>
-          <input style="width: 25rem" id="avdeling" type="text" bind:value={content.bekreftelse.bedriftsData.avdeling} placeholder="Avdeling ved bedriften" />
+      </div>
+      <div class="label-input" style="display: flex;">
+        <label for="avdeling">Avdeling (valgfritt)</label>
+        <input id="avdeling" type="text" bind:value={content.bekreftelse.bedriftsData.avdeling} placeholder="Avdeling ved bedriften" />
+      </div>
+      <div class="label-input">
+        <label for="motested">Oppmøtested</label>
+        <input id="motested" type="text" bind:value={content.bekreftelse.oppmotested} placeholder="Hvor skal eleven møte opp" />
+      </div>
+    {/if}
+  </section>
+{/if}
+
+<!--Kontaktpersoner-->
+{#if isCompletedDocument}
+  <!--TODO-->
+{:else if content.bekreftelse.bedriftsData}
+  <section>
+    <h3>Kontaktperson(er) ved bedriften</h3>
+    {#each content.bekreftelse.kontaktpersonData as kontaktperson, index}
+      <div class="contactPerson">
+        <h4>Kontaktperson{index > 0 ? ` ${index + 1}` : ''}</h4>
+        <div class="label-input">
+          <label for="kontaktperson-{index}-navn">Navn</label>
+          <input id="kontaktperson-{index}-navn" type="text" bind:value={content.bekreftelse.kontaktpersonData[index].navn} placeholder="Navn på kontaktperson" />
         </div>
         <div class="label-input">
-          <label for="motested">Oppmøtested</label>
-          <input id="motested" type="text" bind:value={content.bekreftelse.oppmotested} placeholder="Hvor skal eleven møte opp" />
+          <label for="kontaktperson-{index}-tlf">Telefon (valgfritt)</label>
+          <input id="kontaktperson-{index}-tlf" type="number" bind:value={content.bekreftelse.kontaktpersonData[index].telefon} placeholder="Telefonnummer til kontaktperson" />
         </div>
-
-    {/if}
-
-    <!--If not chosen bedrift, and search-result is set, show search-result-->
-    <!-- Else show chosen bedrift -->
-    <!-- If chose bedrift - show valgfri "avdeling" -->
+        <div class="label-input">
+          <label for="kontaktperson-{index}-epost">E-post (valgfritt)</label>
+          <input id="kontaktperson-{index}-epost" type="email" bind:value={content.bekreftelse.kontaktpersonData[index].epost} placeholder="E-post til kontaktperson" />
+        </div>
+        <div class="label-input">
+          <label for="kontaktperson-{index}-avdeling">Avdeling (valgfritt)</label>
+          <input id="kontaktperson-{index}-avdeling" type="text" bind:value={content.bekreftelse.kontaktpersonData[index].avdeling} placeholder="Kontaktpersonens avdeling i bedriften" />
+        </div>
+        {#if index > 0}
+          <div class="icon-link" style="padding-top: 1rem;">
+            <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeContactPerson(index)}}>Fjern kontaktperson</button>
+          </div>
+        {/if}
+      </div>
+      <br />
+    {/each}
+    <button class="icon-button filled" on:click={addContactPerson}><span class="material-symbols-outlined">add</span>Legg til enda en kontaktperson</button>
   </section>
 {/if}
 
+<!--Kopimottakere-->
 {#if isCompletedDocument}
+  <!--TODO-->
+{:else if content.bekreftelse.bedriftsData}
   <section>
-    <h4>
-      Periode
-    </h4>
-    <input type="radio" id="period" name="periodId" disabled checked />
-    <label for="period">{documentContent.period.nb}</label><br>
-  </section>
-{:else}
-  <section>
-    <h4>
-      Velg periode
-    </h4>
-    {#each periods as period}
-      <input type="radio" id="period-{period.id}" bind:group={varsel.periodId} name="periodId" value="{period.id}" required />
-      <label for="period-{period.id}">{period.value.nb}</label><br>
+    <h3>Kopimottakere</h3>
+    <p>Noen ganger er det enklere sagt enn gjort at korrekt mottaker hos utplasseringsbedriften mottar brevene som sendes, i de tilfellene kan man legge kontaktpersonen(e) som kopimottaker, og de vil få tilsendt kopi av dokumentene på e-post i tillegg.</p>
+    {#each content.bekreftelse.kopiPrEpost as mottaker, index}
+      <div class="contactPerson">
+        <h4>Kopimottaker{index > 0 ? ` ${index + 1}` : ''}</h4>
+        <div class="label-input">
+          <label for="kopimottaker-{index}">E-post</label>
+          <input id="kopimottaker-{index}" type="email" bind:value={content.bekreftelse.kopiPrEpost[index]} placeholder="E-post til kopimottaker" />
+        </div>
+        <div class="icon-link" style="padding-top: 1rem;">
+          <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeKopimottaker(index)}}>Fjern kopimottaker</button>
+        </div>
+      </div>
+      <br />
     {/each}
+    <button class="icon-button filled" on:click={addKopimottaker}><span class="material-symbols-outlined">add</span>Legg til kopimottaker</button>
   </section>
 {/if}
 
+<!--Tidsrom-->
 {#if isCompletedDocument}
+  <!--TODO-->
+{:else if content.bekreftelse.bedriftsData}
   <section>
-    <h4>Årsaken til varselet</h4>
-    {#each documentContent.reasons as reason}
-      <input type="checkbox" id="reason-{reason.id}" name="reasons" disabled checked />
-      <label for="reason-{reason.id}">{reason.nb}</label><br>
-    {/each}
+    <h3>Tidsrom for utplassering</h3>
+    <div class="label-input">
+      <label for="fraogmed">Fra og med</label>
+      <input id="fraogmed" type="date" bind:value={content.bekreftelse.fraDato} />
+    </div>
+    <div class="label-input">
+      <label for="tilogmed">Til og med</label>
+      <input id="tilogmed" type="date" bind:value={content.bekreftelse.tilDato} />
+    </div>
+    <div class="label-input">
+      <label for="daysperweek">Antall dager i uken</label>
+      <input id="daysperweek" type="number" bind:value={content.bekreftelse.daysPerWeek} placeholder="Antall dager i uken" />
+    </div>
+    <div class="label-input">
+      <label for="fraklokken">Fra klokken</label>
+      <input id="fraklokken" type="time" bind:value={content.bekreftelse.startTid} />
+    </div>
+    <div class="label-input">
+      <label for="tilklokken">Til klokken</label>
+      <input id="tilklokken" type="time" bind:value={content.bekreftelse.sluttTid} />
+    </div>
   </section>
-{:else}
+{/if}
+
+<!--Pårørerende for eleven-->
+{#if isCompletedDocument}
+  <!--TODO-->
+{:else if content.bekreftelse.bedriftsData}
   <section>
-    <h4>Hva er årsaken til varselet</h4>
-    {#each orderReasons as reason}
-      <input type="checkbox" id="reason-{reason.id}" bind:group={varsel.reasonIds} name="reasons" value="{reason.id}" />
-      <label for="reason-{reason.id}">{reason.description.nb}</label><br>
-    {/each}
+    <h3>Pårørende for eleven</h3>
+      {#each content.bekreftelse.parorendeData as parorende, index}
+        <div class="contactPerson">
+          <h4>Pårørende{index > 0 ? ` ${index + 1}` : ''}</h4>
+          <div class="label-input">
+            <label for="parorende-{index}-navn">Navn</label>
+            <input id="parorende-{index}-navn" type="text" bind:value={content.bekreftelse.parorendeData[index].navn} placeholder="Navn på pårørende" />
+          </div>
+          <div class="label-input">
+            <label for="parorende-{index}-tlf">Telefon</label>
+            <input id="parorende-{index}-tlf" type="number" bind:value={content.bekreftelse.parorendeData[index].telefon} placeholder="Telefonnummer til pårørende" />
+          </div>
+          {#if index > 0}
+            <div class="icon-link" style="padding-top: 1rem;">
+              <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeParorende(index)}}>Fjern pårørende</button>
+            </div>
+          {/if}
+        </div>
+        <br />
+      {/each}
+      <button class="icon-button filled" on:click={addParorende}><span class="material-symbols-outlined">add</span>Legg til enda en pårørende</button>
   </section>
 {/if}
 
@@ -247,12 +394,12 @@
       {#if previewLoading}
         <button disabled><LoadingSpinner width={"1.5"} />Forhåndsvisning</button>
       {:else}
-        <button on:click={() => {sendVarsel(true); previewLoading=true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        <button on:click={() => {sendBekreftelse(true); previewLoading=true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
       {/if}
       {#if sendLoading}
         <button disabled><LoadingSpinner width={"1.5"} />Send</button>
       {:else}
-        <button type="submit" class="filled" on:click={() => {sendVarsel(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
+        <button type="submit" class="filled" on:click={() => {sendBekreftelse(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
       {/if}
     {:else}
       <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
@@ -265,6 +412,9 @@
 <style>
   h3 {
     border-bottom: 1px solid var(--primary-color);
+  }
+  h4 {
+    margin: 0rem;
   }
   .form-buttons {
     display: flex;
@@ -295,8 +445,21 @@
   .selectedBrregUnit {
     padding: 0.5rem 1rem;
     background-color: var(--primary-color-20);
+    border-radius: 0.4rem;
+    border: 2px solid var(--primary-color);
   }
   .unitTitle {
     font-weight: bold;
+  }
+  .icon-link {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .contactPerson {
+    padding: 1rem 1rem;
+    background-color: var(--primary-color-20);
+    border-radius: 0.4rem;
+    border: 2px solid var(--primary-color);
   }
 </style>

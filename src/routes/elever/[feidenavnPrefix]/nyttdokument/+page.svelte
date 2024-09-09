@@ -5,7 +5,7 @@
   import VarselAtferd from "$lib/document-types/VarselAtferd.svelte";
   import VarselFag from "$lib/document-types/VarselFag.svelte";
   import VarselOrden from "$lib/document-types/VarselOrden.svelte";
-    import YffBekreftelse from "$lib/document-types/YFFBekreftelse.svelte";
+  import YffBekreftelse from "$lib/document-types/YFFBekreftelse.svelte";
   import { documentTypes } from "$lib/document-types/document-types";
   /** @type {import('./$types').PageData} */
   export let data
@@ -87,10 +87,10 @@
     <Elevsamtale {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
   {/if}
   {#if documentTypeId === 'notat'}
-    <Notat  {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
+    <Notat {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
   {/if}
   {#if documentTypeId === 'yff-bekreftelse'}
-    <YffBekreftelse {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
+    <YffBekreftelse {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} {studentData} />
   {/if}
   {#if documentTypeId === 'yff-laereplan'}
     Hallo yff

@@ -128,7 +128,13 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
   const studentFeidenavnPrefix = studentFeidenavn.substring(0, studentFeidenavn.indexOf('@'))
   student.feidenavnPrefix = studentFeidenavnPrefix
 
+  // Add mail for pdf
+  student.mail = student.upn
+
   const teacher = userData.personData
+  // Add mail for pdf
+  teacher.mail = teacher.upn
+
   const school = teacherStudent.skoler.find(school => school.skolenummer === schoolNumber)
   if (!school) {
     logger('error', [loggerPrefix, `Could not find school with schoolNumber ${schoolNumber}`])

@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit'
 import { periods, courseReasons, orderReasons, behaviourReasons } from './data/document-data'
+import { isValidEmail, isValidMobile } from './content-validation'
 
 const getSchoolYearFromDate = (date, delimiter = '/') => {
   // Hvis vi er etter 15 juli inneværende år, så swapper vi til current/next. Ellers bruker vi previous/current
@@ -217,14 +218,140 @@ export const documentTypes = [
     accessCondition: 'yffEnabled',
     isEncrypted: false,
     matchContent: {
-      note: 'fjidsofjkldsfkldsjflks'
+      bekreftelse: {
+        oppmotested: 'Whatever',
+        kopiPrEpost: ['optional'],
+        fraDato: '02.02.2021', // Konverteres fra format 2024-12-24
+        tilDato: '03.02.2021',
+        daysPerWeek: '17',
+        startTid: '08:00',
+        sluttTid: '16:00',
+        kontaktpersonData: [
+          {
+            navn: 'Whatever',
+            telefon: '0118 999 881 999 119 7253',
+            epost: 'nei@nei.no',
+            avdeling: 'Whatever'
+          }
+        ],
+        parorendeData: [
+          {
+            navn: 'Halla Balla',
+            telefon: 'Sakesak'
+          }
+        ],
+        bedriftsNavn: 'VESTFOLD OG TELEMARK FYLKESKOMMUNE',
+        bedriftsData: {
+          organisasjonsNummer: '821227062',
+          navn: 'VESTFOLD OG TELEMARK FYLKESKOMMUNE',
+          adresse: 'Postboks 2844',
+          postnummer: '3702',
+          poststed: 'SKIEN',
+          avdeling: 'Whatever',
+          type: 'enhet eller underenhet'
+        }
+      },
+      utdanningsprogramId: 'blabababa',
+      utdanningsprogram: {
+        id: 'blblblalala',
+        fintKode: 'HS',
+        kode: 'HS',
+        type: 'yrkesfaglig',
+        tittel: {
+          en: 'Helse- og oppvekstfag',
+          nb: 'Helse- og oppvekstfag',
+          nn: 'Helse- og oppvekstfag',
+          sm: 'Samisk'
+        },
+        kortform: {
+          en: 'Helse- og oppvekstfag',
+          nb: 'Helse- og oppvekstfag',
+          nn: 'Helse- og oppvekstfag',
+          sm: 'Samisk'
+        },
+        skole: {
+          organisasjonsnummer: '1234354',
+          organisasjonsId: '13',
+          hovedskole: true,
+          skolenummer: '12345',
+          kortnavn: 'OF-SKO',
+          navn: 'Sko videregående skole'
+        }
+      },
+      level: 'VG1',
+      year: '2020/2021'
     },
+    /**
+     *
+     * @param {import('$lib/minelev-api/get-student').StudentData} student
+     * @param {Object} content
+     */
     generateContent: (student, content) => {
       if (!student) throw new Error('Missing required argumnet "student"')
-      const { note } = content
-      if (!note) throw new Error('Missing required argument "content.note"')
+      // We cannot add to db here, because this file is used client-side as well...
+      // First we check bekreftelse
+      if (!content.bekreftelse.oppmotested) throw new Error('Mangler oppmøtested for utplasseringen')
+      if (!Array.isArray(content.bekreftelse.kopiPrEpost)) throw new Error('property "bekreftelse.kopiPrEpost" must be Array')
+      for (const email of content.bekreftelse.kopiPrEpost) {
+        if (!isValidEmail(email)) throw new Error(`Kopimottaker: "${email}" er ikke en gyldig e-post-adresse`)
+      }
+      if (!content.bekreftelse.fraDato) throw new Error('Mangler "fra dato"')
+      if (!content.bekreftelse.tilDato) throw new Error('Mangler "til dato"')
+      const convertDate = (date) => {
+        const dateList = date.split('-')
+        if (!dateList.length === 3) throw new Error('Dato må være på format "yyyy-mm-dd"')
+        return `${dateList[2]}.${dateList[1]}.${dateList[0]}`
+      }
+      const fraDato = convertDate(content.bekreftelse.fraDato)
+      const tilDato = convertDate(content.bekreftelse.tilDato)
+      if (new Date(content.bekreftelse.fraDato) > new Date(content.bekreftelse.tilDato)) throw new Error('Utplasseringens fra-dato må være før utplasseringens til-dato...')
+
+      content.bekreftelse.fraDato = fraDato
+      content.bekreftelse.tilDato = tilDato
+
+      if (!content.bekreftelse.daysPerWeek) throw new Error('Mangler antall dager i uken for utplasseringen')
+      if (isNaN(content.bekreftelse.daysPerWeek)) throw new Error('"Antall dager i uken" må være et tall')
+
+      content.bekreftelse.daysPerWeek = content.bekreftelse.daysPerWeek.toString()
+
+      if (!content.bekreftelse.startTid) throw new Error('Mangler "startTid" for utplasseringen')
+      if (!content.bekreftelse.sluttTid) throw new Error('Mangler "sluttTid" for utplasseringen')
+      if (!Array.isArray(content.bekreftelse.kontaktpersonData)) throw new Error('property "bekreftelse.kontaktpersonData" must be Array')
+      if (content.bekreftelse.kontaktpersonData.length === 0) throw new Error('Må ha minst en kontaktperson ved utplasseringsbedriften')
+      for (const person of content.bekreftelse.kontaktpersonData) {
+        if (!person.navn) throw new Error('Kontaktperson ved bedriften mangler "Navn"')
+        if (person.telefon) person.telefon = person.telefon.toString()
+        if (person.telefon && !isValidMobile(person.telefon)) throw new Error(`Telefonnummer ${person.telefon} til kontaktperson er ikke et gyldig telefonnummer`)
+        if (person.epost && !isValidEmail(person.epost)) throw new Error(`E-post adresse ${person.epost} til kontaktperson er ikke en gyldig e-postadresse`)
+      }
+      if (!Array.isArray(content.bekreftelse.parorendeData)) throw new Error('property "bekreftelse.parorendeData" must be Array')
+      if (content.bekreftelse.parorendeData.length === 0) throw new Error('Må ha minst en pårørerende for eleven')
+      for (const person of content.bekreftelse.parorendeData) {
+        if (!person.navn) throw new Error('Pårørerende for eleven mangler "Navn"')
+        if (person.telefon) person.telefon = person.telefon.toString()
+        if (!person.telefon) throw new Error('Pårørerende for eleven mangler "Telefon"')
+        if (!isValidMobile(person.telefon)) throw new Error(`Telefonnummer ${person.telefon} til pårørende er ikke et gyldig telefonnummer`)
+      }
+      if (!content.bekreftelse.bedriftsData) throw new Error('Missing property "bekreftelse.bedriftsData"')
+      if (!content.bekreftelse.bedriftsData.organisasjonsNummer) throw new Error('Missing property "bekreftelse.bedriftsData.organisasjonsNummer"')
+      if (isNaN(content.bekreftelse.bedriftsData.organisasjonsNummer) || content.bekreftelse.bedriftsData.organisasjonsNummer.length !== 9) throw new Error('property "bekreftelse.bedriftsData.organisasjonsNummer" er ikke et gyldig organisasjonsnummer')
+      if (!content.bekreftelse.bedriftsData.navn) throw new Error('Missing property "content.bekreftelse.bedriftsData.navn"')
+      if (!content.bekreftelse.bedriftsData.adresse) throw new Error('Missing property "content.bekreftelse.bedriftsData.adresse"')
+      if (!content.bekreftelse.bedriftsData.postnummer) throw new Error('Missing property "content.bekreftelse.bedriftsData.postnummer"')
+      if (!content.bekreftelse.bedriftsData.poststed) throw new Error('Missing property "content.bekreftelse.bedriftsData.poststed"')
+      if (!content.bekreftelse.bedriftsData.avdeling) content.bekreftelse.bedriftsData.avdeling = '' 
+
+      content.bekreftelse.bedriftsNavn = content.bekreftelse.bedriftsData.navn
+
+      // Så tar vi utdanningsprogram og level
+      if (!content.utdanningsprogramId) throw new Error('Missing property "utdanningsprogramId')
+      const utdanningsprogram = student.utdanningsprogram.find(program => program.id === content.utdanningsprogramId)
+      if (!utdanningsprogram) throw new Error(`Could not find students utdanningsprogram with id ${content.utdanningsprogramId}`)
+      content.utdanningsprogram = utdanningsprogram
+      if (!content.level) throw new Error('Missing property "level"')
       return {
-        note
+        ...content,
+        year: getCurrentSchoolYear()
       }
     }
   },

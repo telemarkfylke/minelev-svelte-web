@@ -29,6 +29,25 @@ import { callGrep } from '$lib/grep'
  */
 
 /**
+ * @typedef GrepTittel
+ * @property {string} en engelsk
+ * @property {string} no norsk bokmål
+ * @property {string} nn norsk nynorsk
+ * @property {string} sm samisk
+ */
+
+/**
+ * @typedef GrepUtdanningsprogram
+ * @property {string} id
+ * @property {string} kode
+ * @property {string} fintKode
+ * @property {string} type
+ * @property {GrepTittel} tittel
+ * @property {GrepTittel} kortform
+ * @property {import('./get-user-data').MiniSchool[]} skole
+ */
+
+/**
  * @typedef Student
  * @property {string} upn
  * @property {string} feidenavn
@@ -46,9 +65,63 @@ import { callGrep } from '$lib/grep'
  * @property {Faggruppe[]} faggrupper
  * @property {Faggruppe[]} probableFaggrupper
  * @property {boolean} [hasYff]
+ * @property {GrepUtdanningsprogram} [utdanningsprogram]
  * @property {import('./get-user-data').MiniSchool[]} [yffSchools]
  *
  */
+
+/**
+ *
+ * @param {Object} grepUtdanningsprogram
+ * @param {boolean} hasYff
+ * @returns {GrepUtdanningsprogram}
+ */
+const repackGrepUtdanningsprogram = (grepUtdanningsprogram, fintKode, hasYff, skole) => {
+  if (!grepUtdanningsprogram) {
+    return {
+      id: 'Ukjent id',
+      fintKode,
+      type: hasYff ? 'yrkesfaglig' : 'Ukjent type',
+      tittel: {
+        en: 'Ukjent utdanningsprogram',
+        nb: 'Ukjent utdanningsprogram',
+        nn: 'Ukjent utdanningsprogram',
+        sm: 'Ukjent utdanningsprogram'
+      },
+      kortform: {
+        en: 'Ukjent utdanningsprogram',
+        nb: 'Ukjent utdanningsprogram',
+        nn: 'Ukjent utdanningsprogram',
+        sm: 'Ukjent utdanningsprogram'
+      },
+      skole
+    }
+  }
+  const utdanningsprogramBeskrivelse = grepUtdanningsprogram['type-utdanningsprogram']?.beskrivelse || []
+  const typeUtdanningsprogram = utdanningsprogramBeskrivelse.find(b => b.spraak === 'default') || 'Ukjent utdanningsprogram'
+  const defaultTitle = grepUtdanningsprogram.tittel.find(t => t.spraak === 'default')?.verdi || 'Ukjent navn'
+  const defaultShortname = grepUtdanningsprogram.kortform.find(k => k.spraak === 'default')?.verdi || 'Ukjent kortform'
+  const repackedGrepUtdanningsprogram = {
+    id: grepUtdanningsprogram.id || 'Ukjent id',
+    fintKode,
+    kode: grepUtdanningsprogram.kode || 'Ukjent kode',
+    type: hasYff ? 'yrkesfaglig' : typeUtdanningsprogram,
+    tittel: {
+      en: grepUtdanningsprogram.tittel.find(t => t.spraak === 'eng')?.verdi || defaultTitle,
+      nb: grepUtdanningsprogram.tittel.find(t => t.spraak === 'nob')?.verdi || defaultTitle,
+      nn: grepUtdanningsprogram.tittel.find(t => t.spraak === 'nno')?.verdi || defaultTitle,
+      sm: grepUtdanningsprogram.tittel.find(t => t.spraak === 'sme')?.verdi || defaultTitle
+    },
+    kortform: {
+      en: grepUtdanningsprogram.kortform.find(k => k.spraak === 'eng')?.verdi || defaultShortname,
+      nb: grepUtdanningsprogram.kortform.find(k => k.spraak === 'nob')?.verdi || defaultShortname,
+      nn: grepUtdanningsprogram.kortform.find(k => k.spraak === 'nno')?.verdi || defaultShortname,
+      sm: grepUtdanningsprogram.kortform.find(k => k.spraak === 'sme')?.verdi || defaultShortname
+    },
+    skole
+  }
+  return repackedGrepUtdanningsprogram
+}
 
 /**
  * @param {import("$lib/authentication").User} user
@@ -152,12 +225,11 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
   // Så henter vi skoler læreren underviser eleven, og der eleven har yrkesfaglig elevforhold? Returner disse skolene som yff-schools. Disse brukes i kombo for å validere om læreren kan produsere yff-greier for eleven
   if (env.YFF_ENABLED === 'true') {
     const yffSchools = []
+    const utdanningsprogram = []
     logger('info', [loggerPrefix, 'YFF_ENABLED is true, checking for elevforhold with "yrkesfaglig" utdanningsprogram, at schools teacher have access to'])
     const elevforholdToCheckForYFF = student.elevforhold.filter(forhold => teacherStudent.skoler.some(school => school.skolenummer === forhold.skole.skolenummer))
     for (const elevforhold of elevforholdToCheckForYFF) {
-      // Sjekker først om vi har yff på denne skolen alledere, i så fall kan vi skippe
-      if (yffSchools.some(school => school.skolenummer === elevforhold.skole.skolenummer)) continue
-      let grepReferanser = []
+      const grepReferanser = []
       for (const programomraade of elevforhold.programomrademedlemskap) {
         for (const program of programomraade.utdanningsprogram) {
           grepReferanser.push(...program.grepreferanse)
@@ -166,25 +238,28 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
       if (grepReferanser.length === 0) {
         logger('warn', [loggerPrefix, `Found ${grepReferanser.length} grepReferanser for elevforhold ${elevforhold.systemId} - adding school to yffSchools because we don't know if yrkesfaglig or not...`])
         yffSchools.push(teacherStudent.skoler.find(school => school.skolenummer === elevforhold.skole.skolenummer))
+        const repackedGrepUtdanningsprogram = repackGrepUtdanningsprogram(null, 'ukjent', true, elevforhold.skole)
+        utdanningsprogram.push(repackedGrepUtdanningsprogram)
         continue
       }
       logger('info', [`Found ${grepReferanser.length} grepReferanser to check for elevforhold ${elevforhold.systemId}, checking grep-values ${grepReferanser.join(', ')} from udir`])
       for (const grepReferanse of grepReferanser) {
         // Sjekker først om vi har yff på denne skolen alledere, i så fall kan vi skippe
-        if (yffSchools.some(school => school.skolenummer === elevforhold.skole.skolenummer)) continue
+        const utdanningsCode = grepReferanse.substring(grepReferanse.lastIndexOf('/') + 1) // Grep is on the format "https://psi.udir.no/kl06/TP"
         try {
-          const utdanningsCode = grepReferanse.substring(grepReferanse.lastIndexOf('/') + 1) // Grep is on the format "https://psi.udir.no/kl06/TP"
-          const grepResult = await callGrep(`utdanningsprogram/${utdanningsCode}`)
-          const utdanningsprogram = grepResult['type-utdanningsprogram']?.uri || 'Ukjent'
-          const hasYff = utdanningsprogram.endsWith('yrkesfaglig') || utdanningsprogram === 'Ukjent'
+          const grepUtdanningsprogram = await callGrep(`utdanningsprogram/${utdanningsCode}`)
+          const utdanningsprogramTypeUri = grepUtdanningsprogram['type-utdanningsprogram']?.uri || 'Ukjent'
+          const hasYff = utdanningsprogramTypeUri.endsWith('yrkesfaglig') || utdanningsprogramTypeUri === 'Ukjent'
+          const repackedGrepUtdanningsprogram = repackGrepUtdanningsprogram(grepUtdanningsprogram, utdanningsCode, hasYff, elevforhold.skole)
+          utdanningsprogram.push(repackedGrepUtdanningsprogram)
           if (hasYff) {
-            logger('info', [loggerPrefix, `Found yrkesfaglig utdannningsprogram or ukjent: ${utdanningsprogram} - student has YFF at school`])
-            yffSchools.push(teacherStudent.skoler.find(school => school.skolenummer === elevforhold.skole.skolenummer))
+            logger('info', [loggerPrefix, `Found yrkesfaglig utdannningsprogram or ukjent: ${utdanningsprogramTypeUri} - student has YFF at school - adding school to yffSchools, if it does not exist already`])
+            if (!yffSchools.some(school => school.skolenummer === elevforhold.skole.skolenummer)) yffSchools.push(teacherStudent.skoler.find(school => school.skolenummer === elevforhold.skole.skolenummer))
           } else {
-            logger('info', [loggerPrefix, `No yrkesfaglig utdannningsprogram found on: ${utdanningsprogram}`])
+            logger('info', [loggerPrefix, `No yrkesfaglig utdannningsprogram found on: ${utdanningsprogramTypeUri}`])
           }
         } catch (error) {
-          logger('error', [loggerPrefix, `Failed when fetching grep resource utdanningsprogram/${'tp'}`, 'Dont know if we have YFF - should we set True? We dont do it yet at least...', error.response?.data || error.stack || error.toString()])
+          logger('error', [loggerPrefix, `Failed when fetching grep resource utdanningsprogram/${utdanningsCode}`, 'Dont know if we have YFF - should we set True? We dont do it yet at least...', error.response?.data || error.stack || error.toString()])
           // yffSchools.push(teacherStudent.skoler.find(school => school.skolenummer === elevforhold.skole.skolenummer))
         }
       }
@@ -198,9 +273,10 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
       studentData.hasYff = false
       studentData.yffSchools = yffSchools
     }
+    studentData.utdanningsprogram = utdanningsprogram
   }
 
-  logger('info', [loggerPrefix, `All is good, returning data`])
+  logger('info', [loggerPrefix, 'All is good, returning data'])
 
   return studentData
 }
