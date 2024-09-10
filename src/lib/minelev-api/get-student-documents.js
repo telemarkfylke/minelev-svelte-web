@@ -9,16 +9,28 @@ import { getCurrentSchoolYear } from '$lib/document-types/document-types'
  *
  * @param {import("$lib/authentication").User} user
  * @param {string} studentFeidenavn
+ * @param {Object} [docFilter]
  * @returns list of documents
  */
-export const getStudentDocuments = async (user, studentFeidenavn) => {
-  const loggerPrefix = `getStudentDocuments - user: ${user.principalName} - student: ${studentFeidenavn}`
+export const getStudentDocuments = async (user, studentFeidenavn, docFilter) => {
+  const loggerPrefix = `getStudentDocuments - user: ${user.principalName} - student: ${studentFeidenavn} - docFilter - ${docFilter}`
   logger('info', [loggerPrefix, 'New request'])
 
   // Validate parameteres
   if (!studentFeidenavn) {
     logger('error', [loggerPrefix, 'Missing required argument "studentFeidenavn'])
     throw new Error('Missing required argument "studentFeidenavn"')
+  }
+
+  if (docFilter) {
+    if (docFilter.types && !Array.isArray(docFilter.types)) {
+      logger('error', [loggerPrefix, 'Parameter "docFilter.types" must be array'])
+      throw new Error('Parameter "docFilter.types" must be array')
+    }
+    if (docFilter.variants && !Array.isArray(docFilter.variants)) {
+      logger('error', [loggerPrefix, 'Parameter "docFilter.variants" must be array'])
+      throw new Error('Parameter "docFilter.variants" must be array')
+    }
   }
 
   // Check if regular teacher or administrator impersonating teacher or leder
@@ -55,6 +67,10 @@ export const getStudentDocuments = async (user, studentFeidenavn) => {
       if (!availableDocumentType) continue
       const availableSchool = availableDocumentType.schools.some(school => school.skolenummer === document.school.id)
       if (!availableSchool) continue
+      if (docFilter) {
+        if (docFilter.types && !docFilter.types.includes(document.type)) continue
+        if (docFilter.variants && !docFilter.variants.includes(document.variant)) continue
+      }
       documents.push(document)
     }
     logger('info', [loggerPrefix, 'MOCK_API is true', `Found ${documents.length} available documents in mockdb - returning`])
@@ -71,6 +87,14 @@ export const getStudentDocuments = async (user, studentFeidenavn) => {
         }
       }
       const documentQuery = { 'student.elevnummer': teacherStudent.elevnummer, $or: documentTypeOr }
+      if (docFilter) {
+        if (docFilter.types) {
+          documentQuery.type = { $in: docFilter.types }
+        }
+        if (docFilter.variants) {
+          documentQuery.variant = { $in: docFilter.variants }
+        }
+      }
       logger('info', [loggerPrefix, 'Documentquery successfully built', documentQuery, 'Fetching from db'])
       const mongoClient = await getMongoClient()
       const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
