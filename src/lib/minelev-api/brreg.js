@@ -52,7 +52,7 @@ export const brregSearch = async (user, query) => {
   if (!isNaN(query) && query.length === 9) {
     // Orgnr
     logger('info', [loggerPrefix, `Query is orgnr - checking for enheter and underenheter with orgnr ${query}`])
-    console.log(`${env.BRREG_API_URL}/enheter?organisasjonsnummer=${query}`)
+    // console.log(`${env.BRREG_API_URL}/enheter?organisasjonsnummer=${query}`)
     const enheterResponse = await axios.get(`${env.BRREG_API_URL}/enheter?organisasjonsnummer=${query}`)
     const underenheterResponse = await axios.get(`${env.BRREG_API_URL}/underenheter?organisasjonsnummer=${query}`)
     const result = {

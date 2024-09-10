@@ -6,6 +6,7 @@
   import VarselFag from "$lib/document-types/VarselFag.svelte";
   import VarselOrden from "$lib/document-types/VarselOrden.svelte";
   import YffBekreftelse from "$lib/document-types/YFFBekreftelse.svelte";
+  import YffLaereplan from "$lib/document-types/YFFLaereplan.svelte";
   import { documentTypes } from "$lib/document-types/document-types";
   /** @type {import('./$types').PageData} */
   export let data
@@ -93,7 +94,7 @@
     <YffBekreftelse {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} {studentData} />
   {/if}
   {#if documentTypeId === 'yff-laereplan'}
-    Hallo yff
+    <YffLaereplan {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} {studentData} />
   {/if}
   {#if documentTypeId === 'yff-tilbakemelding'}
     Hallo yff
