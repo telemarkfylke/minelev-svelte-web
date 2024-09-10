@@ -13,11 +13,12 @@
   export let isCompletedDocument = false
   export let documentContent = null
 
+  let formElement
   let showPreview = false
   let sendLoading = false
   let previewLoading = false
 
-  let showData = true
+  let showData = false
   let errorMessage = ""
 
   let canClickSend = false
@@ -44,10 +45,12 @@
   }
 
   const getStudentUtdanningsprogram = (schoolNumber) => {
+    if (isCompletedDocument) return []
     return studentData.utdanningsprogram.filter(program => program.skole.skolenummer === schoolNumber)
   }
 
   const getStudentLevels = (schoolNumber) => {
+    if (isCompletedDocument) return []
     return studentData.basisgrupper.filter(gruppe => gruppe.skole.skolenummer === schoolNumber).map(gruppe => gruppe.trinn)
   }
 
@@ -123,10 +126,17 @@
   }
 
   // Reactive statements
-  $: canClickSend = true // TODO
+  $: canClickSend = Boolean(content.bekreftelse.bedriftsData) // Vi prøver oss med innebygget form validation i browser i stedet :)
+  //$: canClickSend = Boolean(content.bekreftelse.bedriftsData && content.bekreftelse.oppmotested && (Array.isArray(content.bekreftelse.kontaktpersonData) && content.bekreftelse.kontaktpersonData.length > 0 && content.bekreftelse.kontaktpersonData.every(person => person.navn)) && content.bekreftelse.fraDato && content.bekreftelse.tilDato && content.bekreftelse.daysPerWeek && content.bekreftelse.startTid && content.bekreftelse.tilDato && (Array.isArray(content.bekreftelse.parorendeData) && content.bekreftelse.parorendeData.length > 0 && content.bekreftelse.parorendeData.every(person => (person.navn && person.telefon))))
 
   let previewBase64
   const sendBekreftelse = async (preview=false) => {
+    const validData = formElement.reportValidity()
+    if (!validData) {
+      previewLoading = false
+      sendLoading = false
+      return
+    }
     errorMessage = ""
     try {
       const payload = {
@@ -158,256 +168,362 @@
 {#if showData}
   <pre>{JSON.stringify(content, null, 2)}</pre>
 {/if}
-
-<!--Elevens utdanningsprogram og trinn-->
-{#if isCompletedDocument}
-  <!--TODO-->
-{:else}
-  <!--Hvis læreren har eleven ved flere utdanningsprogram må hen velge-->
-  <section>
-    <h3>
-      Elevens utdanningsprogram
-    </h3>
-    <div class="label-select">
-      <label for="utdanningsprogramid">Utdanningsprogram</label>
-      <select bind:value={content.utdanningsprogramId} id="utdanningsprogramid">
-        {#if getStudentUtdanningsprogram(selectedSchoolNumber).length === 1} <!-- Hvis det bare er et utdanningsprogram, så bruker vi bare det -->
-          <option value="{getStudentUtdanningsprogram(selectedSchoolNumber)[0].id}">{getStudentUtdanningsprogram(selectedSchoolNumber)[0].tittel.nb}</option>
-        {:else}
-          <option value="">--Velg utdanningsprogram--</option>
-          <hr />
-          {#each getStudentUtdanningsprogram(selectedSchoolNumber) as program}
-            <option value="{program.id}">{program.tittel.nb}</option>
-          {/each}
-        {/if}
+<form bind:this={formElement}>
+  <!--Elevens utdanningsprogram og trinn-->
+  {#if isCompletedDocument}
+    <section>
+      <h3>
+        Elevens utdanningsprogram
+      </h3>
+      <div>
+        {documentContent.utdanningsprogram.tittel.nb} - {documentContent.level}
+      </div>
+    </section>
+  {:else}
+    <!--Hvis læreren har eleven ved flere utdanningsprogram må hen velge-->
+    <section>
+      <h3>
+        Elevens utdanningsprogram
+      </h3>
+      <div class="label-select">
+        <label for="utdanningsprogramid">Utdanningsprogram</label>
+        <select bind:value={content.utdanningsprogramId} id="utdanningsprogramid">
+          {#if getStudentUtdanningsprogram(selectedSchoolNumber).length === 1} <!-- Hvis det bare er et utdanningsprogram, så bruker vi bare det -->
+            <option value="{getStudentUtdanningsprogram(selectedSchoolNumber)[0].id}">{getStudentUtdanningsprogram(selectedSchoolNumber)[0].tittel.nb}</option>
+          {:else}
+            <option value="">--Velg utdanningsprogram--</option>
+            <hr />
+            {#each getStudentUtdanningsprogram(selectedSchoolNumber) as program}
+              <option value="{program.id}">{program.tittel.nb}</option>
+            {/each}
+          {/if}
+          </select>
+      </div>
+      <div class="label-select">
+        <label for="trinn">Trinn</label>
+        <select bind:value={content.level} id="trinn">
+          {#if getStudentLevels(selectedSchoolNumber).length === 1} <!-- Hvis det bare er et trinn, så bruker vi bare det -->
+            <option value="{getStudentLevels(selectedSchoolNumber)[0]}">{getStudentLevels(selectedSchoolNumber)[0]}</option>
+          {:else}
+            <option value="">--Velg trinn--</option>
+            <hr />
+            {#each getStudentLevels(selectedSchoolNumber) as level}
+              <option value="{level}">{level}</option>
+            {/each}
+          {/if}
         </select>
-    </div>
-    <div class="label-select">
-      <label for="trinn">Trinn</label>
-      <select bind:value={content.level} id="trinn">
-        {#if getStudentLevels(selectedSchoolNumber).length === 1} <!-- Hvis det bare er et trinn, så bruker vi bare det -->
-          <option value="{getStudentLevels(selectedSchoolNumber)[0]}">{getStudentLevels(selectedSchoolNumber)[0]}</option>
-        {:else}
-          <option value="">--Velg trinn--</option>
-          <hr />
-          {#each getStudentLevels(selectedSchoolNumber) as level}
-            <option value="{level}">{level}</option>
-          {/each}
-        {/if}
-        </select>
-    </div>
-  </section>
+      </div>
+    </section>
 
-{/if}
+  {/if}
 
-<!--Bedriftsinformasjon-->
-{#if isCompletedDocument}
-  <section>
-    <h3>
-      Bedriftsinformasjon
-    </h3>
-    <input type="radio" id="period" name="periodId" disabled checked />
-    <label for="period">{documentContent.period.nb}</label><br>
-  </section>
-{:else if content.utdanningsprogramId && content.level}
-  <section>
-    <h3>
-      Bedriftsinformasjon
-    </h3>
-    {#if !content.bekreftelse.bedriftsData}
-      <form>
-        <div class="button-input">
-          <input id="brregsearch" type="text" bind:value={brregQuery}  placeholder="Søk etter navn eller orgnr" />
-          <button class="squared" on:click={(e) => { e.preventDefault(); brregSearch(brregQuery) }}>
-            <span class="material-symbols-outlined">search</span>
-          </button>
-        </div>
-      </form>
-      {#if brregLoading}
-        <LoadingSpinner width="4" />
-      {:else if brregError}
-        {brregError}
-      {:else}
-        {#each brregResult as unit}
-          <button class="brregUnit" title="Velg enhet" on:click={() => {content.bekreftelse.bedriftsData = unit; window.scrollTo(0, 0);}}>
-              <div>{unit.organisasjonsNummer}</div>
-              <div style="text-align: left;">
-                {#if unit.type === 'underenhet'}
-                  <div style="font-size: var(--font-size-small);">Underenhet</div>
-                {/if}
-                <div>{unit.navn}</div>
-              </div>
-          </button>
-        {/each}
-      {/if}
-    {:else} <!-- Da har vi bedrift -->
+  <!--Bedriftsinformasjon-->
+  {#if isCompletedDocument}
+    <section>
+      <h3>
+        Bedriftsinformasjon
+      </h3>
       <div class="selectedBrregUnit">
-        <div class="unitTitle">{content.bekreftelse.bedriftsData.navn}</div>
-        <div>{content.bekreftelse.bedriftsData.organisasjonsNummer}</div>
-        <div>{content.bekreftelse.bedriftsData.adresse}</div>
-        <div>{content.bekreftelse.bedriftsData.postnummer} {content.bekreftelse.bedriftsData.poststed}</div>
-        <div class="icon-link">
-          <span class="material-symbols-outlined">arrow_back</span><button on:click={() => { content.bekreftelse.bedriftsData = null }} class="link">Velg en annen bedrift</button>
+        <div class="unitTitle">{documentContent.bekreftelse.bedriftsData.navn}</div>
+        <div>{documentContent.bekreftelse.bedriftsData.organisasjonsNummer}</div>
+        <div>{documentContent.bekreftelse.bedriftsData.adresse}</div>
+        <div>{documentContent.bekreftelse.bedriftsData.postnummer} {documentContent.bekreftelse.bedriftsData.poststed}</div>
+      </div>
+      {#if documentContent.bekreftelse.bedriftsData.avdeling}
+        <div class="label-input disabled">
+          <label for="avdeling">Avdeling</label>
+          <input disabled id="avdeling" type="text" value={documentContent.bekreftelse.bedriftsData.avdeling} />
         </div>
-      </div>
-      <div class="label-input" style="display: flex;">
-        <label for="avdeling">Avdeling (valgfritt)</label>
-        <input id="avdeling" type="text" bind:value={content.bekreftelse.bedriftsData.avdeling} placeholder="Avdeling ved bedriften" />
-      </div>
-      <div class="label-input">
+      {/if}
+      <div class="label-input disabled">
         <label for="motested">Oppmøtested</label>
-        <input id="motested" type="text" bind:value={content.bekreftelse.oppmotested} placeholder="Hvor skal eleven møte opp" />
+        <input disabled id="motested" type="text" value={documentContent.bekreftelse.oppmotested} />
       </div>
-    {/if}
-  </section>
-{/if}
-
-<!--Kontaktpersoner-->
-{#if isCompletedDocument}
-  <!--TODO-->
-{:else if content.bekreftelse.bedriftsData}
-  <section>
-    <h3>Kontaktperson(er) ved bedriften</h3>
-    {#each content.bekreftelse.kontaktpersonData as kontaktperson, index}
-      <div class="contactPerson">
-        <h4>Kontaktperson{index > 0 ? ` ${index + 1}` : ''}</h4>
-        <div class="label-input">
-          <label for="kontaktperson-{index}-navn">Navn</label>
-          <input id="kontaktperson-{index}-navn" type="text" bind:value={content.bekreftelse.kontaktpersonData[index].navn} placeholder="Navn på kontaktperson" />
-        </div>
-        <div class="label-input">
-          <label for="kontaktperson-{index}-tlf">Telefon (valgfritt)</label>
-          <input id="kontaktperson-{index}-tlf" type="number" bind:value={content.bekreftelse.kontaktpersonData[index].telefon} placeholder="Telefonnummer til kontaktperson" />
-        </div>
-        <div class="label-input">
-          <label for="kontaktperson-{index}-epost">E-post (valgfritt)</label>
-          <input id="kontaktperson-{index}-epost" type="email" bind:value={content.bekreftelse.kontaktpersonData[index].epost} placeholder="E-post til kontaktperson" />
-        </div>
-        <div class="label-input">
-          <label for="kontaktperson-{index}-avdeling">Avdeling (valgfritt)</label>
-          <input id="kontaktperson-{index}-avdeling" type="text" bind:value={content.bekreftelse.kontaktpersonData[index].avdeling} placeholder="Kontaktpersonens avdeling i bedriften" />
-        </div>
-        {#if index > 0}
-          <div class="icon-link" style="padding-top: 1rem;">
-            <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeContactPerson(index)}}>Fjern kontaktperson</button>
+    </section>
+  {:else if content.utdanningsprogramId && content.level}
+    <section>
+      <h3>
+        Bedriftsinformasjon
+      </h3>
+      {#if !content.bekreftelse.bedriftsData}
+        <form>
+          <div class="button-input">
+            <input id="brregsearch" type="text" bind:value={brregQuery}  placeholder="Søk etter navn eller orgnr" />
+            <button class="squared" on:click={(e) => { e.preventDefault(); brregSearch(brregQuery) }}>
+              <span class="material-symbols-outlined">search</span>
+            </button>
           </div>
+        </form>
+        {#if brregLoading}
+          <LoadingSpinner width="4" />
+        {:else if brregError}
+          {brregError}
+        {:else}
+          {#each brregResult as unit}
+            <button class="brregUnit" title="Velg enhet" on:click={() => {content.bekreftelse.bedriftsData = unit; window.scrollTo(0, 0);}}>
+                <div>{unit.organisasjonsNummer}</div>
+                <div style="text-align: left;">
+                  {#if unit.type === 'underenhet'}
+                    <div style="font-size: var(--font-size-small);">Underenhet</div>
+                  {/if}
+                  <div>{unit.navn}</div>
+                </div>
+            </button>
+          {/each}
         {/if}
-      </div>
-      <br />
-    {/each}
-    <button class="icon-button filled" on:click={addContactPerson}><span class="material-symbols-outlined">add</span>Legg til enda en kontaktperson</button>
-  </section>
-{/if}
-
-<!--Kopimottakere-->
-{#if isCompletedDocument}
-  <!--TODO-->
-{:else if content.bekreftelse.bedriftsData}
-  <section>
-    <h3>Kopimottakere</h3>
-    <p>Noen ganger er det enklere sagt enn gjort at korrekt mottaker hos utplasseringsbedriften mottar brevene som sendes, i de tilfellene kan man legge kontaktpersonen(e) som kopimottaker, og de vil få tilsendt kopi av dokumentene på e-post i tillegg.</p>
-    {#each content.bekreftelse.kopiPrEpost as mottaker, index}
-      <div class="contactPerson">
-        <h4>Kopimottaker{index > 0 ? ` ${index + 1}` : ''}</h4>
+      {:else} <!-- Da har vi bedrift -->
+        <div class="selectedBrregUnit">
+          <div class="unitTitle">{content.bekreftelse.bedriftsData.navn}</div>
+          <div>{content.bekreftelse.bedriftsData.organisasjonsNummer}</div>
+          <div>{content.bekreftelse.bedriftsData.adresse}</div>
+          <div>{content.bekreftelse.bedriftsData.postnummer} {content.bekreftelse.bedriftsData.poststed}</div>
+          <div class="icon-link">
+            <span class="material-symbols-outlined">arrow_back</span><button on:click={() => { content.bekreftelse.bedriftsData = null }} class="link">Velg en annen bedrift</button>
+          </div>
+        </div>
         <div class="label-input">
-          <label for="kopimottaker-{index}">E-post</label>
-          <input id="kopimottaker-{index}" type="email" bind:value={content.bekreftelse.kopiPrEpost[index]} placeholder="E-post til kopimottaker" />
+          <label for="avdeling">Avdeling (valgfritt)</label>
+          <input id="avdeling" type="text" bind:value={content.bekreftelse.bedriftsData.avdeling} placeholder="Avdeling ved bedriften" />
         </div>
-        <div class="icon-link" style="padding-top: 1rem;">
-          <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeKopimottaker(index)}}>Fjern kopimottaker</button>
+        <div class="label-input required">
+          <label for="motested">Oppmøtested</label>
+          <input required id="motested" type="text" bind:value={content.bekreftelse.oppmotested} placeholder="Hvor skal eleven møte opp" />
         </div>
-      </div>
-      <br />
-    {/each}
-    <button class="icon-button filled" on:click={addKopimottaker}><span class="material-symbols-outlined">add</span>Legg til kopimottaker</button>
-  </section>
-{/if}
+      {/if}
+    </section>
+  {/if}
 
-<!--Tidsrom-->
-{#if isCompletedDocument}
-  <!--TODO-->
-{:else if content.bekreftelse.bedriftsData}
-  <section>
-    <h3>Tidsrom for utplassering</h3>
-    <div class="label-input">
-      <label for="fraogmed">Fra og med</label>
-      <input id="fraogmed" type="date" bind:value={content.bekreftelse.fraDato} />
-    </div>
-    <div class="label-input">
-      <label for="tilogmed">Til og med</label>
-      <input id="tilogmed" type="date" bind:value={content.bekreftelse.tilDato} />
-    </div>
-    <div class="label-input">
-      <label for="daysperweek">Antall dager i uken</label>
-      <input id="daysperweek" type="number" bind:value={content.bekreftelse.daysPerWeek} placeholder="Antall dager i uken" />
-    </div>
-    <div class="label-input">
-      <label for="fraklokken">Fra klokken</label>
-      <input id="fraklokken" type="time" bind:value={content.bekreftelse.startTid} />
-    </div>
-    <div class="label-input">
-      <label for="tilklokken">Til klokken</label>
-      <input id="tilklokken" type="time" bind:value={content.bekreftelse.sluttTid} />
-    </div>
-  </section>
-{/if}
-
-<!--Pårørerende for eleven-->
-{#if isCompletedDocument}
-  <!--TODO-->
-{:else if content.bekreftelse.bedriftsData}
-  <section>
-    <h3>Pårørende for eleven</h3>
-      {#each content.bekreftelse.parorendeData as parorende, index}
+  <!--Kontaktpersoner-->
+  {#if isCompletedDocument}
+    <section>
+      <h3>Kontaktperson(er) ved bedriften</h3>
+      {#each documentContent.bekreftelse.kontaktpersonData as kontaktperson, index}
         <div class="contactPerson">
-          <h4>Pårørende{index > 0 ? ` ${index + 1}` : ''}</h4>
-          <div class="label-input">
-            <label for="parorende-{index}-navn">Navn</label>
-            <input id="parorende-{index}-navn" type="text" bind:value={content.bekreftelse.parorendeData[index].navn} placeholder="Navn på pårørende" />
+          <h4>Kontaktperson{index > 0 ? ` ${index + 1}` : ''}</h4>
+          <div class="label-input disabled">
+            <label for="kontaktperson-{index}-navn">Navn</label>
+            <input disabled id="kontaktperson-{index}-navn" type="text" value={kontaktperson.navn} />
           </div>
-          <div class="label-input">
-            <label for="parorende-{index}-tlf">Telefon</label>
-            <input id="parorende-{index}-tlf" type="number" bind:value={content.bekreftelse.parorendeData[index].telefon} placeholder="Telefonnummer til pårørende" />
-          </div>
-          {#if index > 0}
-            <div class="icon-link" style="padding-top: 1rem;">
-              <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeParorende(index)}}>Fjern pårørende</button>
+          {#if kontaktperson.telefon}
+            <div class="label-input disabled">
+              <label for="kontaktperson-{index}-tlf">Telefon</label>
+              <input disabled id="kontaktperson-{index}-tlf" type="number" value={kontaktperson.telefon} />
+            </div>
+          {/if}
+          {#if kontaktperson.epost}
+            <div class="label-input disabled">
+              <label for="kontaktperson-{index}-epost">E-post</label>
+              <input disabled id="kontaktperson-{index}-epost" type="email" value={kontaktperson.epost} />
+            </div>
+          {/if}
+          {#if kontaktperson.avdeling}
+            <div class="label-input disabled">
+              <label for="kontaktperson-{index}-avdeling">Avdeling</label>
+              <input disabled id="kontaktperson-{index}-avdeling" type="text" value={kontaktperson.avdeling} />
             </div>
           {/if}
         </div>
         <br />
       {/each}
-      <button class="icon-button filled" on:click={addParorende}><span class="material-symbols-outlined">add</span>Legg til enda en pårørende</button>
-  </section>
-{/if}
+    </section>
+  {:else if content.bekreftelse.bedriftsData}
+    <section>
+      <h3>Kontaktperson(er) ved bedriften</h3>
+      {#each content.bekreftelse.kontaktpersonData as kontaktperson, index}
+        <div class="contactPerson">
+          <h4>Kontaktperson{index > 0 ? ` ${index + 1}` : ''}</h4>
+          <div class="label-input required">
+            <label for="kontaktperson-{index}-navn">Navn</label>
+            <input required id="kontaktperson-{index}-navn" type="text" bind:value={content.bekreftelse.kontaktpersonData[index].navn} placeholder="Navn på kontaktperson" />
+          </div>
+          <div class="label-input">
+            <label for="kontaktperson-{index}-tlf">Telefon (valgfritt)</label>
+            <input id="kontaktperson-{index}-tlf" type="number" bind:value={content.bekreftelse.kontaktpersonData[index].telefon} placeholder="Telefonnummer til kontaktperson" />
+          </div>
+          <div class="label-input">
+            <label for="kontaktperson-{index}-epost">E-post (valgfritt)</label>
+            <input id="kontaktperson-{index}-epost" type="email" bind:value={content.bekreftelse.kontaktpersonData[index].epost} placeholder="E-post til kontaktperson" />
+          </div>
+          <div class="label-input">
+            <label for="kontaktperson-{index}-avdeling">Avdeling (valgfritt)</label>
+            <input id="kontaktperson-{index}-avdeling" type="text" bind:value={content.bekreftelse.kontaktpersonData[index].avdeling} placeholder="Kontaktpersonens avdeling i bedriften" />
+          </div>
+          {#if index > 0}
+            <div class="icon-link" style="padding-top: 1rem;">
+              <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeContactPerson(index)}}>Fjern kontaktperson</button>
+            </div>
+          {/if}
+        </div>
+        <br />
+      {/each}
+      <button class="icon-button filled" on:click={addContactPerson}><span class="material-symbols-outlined">add</span>Legg til enda en kontaktperson</button>
+    </section>
+  {/if}
 
-{#if errorMessage}
-  <section class="error">
-    <h4>En feil har oppstått 😩</h4>
-    <p>{JSON.stringify(errorMessage)}</p>
-  </section>
-{/if}
+  <!--Kopimottakere-->
+  {#if isCompletedDocument}
+    <section>
+      <h3>Kopimottakere</h3>
+      {#if content.bekreftelse.kopiPrEpost.length === 0}
+        <p>Ingen kopimottakere</p>
+      {/if}
+      {#each content.bekreftelse.kopiPrEpost as mottaker, index}
+        <div class="contactPerson">
+          <h4>Kopimottaker{index > 0 ? ` ${index + 1}` : ''}</h4>
+          <div class="label-input disabled">
+            <label for="kopimottaker-{index}">E-post</label>
+            <input disabled id="kopimottaker-{index}" type="email" value={mottaker} />
+          </div>
+        </div>
+        <br />
+      {/each}
+    </section>
+  {:else if content.bekreftelse.bedriftsData}
+    <section>
+      <h3>Kopimottakere</h3>
+      <p>Noen ganger er det enklere sagt enn gjort at korrekt mottaker hos utplasseringsbedriften mottar brevene som sendes, i de tilfellene kan man legge kontaktpersonen(e) som kopimottaker, og de vil få tilsendt kopi av dokumentene på e-post i tillegg.</p>
+      {#each content.bekreftelse.kopiPrEpost as mottaker, index}
+        <div class="contactPerson">
+          <h4>Kopimottaker{index > 0 ? ` ${index + 1}` : ''}</h4>
+          <div class="label-input">
+            <label for="kopimottaker-{index}">E-post</label>
+            <input id="kopimottaker-{index}" type="email" bind:value={content.bekreftelse.kopiPrEpost[index]} placeholder="E-post til kopimottaker" />
+          </div>
+          <div class="icon-link" style="padding-top: 1rem;">
+            <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeKopimottaker(index)}}>Fjern kopimottaker</button>
+          </div>
+        </div>
+        <br />
+      {/each}
+      <button class="icon-button filled" on:click={addKopimottaker}><span class="material-symbols-outlined">add</span>Legg til kopimottaker</button>
+    </section>
+  {/if}
 
-{#if !isCompletedDocument}
-  <div class="form-buttons">
-    {#if canClickSend}
-      {#if previewLoading}
-        <button disabled><LoadingSpinner width={"1.5"} />Forhåndsvisning</button>
+  <!--Tidsrom-->
+  {#if isCompletedDocument}
+    <section>
+      <h3>Tidsrom for utplassering</h3>
+      <div class="label-input disabled">
+        <label for="fraogmed">Fra og med</label>
+        <input disabled id="fraogmed" type="text" value={documentContent.bekreftelse.fraDato} />
+      </div>
+      <div class="label-input disabled">
+        <label for="tilogmed">Til og med</label>
+        <input disabled id="tilogmed" type="text" value={documentContent.bekreftelse.tilDato} />
+      </div>
+      <div class="label-input disabled">
+        <label for="daysperweek">Antall dager i uken</label>
+        <input disabled id="daysperweek" type="number" value={documentContent.bekreftelse.daysPerWeek} />
+      </div>
+      <div class="label-input disabled">
+        <label for="fraklokken">Fra klokken</label>
+        <input disabled id="fraklokken" type="time" value={documentContent.bekreftelse.startTid} />
+      </div>
+      <div class="label-input disabled">
+        <label for="tilklokken">Til klokken</label>
+        <input disabled id="tilklokken" type="time" value={documentContent.bekreftelse.sluttTid} />
+      </div>
+    </section>
+  {:else if content.bekreftelse.bedriftsData}
+    <section>
+      <h3>Tidsrom for utplassering</h3>
+      <div class="label-input required">
+        <label for="fraogmed">Fra og med</label>
+        <input required id="fraogmed" type="date" bind:value={content.bekreftelse.fraDato} />
+      </div>
+      <div class="label-input required">
+        <label for="tilogmed">Til og med</label>
+        <input required id="tilogmed" type="date" bind:value={content.bekreftelse.tilDato} />
+      </div>
+      <div class="label-input required">
+        <label for="daysperweek">Antall dager i uken</label>
+        <input required id="daysperweek" type="number" bind:value={content.bekreftelse.daysPerWeek} placeholder="Antall dager i uken" />
+      </div>
+      <div class="label-input required">
+        <label for="fraklokken">Fra klokken</label>
+        <input required id="fraklokken" type="time" bind:value={content.bekreftelse.startTid} />
+      </div>
+      <div class="label-input required">
+        <label for="tilklokken">Til klokken</label>
+        <input required id="tilklokken" type="time" bind:value={content.bekreftelse.sluttTid} />
+      </div>
+    </section>
+  {/if}
+
+  <!--Pårørerende for eleven-->
+  {#if isCompletedDocument}
+  <section>
+    <h3>Pårørende for eleven</h3>
+      {#each documentContent.bekreftelse.parorendeData as parorende, index}
+        <div class="contactPerson">
+          <h4>Pårørende{index > 0 ? ` ${index + 1}` : ''}</h4>
+          <div class="label-input disabled">
+            <label for="parorende-{index}-navn">Navn</label>
+            <input disabled id="parorende-{index}-navn" type="text" value={parorende.navn} />
+          </div>
+          <div class="label-input disabled">
+            <label for="parorende-{index}-tlf">Telefon</label>
+            <input disabled id="parorende-{index}-tlf" type="number" value={parorende.telefon} />
+          </div>
+        </div>
+        <br />
+      {/each}
+  </section>
+  {:else if content.bekreftelse.bedriftsData}
+    <section>
+      <h3>Pårørende for eleven</h3>
+        {#each content.bekreftelse.parorendeData as parorende, index}
+          <div class="contactPerson">
+            <h4>Pårørende{index > 0 ? ` ${index + 1}` : ''}</h4>
+            <div class="label-input required">
+              <label for="parorende-{index}-navn">Navn</label>
+              <input required id="parorende-{index}-navn" type="text" bind:value={content.bekreftelse.parorendeData[index].navn} placeholder="Navn på pårørende" />
+            </div>
+            <div class="label-input required">
+              <label for="parorende-{index}-tlf">Telefon</label>
+              <input required id="parorende-{index}-tlf" type="number" bind:value={content.bekreftelse.parorendeData[index].telefon} placeholder="Telefonnummer til pårørende" />
+            </div>
+            {#if index > 0}
+              <div class="icon-link" style="padding-top: 1rem;">
+                <span class="material-symbols-outlined">delete</span><button class="link" on:click={() => {removeParorende(index)}}>Fjern pårørende</button>
+              </div>
+            {/if}
+          </div>
+          <br />
+        {/each}
+        <button class="icon-button filled" on:click={addParorende}><span class="material-symbols-outlined">add</span>Legg til enda en pårørende</button>
+    </section>
+  {/if}
+
+  <!-- Hvis error -->
+  {#if errorMessage}
+    <section class="error">
+      <h4>En feil har oppstått 😩</h4>
+      <p>{JSON.stringify(errorMessage)}</p>
+    </section>
+  {/if}
+
+  {#if !isCompletedDocument}
+    <div class="form-buttons">
+      {#if canClickSend}
+        {#if previewLoading}
+          <button disabled><LoadingSpinner width={"1.5"} />Forhåndsvisning</button>
+        {:else}
+          <button type="submit" on:click={(e) => {e.preventDefault(); previewLoading=true; sendBekreftelse(true);}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        {/if}
+        {#if sendLoading}
+          <button disabled><LoadingSpinner width={"1.5"} />Send</button>
+        {:else}
+          <button type="submit" class="filled" on:click={(e) => {e.preventDefault(); sendLoading=true; sendBekreftelse();}}><span class="material-symbols-outlined">send</span>Send</button>
+        {/if}
       {:else}
-        <button on:click={() => {sendBekreftelse(true); previewLoading=true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        <button disabled><span class="material-symbols-outlined">send</span>Send</button>
       {/if}
-      {#if sendLoading}
-        <button disabled><LoadingSpinner width={"1.5"} />Send</button>
-      {:else}
-        <button type="submit" class="filled" on:click={() => {sendBekreftelse(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
-      {/if}
-    {:else}
-      <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
-      <button disabled><span class="material-symbols-outlined">send</span>Send</button>
-    {/if}
-  </div>
-  <PdfPreview {showPreview} base64Data={previewBase64} closePreview={() => {showPreview = false}} />
-{/if}
+    </div>
+    <PdfPreview {showPreview} base64Data={previewBase64} closePreview={() => {showPreview = false}} />
+  {/if}
+</form>
 
 <style>
   h3 {

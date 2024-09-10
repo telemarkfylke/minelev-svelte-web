@@ -6,13 +6,13 @@
     import VarselAtferd from "$lib/document-types/VarselAtferd.svelte";
     import VarselFag from "$lib/document-types/VarselFag.svelte";
     import VarselOrden from "$lib/document-types/VarselOrden.svelte";
+    import YffBekreftelse from "$lib/document-types/YFFBekreftelse.svelte";
     import { prettyPrintDate } from "$lib/helpers/pretty-date";
     /** @type {import('./$types').PageData} */
     export let data
 
     const document = data.document
     const studentFeidenavnPrefix = $page.params.feidenavnPrefix
-
 </script>
 
 <h2>{document.title}</h2>
@@ -37,8 +37,8 @@
 {#if document.documentTypeId === 'notat'}
     <Notat isCompletedDocument={true} {studentFeidenavnPrefix} />
 {/if}
-{#if document.documentTypeId === 'yff'}
-    Hallo yff
+{#if document.documentTypeId === 'yff-bekreftelse'}
+    <YffBekreftelse isCompletedDocument={true} documentContent={document.content} {studentFeidenavnPrefix} />
 {/if}
 
 <section>

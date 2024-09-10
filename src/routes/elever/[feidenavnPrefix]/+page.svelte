@@ -61,13 +61,25 @@
   <div class="documentsBox yff">
     <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Yrkesfaglig fordypning</h3>
     <div class="boxContent">
-      Denne eleven har yrkesfaglig fordypning
       {#if loadingDocuments}
         <LoadingSpinner width="1" />
       {:else}
         {#if documents.yff.length > 0}
-          {#each documents.yff as doc}
-            <div>{JSON.stringify(doc)}</div>
+          {#each documents.yff as document}
+            <div class="documentContainer">
+              <div class="documentInfo">
+                  <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                  <div class="documentTitle"><a href="/elever/{document.student.feidenavnPrefix}/dokumenter/{document._id}">{document.title}</a></div>
+                  <div class="documentStatus">{documentStatuses.find(s => s.id === document.status[document.status.length - 1].status)?.short.nb || 'Ukjent status'}</div>
+                  <div class="mobileCreatedBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+              <div class="documentDetails">
+                  {#if document.variant === 'bekreftelse'}
+                    <div><strong>{document.content.bekreftelse.bedriftsNavn}</strong></div>
+                  {/if}
+                  <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+            </div>
           {/each}
         {:else}
           Ingen tilgjengelige yff-dokumenter
@@ -75,9 +87,9 @@
       {/if}
     </div>
     <div class="boxAction">
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument`)}><span class="material-symbols-outlined">add</span>Ny læreplan</button>
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument`)}><span class="material-symbols-outlined">add</span>Ny vurdering ellerno</button>
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument`)}><span class="material-symbols-outlined">add</span>???</button>
+      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-bekreftelse`)}><span class="material-symbols-outlined">add</span>Ny bekreftelse på utplassering</button>
+      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-laereplan`)}><span class="material-symbols-outlined">add</span>Ny lokal læreplan</button>
+      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-tilbakemelding`)}><span class="material-symbols-outlined">add</span>Ny tilbakmelding på utplassering</button>
     </div>
   </div>
 {/if}
