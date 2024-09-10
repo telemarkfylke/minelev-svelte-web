@@ -1,10 +1,10 @@
 <script>
-  import axios from "axios";
-  import PdfPreview from "../components/PDFPreview.svelte";
-  import { periods, orderReasons } from "./data/document-data";
-  import { documentTypes } from "./document-types";
-  import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
-  import { goto } from "$app/navigation";
+  import axios from "axios"
+  import PdfPreview from "../components/PDFPreview.svelte"
+  import { periods, orderReasons } from "./data/document-data"
+  import { documentTypes } from "./document-types"
+  import LoadingSpinner from "$lib/components/LoadingSpinner.svelte"
+  import { goto } from "$app/navigation"
 
   export let documentTypeId = null
   export let studentFeidenavnPrefix = null
