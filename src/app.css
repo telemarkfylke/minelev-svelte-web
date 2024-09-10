@@ -231,11 +231,6 @@ input {
 	border-radius: 0.4rem;
 }
 
-input:disabled {
-	color: gray;
-	cursor: not-allowed;
-}
-
 .icon-input, .button-input, .label-input {
 	display: flex;
 	align-items: center;
@@ -243,12 +238,26 @@ input:disabled {
 	border-radius: 0.4rem;
 }
 
+input:disabled, .icon-input.disabled, .button-input.disabled, .label-input.disabled {
+	color: grey;
+	cursor: not-allowed;
+	border-color: grey;
+}
+
 input:hover, .icon-input:hover, .button-input:hover, .label-input:hover {
 	background-color: var(--primary-color-10);
 }
 
+input:disabled:hover, .icon-input.disabled:hover, .button-input.disabled:hover, .label-input.disabled_hover {
+	background-color: var(--primary-background-color);
+}
+
 .icon-input:hover input, .button-input:hover input, .label-input:hover input {
 	background-color: var(--primary-color-10);
+}
+
+.icon-input.disabled:hover input, .button-input.disabled:hover input, .label-input.disabled:hover input {
+	background-color: var(--primary-background-color);
 }
 
 input:focus-visible, .icon-input:focus-within, .button-input:focus-within, .label-input:focus-within {
@@ -321,6 +330,11 @@ input:focus-visible, .icon-input:focus-within, .button-input:focus-within, .labe
 	top: -1.5rem;
 }
 
+.label-input.required label::after {
+	content: " *";
+	color: var(--error-color);
+}
+
 .label-input:focus-within label {
 	font-weight: bold;
 }
@@ -376,6 +390,11 @@ select:hover {
 	position: absolute;
 	padding: 0rem 0rem;
 	top: -1.375rem;
+}
+
+.label-select.required label::after {
+	content: " *";
+	color: red;
 }
 
 .label-select:focus-within label {
