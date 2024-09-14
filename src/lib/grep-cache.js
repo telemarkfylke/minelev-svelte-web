@@ -10,7 +10,7 @@ let grepCache = null
 export const getGrepCache = () => {
   if (!grepCache) {
     logger('info', ['grep-cache', 'Cache does not exist - creating'])
-    grepCache = new NodeCache({ stdTTL: 86400 }) // 24 hours
+    grepCache = new NodeCache({ stdTTL: 86400, useClones: false }) // 24 hours, no clones, for performance: https://github.com/node-cache/node-cache/issues/295
     logger('info', ['grep-cache', 'Cache created - returning'])
   }
   return grepCache

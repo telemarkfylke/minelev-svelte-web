@@ -83,6 +83,9 @@ const mockStudents = [
             aktiv: true,
             navn: 'Tømrer',
             systemId: 'BATMF2----',
+            grepreferanse: [
+              'https://psi.udir.no/kl06/BAAMF3----'
+            ],
             utdanningsprogram: [
               {
                 systemId: {

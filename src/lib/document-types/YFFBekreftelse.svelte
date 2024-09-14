@@ -46,7 +46,7 @@
 
   const getStudentUtdanningsprogram = (schoolNumber) => {
     if (isCompletedDocument) return []
-    return studentData.utdanningsprogram.filter(program => program.skole.skolenummer === schoolNumber)
+    return studentData.yffSchools.find(school => school.skolenummer === schoolNumber).utdanningsprogrammer
   }
 
   const getStudentLevels = (schoolNumber) => {
@@ -80,11 +80,11 @@
       ],
       bedriftsData: null
     },
-    utdanningsprogramId: getStudentUtdanningsprogram(selectedSchoolNumber).length === 1 ? getStudentUtdanningsprogram(selectedSchoolNumber)[0].id : '',
+    utdanningsprogramId: getStudentUtdanningsprogram(selectedSchoolNumber).length === 1 ? getStudentUtdanningsprogram(selectedSchoolNumber)[0].uri : '',
     level: getStudentLevels(selectedSchoolNumber).length === 1 ? getStudentLevels(selectedSchoolNumber)[0] : ''
   }
 
-  $: content.utdanningsprogramId = getStudentUtdanningsprogram(selectedSchoolNumber).length === 1 ? getStudentUtdanningsprogram(selectedSchoolNumber)[0].id : '' // In case of change of selectedSchoolNumber
+  $: content.utdanningsprogramId = getStudentUtdanningsprogram(selectedSchoolNumber).length === 1 ? getStudentUtdanningsprogram(selectedSchoolNumber)[0].uri : '' // In case of change of selectedSchoolNumber
   $: content.level = getStudentLevels(selectedSchoolNumber).length === 1 ? getStudentLevels(selectedSchoolNumber)[0] : '' // In case of change of selectedSchoolNumber
 
   const addContactPerson = () => {
@@ -189,12 +189,12 @@
         <label for="utdanningsprogramid">Utdanningsprogram</label>
         <select bind:value={content.utdanningsprogramId} id="utdanningsprogramid">
           {#if getStudentUtdanningsprogram(selectedSchoolNumber).length === 1} <!-- Hvis det bare er et utdanningsprogram, så bruker vi bare det -->
-            <option value="{getStudentUtdanningsprogram(selectedSchoolNumber)[0].id}">{getStudentUtdanningsprogram(selectedSchoolNumber)[0].tittel.nb}</option>
+            <option value="{getStudentUtdanningsprogram(selectedSchoolNumber)[0].uri}">{getStudentUtdanningsprogram(selectedSchoolNumber)[0].tittel.nb}</option>
           {:else}
             <option value="">--Velg utdanningsprogram--</option>
             <hr />
             {#each getStudentUtdanningsprogram(selectedSchoolNumber) as program}
-              <option value="{program.id}">{program.tittel.nb}</option>
+              <option value="{program.uri}">{program.tittel.nb}</option>
             {/each}
           {/if}
           </select>
@@ -214,7 +214,6 @@
         </select>
       </div>
     </section>
-
   {/if}
 
   <!--Bedriftsinformasjon-->
@@ -364,10 +363,10 @@
   {#if isCompletedDocument}
     <section>
       <h3>Kopimottakere</h3>
-      {#if content.bekreftelse.kopiPrEpost.length === 0}
+      {#if documentContent.bekreftelse.kopiPrEpost.length === 0}
         <p>Ingen kopimottakere</p>
       {/if}
-      {#each content.bekreftelse.kopiPrEpost as mottaker, index}
+      {#each documentContent.bekreftelse.kopiPrEpost as mottaker, index}
         <div class="contactPerson">
           <h4>Kopimottaker{index > 0 ? ` ${index + 1}` : ''}</h4>
           <div class="label-input disabled">

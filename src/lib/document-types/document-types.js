@@ -253,30 +253,29 @@ export const documentTypes = [
       },
       utdanningsprogramId: 'blabababa',
       utdanningsprogram: {
-        id: 'blblblalala',
-        fintKode: 'HS',
-        kode: 'HS',
-        type: 'yrkesfaglig',
+        kode: 'BA',
+        uri: 'optional',
+        'url-data': 'optional',
         tittel: {
-          en: 'Helse- og oppvekstfag',
-          nb: 'Helse- og oppvekstfag',
-          nn: 'Helse- og oppvekstfag',
-          sm: 'Samisk'
+          default: 'Bygg- og anleggsteknikk',
+          nb: 'Bygg- og anleggsteknikk',
+          nn: 'Bygg- og anleggsteknikk',
+          en: 'Building and Construction',
+          sm: 'Huksen- ja ráhkadusteknihkka'
         },
-        kortform: {
-          en: 'Helse- og oppvekstfag',
-          nb: 'Helse- og oppvekstfag',
-          nn: 'Helse- og oppvekstfag',
-          sm: 'Samisk'
+        type: {
+          'url-data': 'optional',
+          beskrivelse: {
+            default: 'Yrkesfaglig utdanningsprogram',
+            nb: 'Yrkesfaglig utdanningsprogram',
+            nn: 'Yrkesfaglig utdanningsprogram',
+            en: 'Yrkesfaglig utdanningsprogram',
+            sm: 'Yrkesfaglig utdanningsprogram'
+          }
         },
-        skole: {
-          organisasjonsnummer: '1234354',
-          organisasjonsId: '13',
-          hovedskole: true,
-          skolenummer: '12345',
-          kortnavn: 'OF-SKO',
-          navn: 'Sko videregående skole'
-        }
+        programomrade: [
+          'optional'
+        ]
       },
       level: 'VG1',
       year: '2020/2021'
@@ -339,13 +338,14 @@ export const documentTypes = [
       if (!content.bekreftelse.bedriftsData.adresse) throw new Error('Missing property "content.bekreftelse.bedriftsData.adresse"')
       if (!content.bekreftelse.bedriftsData.postnummer) throw new Error('Missing property "content.bekreftelse.bedriftsData.postnummer"')
       if (!content.bekreftelse.bedriftsData.poststed) throw new Error('Missing property "content.bekreftelse.bedriftsData.poststed"')
-      if (!content.bekreftelse.bedriftsData.avdeling) content.bekreftelse.bedriftsData.avdeling = '' 
+      if (!content.bekreftelse.bedriftsData.avdeling) content.bekreftelse.bedriftsData.avdeling = ''
 
       content.bekreftelse.bedriftsNavn = content.bekreftelse.bedriftsData.navn
 
       // Så tar vi utdanningsprogram og level
       if (!content.utdanningsprogramId) throw new Error('Missing property "utdanningsprogramId')
-      const utdanningsprogram = student.utdanningsprogram.find(program => program.id === content.utdanningsprogramId)
+      const yffSchool = student.yffSchools.find(school => school.utdanningsprogrammer.some(program => program.uri === content.utdanningsprogramId))
+      const utdanningsprogram = yffSchool.utdanningsprogrammer.find(program => program.uri === content.utdanningsprogramId)
       if (!utdanningsprogram) throw new Error(`Could not find students utdanningsprogram with id ${content.utdanningsprogramId}`)
       content.utdanningsprogram = utdanningsprogram
       if (!content.level) throw new Error('Missing property "level"')
