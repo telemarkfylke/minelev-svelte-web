@@ -73,3 +73,27 @@ export const kompetansemaalQuery = (programomraadeKode) => {
         }
     `
 }
+
+export const programFagKompetansemaalQuery = (programomraadeKode) => {
+  if (!programomraadeKode) throw new Error('Missing required parameter: programomraadeKode')
+  return `
+          prefix u: <http://psi.udir.no/ontologi/kl06/>
+          prefix d: <http://psi.udir.no/kl06/>
+          prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  
+          SELECT DISTINCT ?km_tittel ?km_uri ?km_url_data ?km_kode ?po WHERE {
+          
+              ?km rdf:type u:kompetansemaal_lk20 ;
+                  u:uri ?km_uri ;
+                  u:tilhoerer-kompetansemaalsett/u:etter-fag/u:programomraader-referanse d:${programomraadeKode} ;
+                  u:tilhoerer-laereplan/u:fagtype ?fagtype ;
+                  u:tittel ?km_tittel ;
+                  u:url-data ?km_url_data ;
+                  u:kode ?km_kode ;
+                  u:status ?km_status .
+  
+              FILTER regex(str(?km_status), "publisert", "i")
+              FILTER regex(str(?fagtype), "programfag", "i")
+          }
+      `
+}

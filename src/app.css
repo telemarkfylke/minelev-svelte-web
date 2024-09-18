@@ -101,6 +101,10 @@ a, a:visited {
 a:hover {
   color: var(--link-color-hover);
 }
+a span.material-symbols-outlined {
+	text-decoration: none;
+	vertical-align: text-bottom;
+}
 
 /* See button too se a.button class */
 
@@ -188,7 +192,7 @@ button.action:active, a.button.action:active {
 	background-color: rgba(0, 0, 0, 0.2);
 }
 
-/* Is the one below really necessary... yaeh, so you don't have to remember what to styke yourself - BUT remember hover state when designing */
+/* Is the one below really necessary... yaeh, so you don't have to remember what to style yourself - BUT remember hover state when designing */
 button.blank, button.blank:hover, a.button.blank, a.button.blank:hover {
 	height: auto;
 	border: 0px;
@@ -201,6 +205,7 @@ button.blank, button.blank:hover, a.button.blank, a.button.blank:hover {
 }
 
 button.link {
+	display: block;
 	cursor: pointer;
 	color: var(--link-color);
   text-decoration: underline;
@@ -218,6 +223,12 @@ button.link:disabled, button.link:disabled:hover {
 button.link:hover {
 	background-color: inherit;
 	color: var(--link-color-hover);
+}
+
+button.link span.material-symbols-outlined {
+	text-decoration: none;
+	vertical-align: text-bottom;
+	display: inline-block;
 }
 
 /* Input elements */

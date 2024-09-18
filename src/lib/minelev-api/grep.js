@@ -1,8 +1,8 @@
 import { env } from '$env/dynamic/private'
 import axios from 'axios'
-import { getGrepCache } from './grep-cache'
+import { getGrepCache } from '../grep-cache'
 import { logger } from '@vtfk/logger'
-import { kompetansemaalQuery, utdanningsprogramQuery, programomraaderQuery } from './grep-queries'
+import { kompetansemaalQuery, utdanningsprogramQuery, programomraaderQuery, programFagKompetansemaalQuery } from '../grep-queries'
 
 const callGrepSparql = async (query) => {
   const url = `${env.GREP_SPARQL_URL}?query=${encodeURIComponent(query)}`
@@ -112,35 +112,37 @@ const repackGrepKompetansemaal = (grepElements) => {
  */
 
 /**
- *
+ * @param {import('$lib/authentication').User} user
  * @returns {Promise<Utdanningsprogram[]>}
  */
-export const getGrepUtdanningsprogrammer = async () => {
+export const getGrepUtdanningsprogrammer = async (user) => {
+  const loggerPrefix = `getGrepUtdanningsprogrammer - user: ${user.principalName}`
   const grepCache = getGrepCache()
   const cacheKey = 'utdanningsprogrammer'
   const cachedData = grepCache.get(cacheKey)
   if (cachedData) {
-    logger('info', ['getGrepUtdanningsprogrammer', 'Got data from cache'])
+    logger('info', [loggerPrefix, 'Got data from cache'])
     return cachedData
   }
-  logger('info', ['getGrepUtdanningsprogrammer', 'Grep-utdanningsprogrammer does not exist in cache - refreshing from grep (udir)'])
+  logger('info', [loggerPrefix, 'Grep-utdanningsprogrammer does not exist in cache - refreshing from grep (udir)'])
   const query = utdanningsprogramQuery()
   const data = await callGrepSparql(query)
   const grepElements = data.results?.bindings
   if (!grepElements) throw new Error('No utdanningsprogrammer from grep in "data.result.bindings"')
-  logger('info', ['getGrepUtdanningsprogrammer', `Got ${grepElements.length} grep-elememts from grep (udir), repacking`])
+  logger('info', [loggerPrefix, `Got ${grepElements.length} grep-elememts from grep (udir), repacking`])
   const repackedUtdanningsprogrammer = repackGrepUtdanningsprogrammer(grepElements)
-  logger('info', ['getGrepUtdanningsprogrammer', `Repacked data from grep (udir) to ${repackedUtdanningsprogrammer.length} programmer, setting in cache and returning`])
+  logger('info', [loggerPrefix, `Repacked data from grep (udir) to ${repackedUtdanningsprogrammer.length} programmer, setting in cache and returning`])
   grepCache.set(cacheKey, repackedUtdanningsprogrammer)
   return repackedUtdanningsprogrammer
 }
 
 /**
- *
+ * @param {import('$lib/authentication').User} user
  * @param {string} kodeOrUri
  * @returns {Promise<Utdanningsprogram>}
  */
-export const getGrepUtdanningsprogram = async (kodeOrUri) => {
+export const getGrepUtdanningsprogram = async (user, kodeOrUri) => {
+  const loggerPrefix = `getGrepUtdanningsprogram - user: ${user.principalName}`
   if (!kodeOrUri) throw new Error('Missing required parameter: kodeOrUri')
   let uri
   let httpsUri
@@ -152,7 +154,7 @@ export const getGrepUtdanningsprogram = async (kodeOrUri) => {
   } else {
     kode = kodeOrUri
   }
-  const utdanningsprogrammer = await getGrepUtdanningsprogrammer()
+  const utdanningsprogrammer = await getGrepUtdanningsprogrammer(user)
   const utdanningsprogram = utdanningsprogrammer.find(item => item.kode === kode || item.uri === uri || item.uri === httpsUri)
   if (!utdanningsprogram) throw new Error(`No utdanningsprogram found with kode or uri: ${kodeOrUri}`)
   return utdanningsprogram
@@ -169,27 +171,28 @@ export const getGrepUtdanningsprogram = async (kodeOrUri) => {
  */
 
 /**
- *
+ * @param {import('$lib/authentication').User} user
  * @param {string} utdanningsprogramKode
  * @param {"vg1" | "vg2" | "vg3"} [aarstrinn]
  * @returns {Promise<Programomraade[]>}
  */
-export const getGrepProgramomraader = async (utdanningsprogramKode, aarstrinn) => {
+export const getGrepProgramomraader = async (user, utdanningsprogramKode, aarstrinn) => {
+  const loggerPrefix = `getGrepProgramomraader - user: ${user.principalName} - ${utdanningsprogramKode} - ${aarstrinn}`
   const grepCache = getGrepCache()
   const cacheKey = `programomraader-${utdanningsprogramKode}-${aarstrinn}`
   const cachedData = grepCache.get(cacheKey)
   if (cachedData) {
-    logger('info', [`getGrepProgramomraader - ${utdanningsprogramKode} - ${aarstrinn}`, 'Got data from cache'])
+    logger('info', [loggerPrefix, 'Got data from cache'])
     return cachedData
   }
-  logger('info', [`getGrepProgramomraader - ${utdanningsprogramKode} - ${aarstrinn}`, 'Grep-programomraader does not exist in cache - refreshing from grep (udir)'])
+  logger('info', [loggerPrefix, 'Grep-programomraader does not exist in cache - refreshing from grep (udir)'])
   const query = programomraaderQuery(utdanningsprogramKode, aarstrinn)
   const data = await callGrepSparql(query)
   const grepElements = data.results?.bindings
   if (!grepElements) throw new Error('No programomraader from grep in "data.result.bindings"')
-  logger('info', [`getGrepProgramomraader - ${utdanningsprogramKode} - ${aarstrinn}`, `Got ${grepElements.length} grep-elements from grep (udir), repacking`])
+  logger('info', [loggerPrefix, `Got ${grepElements.length} grep-elements from grep (udir), repacking`])
   const repackedProgramomraader = repackGrepProgramomraader(grepElements)
-  logger('info', [`getGrepProgramomraader  - ${utdanningsprogramKode} - ${aarstrinn}`, `Repacked data from grep (udir) to ${repackedProgramomraader.length} omraader, setting in cache and returning`])
+  logger('info', [loggerPrefix, `Repacked data from grep (udir) to ${repackedProgramomraader.length} omraader, setting in cache and returning`])
   grepCache.set(cacheKey, repackedProgramomraader)
   return repackedProgramomraader
 }
@@ -204,26 +207,27 @@ export const getGrepProgramomraader = async (utdanningsprogramKode, aarstrinn) =
  */
 
 /**
- *
- * @param {*} programomraadeKode
+ * @param {import('$lib/authentication').User} user
+ * @param {string} programomraadeKode
  * @returns {Promise<Kompetansemaal[]>}
  */
-export const getGrepKompetaansemaal = async (programomraadeKode) => {
+export const getGrepKompetaansemaal = async (user, programomraadeKode, onlyProgramfag = true) => {
+  const loggerPrefix = `getGrepKompetaansemaal - user: ${user.principalName} - ${programomraadeKode} - onlyProgramfag: ${onlyProgramfag}`
   const grepCache = getGrepCache()
   const cacheKey = `kompetansemaal-${programomraadeKode}`
   const cachedData = grepCache.get(cacheKey)
   if (cachedData) {
-    logger('info', [`getGrepKompetaansemaal - ${programomraadeKode}`, 'Got data from cache'])
+    logger('info', [loggerPrefix, 'Got data from cache'])
     return cachedData
   }
-  logger('info', [`getGrepKompetaansemaal - ${programomraadeKode}`, 'Grep-kompetansemaal does not exist in cache - refreshing from grep (udir)'])
-  const query = kompetansemaalQuery(programomraadeKode)
+  logger('info', [loggerPrefix, 'Grep-kompetansemaal does not exist in cache - refreshing from grep (udir)'])
+  const query = onlyProgramfag ? programFagKompetansemaalQuery(programomraadeKode) : kompetansemaalQuery(programomraadeKode)
   const data = await callGrepSparql(query)
   const grepElements = data.results?.bindings
   if (!grepElements) throw new Error('No kompetansemaal from grep in "data.result.bindings"')
-  logger('info', [`getGrepKompetaansemaal - ${programomraadeKode}`, `Got ${grepElements.length} grep-elements from grep (udir), repacking`])
+  logger('info', [loggerPrefix, `Got ${grepElements.length} grep-elements from grep (udir), repacking`])
   const repackedKompetansemaal = repackGrepKompetansemaal(grepElements)
-  logger('info', [`getGrepKompetaansemaal - ${programomraadeKode}`, `Repacked data from grep (udir) to ${repackedKompetansemaal.length} kompetansemaal, setting in cache and returning`])
+  logger('info', [loggerPrefix, `Repacked data from grep (udir) to ${repackedKompetansemaal.length} kompetansemaal, setting in cache and returning`])
   grepCache.set(cacheKey, repackedKompetansemaal)
   return repackedKompetansemaal
 }

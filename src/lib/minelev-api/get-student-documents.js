@@ -73,6 +73,8 @@ export const getStudentDocuments = async (user, studentFeidenavn, docFilter) => 
       }
       documents.push(document)
     }
+    // Then sort by newest first
+    documents.sort((a, b) => b.created.timestamp - a.created.timestamp)
     logger('info', [loggerPrefix, 'MOCK_API is true', `Found ${documents.length} available documents in mockdb - returning`])
     return documents
   } else {
@@ -98,7 +100,7 @@ export const getStudentDocuments = async (user, studentFeidenavn, docFilter) => 
       logger('info', [loggerPrefix, 'Documentquery successfully built', documentQuery, 'Fetching from db'])
       const mongoClient = await getMongoClient()
       const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
-      const documents = await collection.find(documentQuery).sort({ _id: -1 }).toArray()
+      const documents = await collection.find(documentQuery).sort({ _id: -1 }).toArray() // Sort { _id: -1 } is newest first, thank you mongodb
 
       logger('info', [loggerPrefix, `Found ${documents.length} documents in db. Filtering out data that shouldnt be retuned.`])
 

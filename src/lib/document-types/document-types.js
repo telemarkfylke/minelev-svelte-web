@@ -361,14 +361,50 @@ export const documentTypes = [
     accessCondition: 'yffEnabled',
     isEncrypted: false,
     matchContent: {
-      note: 'fjidsofjkldsfkldsjflks'
+      utplassering: {
+        id: '5d7f29d059e31d0007cc9ff5',
+        name: 'Norges røde kors',
+        maal: [
+          {
+            grep: {
+              kode: 'K3703',
+              uri: 'http://psi.udir.no/kl06/K3703',
+              'url-data': 'https://data.udir.no/kl06/v201906/kompetansemaal/K3703',
+              tittel: {
+                default: 'mestre tre ulike typer masseflyttingsmaskiner',
+                nb: 'mestre tre ulike typer masseflyttingsmaskiner',
+                nn: 'mestre tre ulike typer masseflyttingsmaskiner',
+                en: 'mestre tre ulike typer masseflyttingsmaskiner',
+                sm: 'mestre tre ulike typer masseflyttingsmaskiner'
+              }
+            },
+            programomraade: {
+              kode: 'BATMF2----',
+              uri: 'http://psi.udir.no/kl06/BATMF2----',
+              'url-data': 'https://beta-data.udir.no/kl06/v201906/programomraader/BATMF2----',
+              tittel: {
+                default: 'Tømrer',
+                nb: 'Tømrer',
+                nn: 'Tømrar',
+                en: 'Carpentry',
+                sm: 'Ceahkkun'
+              },
+              trinn: 'vg2',
+              opplaeringssted: 'http://psi.udir.no/kl06/opplaeringssted_skole'
+            },
+            arbeidsoppgaver: 'optional'
+          }
+        ]
+      },
+      year: '2020/2021'
     },
     generateContent: (student, content) => {
       if (!student) throw new Error('Missing required argumnet "student"')
-      const { note } = content
-      if (!note) throw new Error('Missing required argument "content.note"')
+      if (!content.utplassering) throw new Error('Missing required argument "content.utplassering"')
+      if (!content.utplassering.maal || (Array.isArray(content.utplassering.maal) && content.utplassering.maal.length === 0)) throw new Error('"content.utplassering.maal" must be an array with at least one element')
       return {
-        note
+        ...content,
+        year: getCurrentSchoolYear()
       }
     }
   },

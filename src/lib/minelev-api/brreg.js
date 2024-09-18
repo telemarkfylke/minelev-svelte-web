@@ -94,3 +94,4 @@ export const brregUnit = async (user, orgnr, type) => {
 
   return result
 }
+

@@ -7,6 +7,7 @@
   import { goto } from "$app/navigation"
   import { page } from "$app/stores";
   import { onMount } from "svelte";
+    import { get } from "svelte/store";
 
   export let documentTypeId = null
   export let studentFeidenavnPrefix = null
@@ -34,166 +35,124 @@
   let showPreview = false
   let sendLoading = false
   let previewLoading = false
+  let showKompetansemaal = true
 
-  let showData = true
+  let showData = false
   let errorMessage = ""
 
   let canClickSend = false
 
-  // Utplasseringer
-  let utplasseringer = null
-  let utplasseringsError = ""
-
-  // Hent utplasseringene til eleven - Kjøres i onMount - henter alle tilgjengelige yff-bedrifter (basert på bekreftelser), samt tidligere læreplaner per bedrift, og slår sammen til et utvalg brukeren kan velge fra. Enten ny læreplan eller basert på en tidligere.
-  // Hele content settes så basert på hvilken utplassering man velger. Mulig vi må ta en reactive kopi til content basert på id, slik at man ikke redigerer i originalobjektet
-  const getAvailableUtplasseringer = async () => {
-    return [
-      {
-        id: '1',
-        name: 'Ein bedrift',
-        maal: []
-      }
-    ]
-  }
-
-  const getUtplasseringName = (utplasseringsId) => {
-    if (!utplasseringer) return null
-    const utplassering = utplasseringer.find(u => u.id === utplasseringsId)
-    if (!utplassering) {
-      utplasseringsError = `Fant ingen utplassering med id: ${utplasseringsId}`
-      return null
-    }
-    return utplassering.name
-  }
+  // Tilgjengelige læreplaner
+  let laereplaner = null
+  let originalLaereplaner = null
+  let laereplanError = ""
 
   onMount(async () => {
-    utplasseringsError = ""
+    laereplaner = ""
     try {
-      console.log("henter utplasseringer")
-      utplasseringer = await getUtplasseringer()
+      const { data } = await axios.get(`/api/students/${$page.params.feidenavnPrefix}/yff/availablelaereplaner`)
+      originalLaereplaner = data
+      laereplaner = JSON.parse(JSON.stringify(originalLaereplaner))
     } catch (error) {
-      utplasseringer = null
-      utplasseringsError = error.stack || error.toString()
+      laereplaner = null
+      originalLaereplaner = null
+      laereplanError = error.stack || error.toString()
     }
   })
 
+  const resetLaereplan = () => {
+    if (content?.utplassering?.id) {
+      const correspondingOriginal = originalLaereplaner.find(plan => plan.utplassering.id === content.utplassering.id)
+      content.utplassering.maal = JSON.parse(JSON.stringify(correspondingOriginal.utplassering.maal)) // Setter maal tilbake til original i tilfelle noen har knota - men kun maal for å ikke knekke bind mot objektet
+    }
+  }
+
   const getStudentUtdanningsprogram = (schoolNumber) => {
     if (isCompletedDocument) return []
-    return studentData.utdanningsprogram.filter(program => program.skole.skolenummer === schoolNumber)
+    const utdanningsprogrammer = studentData.yffSchools.find(school => school.skolenummer === schoolNumber).utdanningsprogrammer
+    return utdanningsprogrammer
   }
 
   const getStudentLevels = (schoolNumber) => {
     if (isCompletedDocument) return []
-    return studentData.basisgrupper.filter(gruppe => gruppe.skole.skolenummer === schoolNumber).map(gruppe => gruppe.trinn)
+    return studentData.basisgrupper.filter(gruppe => gruppe.skole.skolenummer === schoolNumber).map(gruppe => gruppe.trinn.toLowerCase())
   }
 
-  // Hent gjeldende læreplan for en utplassering (hvis det finnes en)
-  const getLatestLaereplan = async () => {
-    return {
-      _id: '01',
-      content: {
-        utplassering: {
-          id: '1',
-          name: 'En bedrift',
-          maal: [
-            {
-              grep: {
-                kode: 'K3703',
-                'url-data': 'https://data.udir.no/kl06/v201906/kompetansemaal/K3703',
-                tittel: {
-                  nb: 'mestre tre ulike typer masseflyttingsmaskiner',
-                  nn: 'mestre tre ulike typer masseflyttingsmaskiner',
-                  en: 'mestre tre ulike typer masseflyttingsmaskiner'
-                }
-              },
-              arbeidsoppgaver: 'lede morgentrimmen'
-            }
-          ]
-        }
-      }
+  // Programområder (skal legges til på mål - så vi legger de tigjengelige til her)
+  let currentProgramomraader = []
+
+
+  const getStudentProgramomraader = (schoolNumber) => {
+    if (isCompletedDocument) return []
+    const utdanningsprogrammer = getStudentUtdanningsprogram(schoolNumber)
+    const programomraader = utdanningsprogrammer.map(program => program.programomrade).flat().map(omrade => omrade.substring(omrade.lastIndexOf('/') + 1))
+    return programomraader
+  }
+
+  const levels = [
+    {
+      name: 'VG 1',
+      value: 'vg1'
+    },
+    {
+      name: 'VG 2',
+      value: 'vg2'
+    },
+    {
+      name: 'VG 3',
+      value: 'vg3'
+    }
+  ]
+
+  // GREP henting av kompetansemål
+  const grepSource = {
+    level: getStudentLevels(selectedSchoolNumber).length === 1 ? getStudentLevels(selectedSchoolNumber)[0] : '',
+    utdanningsprogram: getStudentUtdanningsprogram(selectedSchoolNumber).length === 1 ? getStudentUtdanningsprogram(selectedSchoolNumber)[0].kode : '',
+    programomraade: getStudentProgramomraader(selectedSchoolNumber).length === 1 ? getStudentProgramomraader(selectedSchoolNumber)[0] : '' 
+  }
+  
+  const getGrepUtdanningsprogrammer = async () => {
+    const { data } = await axios.get(`/api/grep/utdanningsprogrammer`)
+    return data
+  }
+
+  const getGrepProgramomraader = async (utdanningsprogram, trinn) => {
+    const { data } = await axios.get(`/api/grep/programomraader?utdanningsprogram=${utdanningsprogram}&trinn=${trinn}`)
+    currentProgramomraader = data
+    return data
+  }
+
+  const getGrepKompetansemaal = async (programomraade) => {
+    const { data } = await axios.get(`/api/grep/kompetansemaal?programomraade=${programomraade}`)
+    return data
+  }
+
+  const addKompetansemaal = (maal) => {
+    content.utplassering.maal = [...content.utplassering.maal, maal] // To make it reactive
+  }
+
+  const removeKompetansemaal = (index) => {
+    content.utplassering.maal = content.utplassering.maal.filter((_, i) => i !== index) // To make it reactive
+  }
+
+  const handleKompetansemaalCheckbox = (event, maal) => {
+    event.preventDefault()
+    if (event.currentTarget.checked) {
+      const currentProgramomraade = currentProgramomraader.find(omraade => omraade.kode === grepSource.programomraade)
+      if (!currentProgramomraade) throw new Error(`Programområde ${grepSource.programomraade} ikke funnet`)
+      addKompetansemaal({ grep: maal, programomraade: currentProgramomraade, arbeidsoppgaver: '' })
+    } else {
+      content.utplassering.maal = content.utplassering.maal.filter((m) => m.grep.kode !== maal.kode) // To make it reactive
     }
   }
 
   // Laereplan content data
-  const content = {
-    utplassering: {
-      id: "",
-      name: 'Norges røde kors',
-      maal: [
-        {
-          grep: {
-            kode: 'K3703',
-            'url-data': 'https://data.udir.no/kl06/v201906/kompetansemaal/K3703',
-            tittel: {
-              nb: 'mestre tre ulike typer masseflyttingsmaskiner',
-              nn: 'mestre tre ulike typer masseflyttingsmaskiner',
-              en: 'mestre tre ulike typer masseflyttingsmaskiner'
-            }
-          },
-          arbeidsoppgaver: 'lede morgentrimmen'
-        },
-        {
-          grep: {
-            kode: 'K3703',
-            'url-data': 'https://data.udir.no/kl06/v201906/kompetansemaal/K3703',
-            tittel: {
-              nb: 'bruke relevant måleutstyr',
-              nn: 'bruke relevant måleutstyr',
-              en: 'bruke relevant måleutstyr'
-            }
-          },
-          arbeidsoppgaver: 'lede morgentrimmen'
-        },
-        {
-          grep: {
-            kode: 'K3703',
-            'url-data': 'https://data.udir.no/kl06/v201906/kompetansemaal/K3703',
-            tittel: {
-              nb: 'utføre fundamentering, oppbygging og komprimering i henhold til tegninger og beskrivelser',
-              nn: 'utføre fundamentering, oppbygging og komprimering i henhold til tegninger og beskrivelser',
-              en: 'utføre fundamentering, oppbygging og komprimering i henhold til tegninger og beskrivelser'
-            }
-          },
-          arbeidsoppgaver: 'lede morgentrimmen'
-        },
-        {
-          grep: {
-            kode: 'K3703',
-            'url-data': 'https://data.udir.no/kl06/v201906/kompetansemaal/K3703',
-            tittel: {
-              nb: 'gjøre rede for innholdet i relevant nasjonalt og internasjonalt regelverk som gjelder kundens rettigheter og plikter, herunder regler om klageadgang',
-              nn: 'gjøre rede for innholdet i relevant nasjonalt og internasjonalt regelverk som gjelder kundens rettigheter og plikter, herunder regler om klageadgang',
-              en: 'gjøre rede for innholdet i relevant nasjonalt og internasjonalt regelverk som gjelder kundens rettigheter og plikter, herunder regler om klageadgang'
-            }
-          },
-          arbeidsoppgaver: 'lede morgentrimmen'
-        },
-        {
-          grep: {
-            kode: 'K3703',
-            'url-data': 'https://data.udir.no/kl06/v201906/kompetansemaal/K3703',
-            tittel: {
-              nb: 'mestre tre ulike typer masseflyttingsmaskiner',
-              nn: 'mestre tre ulike typer masseflyttingsmaskiner',
-              en: 'mestre tre ulike typer masseflyttingsmaskiner'
-            }
-          },
-          arbeidsoppgaver: 'lede morgentrimmen'
-        }
-      ]
-    },
-    year: '2020/2021'
-  }
-
-  // Reactive statements
-  // Statement to set utplasseringsname, simpelt and greit
-  $: content.utplassering.name = getUtplasseringName(content.utplassering.id)
+  let content = ''
 
   $: canClickSend = true // Vi prøver oss med innebygget form validation i browser i stedet :)
-  //$: canClickSend = Boolean(content.bekreftelse.bedriftsData && content.bekreftelse.oppmotested && (Array.isArray(content.bekreftelse.kontaktpersonData) && content.bekreftelse.kontaktpersonData.length > 0 && content.bekreftelse.kontaktpersonData.every(person => person.navn)) && content.bekreftelse.fraDato && content.bekreftelse.tilDato && content.bekreftelse.daysPerWeek && content.bekreftelse.startTid && content.bekreftelse.tilDato && (Array.isArray(content.bekreftelse.parorendeData) && content.bekreftelse.parorendeData.length > 0 && content.bekreftelse.parorendeData.every(person => (person.navn && person.telefon))))
 
   let previewBase64
-  const sendBekreftelse = async (preview=false) => {
+  const sendLaereplan = async (preview=false) => {
     const validData = formElement.reportValidity()
     if (!validData) {
       previewLoading = false
@@ -205,7 +164,7 @@
       const payload = {
         documentTypeId,
         type: 'yff',
-        variant: 'bekreftelse',
+        variant: 'laereplan',
         schoolNumber: selectedSchoolNumber,
         documentData: content,
         preview
@@ -232,32 +191,41 @@
 {#if showData}
   <pre>{JSON.stringify(content, null, 2)}</pre>
 {/if}
-{utplasseringer}
-{console.log(utplasseringer)}
+
+{#if isCompletedDocument}
+  <h4 class="sectionTitle">Informasjon om denne læreplanen - om den kan redigeres, er gjeldende osv</h4>
+  <div>Dette er en læerplan blabla</div>
+{:else}
+  <div>Informasjon om opprettelse redigering av læreplan</div>
+{/if}
+
 <form bind:this={formElement}>
   <!-- Utplassering læreplanen er knyttet til -->
   {#if isCompletedDocument}
-    <!-- TODO -->
-  {:else if utplasseringsError}
+    <h4 class="sectionTitle">
+      Utplasseringssted for den lokale læreplanen
+    </h4>
+    <div>{documentContent.utplassering.name}</div>
+  {:else if laereplanError}
     <section class="error">
       <h4>En feil har oppstått 😩</h4>
-      <p>{utplasseringsError}</p>
+      <p>{laereplanError}</p>
     </section>
   {:else}
     <section>
       <h3>
-        Utplassering for den lokale læreplanen
+        Utplasseringssted for den lokale læreplanen
       </h3>
-      {#if !utplasseringer}
+      {#if !laereplaner}
         <LoadingSpinner width={"1.5"} />
       {:else}
         <div class="label-select">
           <label for="utplassering">Utplasseringssted</label>
-          <select bind:value={content.utplassering.id} id="utplassering">
+          <select bind:value={content} id="utplassering" on:change={resetLaereplan}>
             <option value="">--Velg utplasseringssted--</option>
             <hr />
-            {#each utplasseringer as utplassering}
-              <option value="{utplassering.id}">{utplassering.name}</option>
+            {#each laereplaner as laereplan}
+              <option value={laereplan}>{laereplan.utplassering.name}</option>
             {/each}
           </select>
         </div>
@@ -265,16 +233,171 @@
     </section>
   {/if}
 
-  <!-- Læreplan - dersom det finnes en for utplasseringen allerede, må vi hente den nyeste - har vi den allerede mon tro? Hva om flere lærere gjør det samtidig? Nyeste trumfer uansett -->
+  <!-- Velging av kompetansemål for læreplanen -->
+  {#if isCompletedDocument}
+    <!-- Denne blokka brukes bare til oppretting og redigering av læreplanen, og vi viser den ikke for ferdige dokumenter -->
+  {:else if content?.utplassering?.id}
+    <section>
+      <h3>
+        Legg til kompetansemål
+      </h3>
+      <strong>Hent kompetansemål fra</strong>
+      <div class="grepSourceSelection">
+        <div>
+          {#await getGrepUtdanningsprogrammer()}
+            <LoadingSpinner width={"1.5"} />
+          {:then utdanningsprogrammer}
+            <div class="label-select">
+              <label for="utdanningsprogram">Utdanningsprogram</label>
+              <select bind:value={grepSource.utdanningsprogram} on:change={() => { grepSource.programomraade = '' }} id="utdanningsprogram">
+                <option value="">--Velg utdanningsprogram--</option>
+                <hr />
+                {#each utdanningsprogrammer as utdanningsprogram}
+                  <option value={utdanningsprogram.kode}>{utdanningsprogram.tittel.nb}</option>
+                {/each}
+              </select>
+            </div>
+          {:catch error}
+            <div class="error">
+              <h4>Det oppstod en feil :(</h4>
+              <p>{error.toString()}</p>
+            </div>
+          {/await}
+        </div>
+        {#if grepSource.utdanningsprogram}
+          <div>
+            <div class="label-select">
+              <label for="level">Trinn</label>
+              <select bind:value={grepSource.level} on:change={() => { console.log("hallo"); grepSource.programomraade = '' }} id="level">
+                <option value="">--Velg trinn--</option>
+                <hr />
+                {#each levels as level}
+                  <option value={level.value}>{level.name}</option>
+                {/each}
+              </select>
+            </div>
+          </div>
+        {/if}
+        {#if grepSource.utdanningsprogram && grepSource.level}
+          {#await getGrepProgramomraader(grepSource.utdanningsprogram, grepSource.level)}
+            <LoadingSpinner width={"1.5"} />
+          {:then programomraader}
+            <div>
+              <div class="label-select">
+                <label for="programomraade">Programområde</label>
+                <select bind:value={grepSource.programomraade} id="programomraade">
+                  <option value="">--Velg programområde--</option>
+                  <hr />
+                  {#each programomraader as programomraade}
+                    <option value={programomraade.kode}>{programomraade.tittel.nb.length > 40 ? `${programomraade.tittel.nb.substring(0, 37)}...` : programomraade.tittel.nb}</option>
+                  {/each}
+                </select>
+              </div>
+            </div>
+          {:catch error}
+            <div class="error">
+              <h4>Det oppstod en feil :(</h4>
+              <p>{error.toString()}</p>
+            </div>
+          {/await}
+        {/if}
+      </div>
+      <br />
+      <!-- Kompetansemål man kan velge fra -->
+      {#if grepSource.programomraade}
+        <div><strong>Kompetansemål</strong></div>
+        <button class="link" on:click={(e) => { e.preventDefault(); showKompetansemaal = !showKompetansemaal } }>{showKompetansemaal ? "Skjul" : "Vis"} kompetansemål</button>
+        {#await getGrepKompetansemaal(grepSource.programomraade)}
+          <LoadingSpinner width={"1.5"} />
+        {:then kompetansemaal}
+          {#if showKompetansemaal}
+            {#each kompetansemaal as maal}
+              <div class="kompetansemaal">
+                {#if content.utplassering.maal.find(m => m.grep.kode === maal.kode)}
+                  <input type="checkbox" checked id="km-{maal.kode}" on:change={(event) => handleKompetansemaalCheckbox(event, maal)} name="maal" value={maal} />
+                {:else}
+                  <input type="checkbox" id="km-{maal.kode}" on:change={(event) => handleKompetansemaalCheckbox(event, maal)} name="maal" value={maal} />
+                {/if}
+                <label for="km-{maal.kode}">{maal.tittel.nb}</label><br>
+              </div>
+            {/each}
+          {/if}
+        {:catch error}
+          <div class="error">
+            <h4>Det oppstod en feil :(</h4>
+            <p>{error.toString()}</p>
+          </div>
+        {/await}
+      {/if}
+    </section>
+  {/if}
+  
+  <!-- Valgte kompetansemål med beskrivelse -->
+  {#if isCompletedDocument}
+    <h4 class="sectionTitle">Kompetansemål i den lokale læreplanen</h4>
+    {#each documentContent.utplassering.maal as maal, maalIndex}
+      <div class="staticMaal">
+        <div><strong>Programområde: </strong>{maal.programomraade.tittel.nb}</div>
+        <div><strong>Kompetansemål: </strong>{maal.grep.tittel.nb}</div>
+        {#if maal.arbeidsoppgaver}
+          <div><strong>Arbeidsoppgaver: </strong>{maal.arbeidsoppgaver}</div>
+        {/if}
+      </div>
+    {/each}
+  {:else if content?.utplassering?.id && Array.isArray(content?.utplassering?.maal) && content?.utplassering?.maal.length > 0}
+    <section>
+      <h3>
+        Beskriv kompetansemål med arbeidsoppgaver
+      </h3>
+      {#each content.utplassering.maal as maal, maalIndex}
+        <div class="lareplanKompetansemaal">
+          <div class="lareplanKompetansemaalTittel">
+            <div>{maal.programomraade.tittel.nb}</div>
+            <button class="link" on:click={(e) => { e.preventDefault(); removeKompetansemaal(maalIndex); } }><span class="material-symbols-outlined">delete</span>Fjern</button>
+          </div>
+          <div><strong>{maalIndex + 1}. {maal.grep.tittel.nb}</strong></div>
+          <div class="label-input">
+            <label for="oppgaver-{maal.grep.kode}">Beskriv arbeidsoppgaver (valgfritt)</label>
+            <input id="oppgaver-{maal.grep.kode}" type="text" bind:value={maal.arbeidsoppgaver} placeholder="Utdyp arbeidsoppgaver for kompetansemålet" />
+          </div>
+        </div>
+      {/each}
+    </section>
+  {/if}
+
+  <!-- Hvis error -->
+  {#if errorMessage}
+    <section class="error">
+      <h4>En feil har oppstått 😩</h4>
+      <p>{JSON.stringify(errorMessage)}</p>
+    </section>
+  {/if}
+
+  {#if !isCompletedDocument && Array.isArray(content?.utplassering?.maal) && content?.utplassering?.maal.length > 0}
+    <div class="form-buttons">
+      {#if canClickSend}
+        {#if previewLoading}
+          <button disabled><LoadingSpinner width={"1.5"} />Forhåndsvisning</button>
+        {:else}
+          <button type="submit" on:click={(e) => {e.preventDefault(); previewLoading=true; sendLaereplan(true);}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        {/if}
+        {#if sendLoading}
+          <button disabled><LoadingSpinner width={"1.5"} />Lagre og send</button>
+        {:else}
+          <button type="submit" class="filled" on:click={(e) => {e.preventDefault(); sendLoading=true; sendLaereplan();}}><span class="material-symbols-outlined">send</span>Lagre og send</button>
+        {/if}
+      {:else}
+        <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        <button disabled><span class="material-symbols-outlined">send</span>Lagre og send</button>
+      {/if}
+    </div>
+    <PdfPreview {showPreview} base64Data={previewBase64} closePreview={() => {showPreview = false}} />
+  {/if}
 </form>
 
-
 <style>
-  h3 {
+  h3, h4 {
     border-bottom: 1px solid var(--primary-color);
-  }
-  h4 {
-    margin: 0rem;
   }
   .form-buttons {
     display: flex;
@@ -284,42 +407,36 @@
     /* background-color: var(--primary-color-20); */
     padding-bottom: 0.5rem;
   }
+  .grepSourceSelection {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
   .error {
     color: var(--error-color);
     background-color: var(--error-background-color);
     padding: 0.5rem 1rem;
   }
-  .brregUnit:hover, .brregUnit:nth-child(odd):hover {
-    background-color: var(--primary-color-30);
-  }
-  .brregUnit {
-    padding: 0.5rem 1rem;
-    gap: 1rem;
-    width: 100%;
-    border: 0px;
-    border-radius: 0rem;
-  }
-  .brregUnit:nth-child(odd) {
-    background-color: var(--primary-color-20);
-  }
-  .selectedBrregUnit {
-    padding: 0.5rem 1rem;
-    background-color: var(--primary-color-20);
-    border-radius: 0.4rem;
-    border: 2px solid var(--primary-color);
-  }
-  .unitTitle {
-    font-weight: bold;
-  }
-  .icon-link {
+  
+  .kompetansemaal {
     display: flex;
-    gap: 0.5rem;
+    padding: 0.2rem 0.2rem;
+    align-items: center;
+    gap: 0.2rem;
+  }
+  .kompetansemaal:nth-child(odd), .lareplanKompetansemaal:nth-child(even) {
+    background-color: var(--primary-color-20);
+  }
+  .lareplanKompetansemaal {
+    padding: 1rem 1rem;
+  }
+  .lareplanKompetansemaalTittel {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
   }
-  .contactPerson {
-    padding: 1rem 1rem;
-    background-color: var(--primary-color-20);
-    border-radius: 0.4rem;
-    border: 2px solid var(--primary-color);
+  .staticMaal {
+    padding-bottom: 1rem;
+    /* background-color: var(--primary-color-20); */
   }
 </style>

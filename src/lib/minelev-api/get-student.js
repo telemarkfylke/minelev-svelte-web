@@ -2,7 +2,7 @@ import { fintStudent } from '$lib/fintfolk-api/student'
 import { logger } from '@vtfk/logger'
 import { getUserData, repackMiniSchool } from './get-user-data'
 import { env } from '$env/dynamic/private'
-import { getGrepUtdanningsprogram } from '$lib/grep'
+import { getGrepUtdanningsprogram } from './grep'
 
 /**
  * @typedef Fag
@@ -30,7 +30,7 @@ import { getGrepUtdanningsprogram } from '$lib/grep'
 
 // Den under extender utdanningsprogram og slenger på programområde
 /**
- * @typedef {import('../grep').Utdanningsprogram & {programomrade: string[]}} ExpandedUtdanningsprogram
+ * @typedef {import('./grep').Utdanningsprogram & {programomrade: string[]}} ExpandedUtdanningsprogram
  */
 
 // Den under extender MiniSchool og slenger på expanded utdanningsprogram
@@ -205,7 +205,7 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
           }
           for (const grepReferanse of utdanningsprogram.grepreferanse) {
             try {
-              const grepUtdanningsprogram = await getGrepUtdanningsprogram(grepReferanse)
+              const grepUtdanningsprogram = await getGrepUtdanningsprogram(user, grepReferanse)
               const expandedGrepUtdanningsprogram = {
                 ...grepUtdanningsprogram,
                 programomrade: programomradeGrepReferanser
