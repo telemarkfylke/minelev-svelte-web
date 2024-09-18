@@ -26,7 +26,7 @@
 
   let canClickSend = false
 
-  // Laereplan content data
+  // Tilbakemelding content data
   let content = ''
 
   // Tilgjengelige læreplaner
@@ -34,6 +34,7 @@
   let originalLaereplaner = null
   let laereplanError = ""
 
+  // Henter læreplan med utplasseringsdata
   onMount(async () => {
     laereplaner = ""
     try {

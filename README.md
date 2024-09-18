@@ -120,7 +120,7 @@ En tilbamelding på utplassering kan først opprettes når en lokal læreplan og
     - Middels måloppnåelse
     - Høy måloppnåelse
 - Virksomhetens inntrykk av eleven
-  - Ser ut som hardkoda liste over punkter med valg:
+  - Ser ut som hardkoda liste over punkter med valg: (sjekk minelev-web for å finne punktene)
     - Under forventet
     - Som forventet
     - Over forventet

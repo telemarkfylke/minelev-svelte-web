@@ -109,3 +109,84 @@ export const getAvailableLaereplaner = async (user, studentFeidenavn) => {
   }
   return availableLaereplaner
 }
+
+/**
+ *
+ * @param {import("$lib/authentication").User} user
+ * @param {string} studentFeidenavn
+ * @returns list of documents
+ */
+export const getYffDocuments = async (user, studentFeidenavn) => {
+  const loggerPrefix = `getYffDocuments - user: ${user.principalName} - student: ${studentFeidenavn}`
+  logger('info', [loggerPrefix, 'New request'])
+
+  // Validate parameteres
+  if (!user) {
+    logger('error', [loggerPrefix, 'Missing required argument "user'])
+    throw new Error('Missing required argument "user"')
+  }
+  if (!studentFeidenavn) {
+    logger('error', [loggerPrefix, 'Missing required argument "studentFeidenavn'])
+    throw new Error('Missing required argument "studentFeidenavn"')
+  }
+  logger('info', [loggerPrefix, 'Fetching available yff-documents for student'])
+  const yffDocuments = await getStudentDocuments(user, studentFeidenavn, { types: ['yff'] }) // Lucky for us - documents here are returned newest first, so we don't have to check dates
+
+  const laereplaner = yffDocuments.filter(doc => doc.variant === 'laereplan') // js filter preserves order of elements, so we don't mess with newest first
+  const bekreftelser = yffDocuments.filter(doc => doc.variant === 'bekreftelse')
+  const tilbakemeldinger = yffDocuments.filter(doc => doc.variant === 'tilbakemelding')
+  logger('info', [loggerPrefix, `Found ${yffDocuments.length} yff-documents: ${bekreftelser.length} bekreftelser, ${laereplaner.length} laereplaner, and ${tilbakemeldinger.length} laereplaner`])
+
+  /*
+  Kan opprette en læreplan på en bekreftelse, dersom den ikke har
+  Kan redigere en læreplan, dersom den ikke har en tilbakemelding
+  Kan opprette en tilbakemelding på en bekreftelse, dersom den har en læreplan
+  */
+  const yffResultDocuments = []
+  // Går gjennom læreplaner - sjekk om de kan redigeres, eller om de er ferdige, og sett på property
+  for (const laereplan of laereplaner) {
+    // Sjekk om den utplasseringens id allerede er håndtert (vi returnerer kun den nyeste for hver utplassering)
+    if (yffResultDocuments.some(doc => doc.variant === 'laereplan' && doc.content.utplassering.id === laereplan.content.utplassering.id)) continue // Siden lista vi iterer er sortert etter nyeste først
+    // Sjekk om den har en tilbakemelding knyttet til utplasseringen allerede (da er den låst / ferdig)
+    if (tilbakemeldinger.some(melding => melding.content.utplassering._id === laereplan.content.utplassering.id)) {
+      logger('info', [loggerPrefix, `Laereplan ${laereplan._id.toString()} has tilbakemelding, setting as finished`])
+      yffResultDocuments.push({ ...laereplan, hasTilbakemelding: true })
+      continue
+    }
+    // Hvis ikke har vi den nyeste læreplanen for denne utplasseringen, der det ikke foreligger en tilbakemelding enda, vi legger den til som redigerbar
+    logger('info', [loggerPrefix, `Laereplan ${laereplan._id.toString()} is the latest one, and not completed (no tilbakemelding), adding editable laereplan`])
+    yffResultDocuments.push({ ...laereplan, hasTilbakemelding: false })
+  }
+
+  // Så går vi gjennom bekreftelser, og finner utplasseringer som ikke har noen læreplan i det hele tatt enda
+  for (const bekreftelse of bekreftelser) {
+    // Sjekk om utplasseringsens id allerede har en læreplan på seg
+    if (yffResultDocuments.some(doc => doc.variant === 'laereplan' && doc.content.utplassering.id === bekreftelse._id.toString())) {
+      const correspondingLaereplan = yffResultDocuments.find(doc => doc.variant === 'laereplan' && doc.content.utplassering.id === bekreftelse._id.toString())
+      logger('info', [loggerPrefix, `Bekreftelse ${bekreftelse._id.toString()} has læreplan, setting hasLaereplan true, and hasTilbakemelding ${correspondingLaereplan.hasTilbakemelding}`])
+      yffResultDocuments.push({ ...bekreftelse, hasLaereplan: true, hasTilbakemelding: correspondingLaereplan.hasTilbakemelding })
+      continue
+    }
+    // Sjekk om det er en tilbakemelding på utplasseringen allerede (dette krever en læreplan)
+    const correspondingTilbakemelding = tilbakemeldinger.find(melding => melding.content.utplassering._id === bekreftelse._id.toString())
+    if (correspondingTilbakemelding) {
+      if (!yffResultDocuments.some(doc => doc.variant === 'laereplan' && doc.content.utplassering.id === bekreftelse._id.toString())) {
+        logger('warn', [loggerPrefix, `Bekreftelse ${bekreftelse._id.toString()} has tilbakemelding: ${correspondingTilbakemelding._id.toString()}, but apparently no laereplan - this should NOT be possible`])
+      }
+      logger('info', [loggerPrefix, `Bekreftelse ${bekreftelse._id.toString()} has tilbakemelding, setting hasTilbakemelding true`])
+      yffResultDocuments.push({ ...bekreftelse, hasLaereplan: false, hasTilbakemelding: true })
+      continue
+    }
+    // Ingen læreplan og ingen tilbakmld for denne bekreftelsen
+    logger('info', [loggerPrefix, `Bekreftelse ${bekreftelse._id} does not have læreplan or tilbakemelding - setting both to false`])
+    yffResultDocuments.push({ ...bekreftelse, hasLaereplan: false, hasTilbakemelding: false })
+  }
+  for (const tilbakemelding of tilbakemeldinger) {
+    yffResultDocuments.push(tilbakemelding)
+  }
+
+  // Sort it back in order again...
+  yffResultDocuments.sort((a, b) => b.created.timestamp - a.created.timestamp)
+
+  return yffResultDocuments
+}
