@@ -7,9 +7,11 @@
   import VarselOrden from "$lib/document-types/VarselOrden.svelte";
   import YffBekreftelse from "$lib/document-types/YFFBekreftelse.svelte";
   import YffLaereplan from "$lib/document-types/YFFLaereplan.svelte";
+  import YffTilbakemelding from "$lib/document-types/YFFTilbakemelding.svelte";
   import { documentTypes } from "$lib/document-types/document-types";
   /** @type {import('./$types').PageData} */
   export let data
+
 
   const studentFeidenavnPrefix = $page.params.feidenavnPrefix
   const teacherStudent = data.students.find(stud => stud.feidenavnPrefix === studentFeidenavnPrefix)
@@ -97,7 +99,7 @@
     <YffLaereplan {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} {studentData} />
   {/if}
   {#if documentTypeId === 'yff-tilbakemelding'}
-    Hallo yff
+    <YffTilbakemelding {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} {studentData} />
   {/if}
 {/if}
 

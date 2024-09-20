@@ -414,14 +414,156 @@ export const documentTypes = [
     accessCondition: 'yffEnabled',
     isEncrypted: false,
     matchContent: {
-      note: 'fjidsofjkldsfkldsjflks'
+      utplassering: {
+        _id: 'blalabalabal',
+        oppmotested: 'Whatever',
+        kopiPrEpost: ['optional'],
+        fraDato: '02.02.2021',
+        tilDato: '03.02.2021',
+        daysPerWeek: '17',
+        startTid: '08:00',
+        sluttTid: '16:00',
+        kontaktpersonData: [
+          {
+            navn: 'Whatever',
+            telefon: '0118 999 881 999 119 7253',
+            epost: 'nei@nei.no',
+            avdeling: 'Whatever'
+          }
+        ],
+        parorendeData: [
+          {
+            navn: 'Halla Balla',
+            telefon: 'Sakesak'
+          }
+        ],
+        bedriftsNavn: 'VESTFOLD OG TELEMARK FYLKESKOMMUNE',
+        bedriftsData: {
+          organisasjonsNummer: '821227062',
+          navn: 'VESTFOLD OG TELEMARK FYLKESKOMMUNE',
+          adresse: 'Postboks 2844',
+          postnummer: '3702',
+          poststed: 'SKIEN',
+          avdeling: 'optional',
+          type: 'enhet eller underenhet'
+        },
+        level: 'VG1',
+      },
+      evalueringsdata: {
+        hms: {
+          title: {
+            nb: 'Eleven følger retningslinjer og HMS innenfor fagområdet',
+            nn: 'Eleven følgjer retningslinjer og HMS innanfor fagområdet'
+          },
+          score: 'Under forventet | Som forventet | Over forventet | Ikke aktuelt'
+        },
+        'respekt-retningslinjer': {
+          title: {
+            nb: 'Eleven viser gode holdninger og respekt for opplæringsstedets regler og retningslinjer',
+            nn: 'Eleven viser gode haldningar og respekt for opplæringsstaden sine reglar og retningslinjer'
+          },
+          score: 'Under forventet | Som forventet | Over forventet | Ikke aktuelt'
+        },
+        'respekt-mennesker': {
+          title: {
+            nb: 'Eleven viser gode holdninger og respekt for mennesker de møter under utplasseringen',
+            nn: 'Eleven viser gode haldningar og respekt for menneske dei møter under utplasseringa'
+          },
+          score: 'Under forventet | Som forventet | Over forventet | Ikke aktuelt'
+        },
+        tilpasningsdyktig: {
+          title: {
+            nb: 'Eleven er tilpasningsdyktig og kan samarbeide',
+            nn: 'Eleven er tilpassingsdyktig og kan samarbeide'
+          },
+          score: 'Under forventet | Som forventet | Over forventet | Ikke aktuelt'
+        },
+        kommunikasjon: {
+          title: {
+            nb: 'Eleven har kommunikasjonsevner i møte med kollegaer, kunder og brukere',
+            nn: 'Eleven viser kommunikasjonsevner i møte med kollegaer, kundar og brukarar'
+          },
+          score: 'Under forventet | Som forventet | Over forventet | Ikke aktuelt'
+        },
+        veiledning: {
+          title: {
+            nb: 'Eleven tar imot veiledning',
+            nn: 'Eleven tek imot rettleiing'
+          },
+          score: 'Under forventet | Som forventet | Over forventet | Ikke aktuelt'
+        },
+        oppfylle: {
+          title: {
+            nb: 'Eleven utfører tildelte arbeidsoppgaver',
+            nn: 'Eleven utfører tildelte arbeidsoppgåver'
+          },
+          score: 'Under forventet | Som forventet | Over forventet | Ikke aktuelt'
+        },
+        initiativ: {
+          title: {
+            nb: 'Eleven viser initiativ og interesse for arbeidet',
+            nn: 'Eleven viser initiativ og interesse for arbeidet'
+          },
+          score: 'Under forventet | Som forventet | Over forventet | Ikke aktuelt'
+        }
+      },
+      ordenatferd: {
+        orden: {
+          title: 'Orden (punktlighet)',
+          score: 'Under forventet | Som forventet | Over forventet'
+        },
+        atferd: {
+          title: 'Atferd (holdninger, respekt)',
+          score: 'Under forventet | Som forventet | Over forventet'
+        }
+      },
+      fravar: {
+        dager: '2',
+        timer: '5',
+        varslet: 'Ja | Nei | Av og til | Ikke aktuelt'
+      },
+      kompetansemal: [
+        {
+          grep: {
+            kode: 'K3703',
+            uri: 'http://psi.udir.no/kl06/K3703',
+            'url-data': 'https://data.udir.no/kl06/v201906/kompetansemaal/K3703',
+            tittel: {
+              default: 'mestre tre ulike typer masseflyttingsmaskiner',
+              nb: 'mestre tre ulike typer masseflyttingsmaskiner',
+              nn: 'mestre tre ulike typer masseflyttingsmaskiner',
+              en: 'mestre tre ulike typer masseflyttingsmaskiner',
+              sm: 'mestre tre ulike typer masseflyttingsmaskiner'
+            }
+          },
+          programomraade: {
+            kode: 'BATMF2----',
+            uri: 'http://psi.udir.no/kl06/BATMF2----',
+            'url-data': 'https://beta-data.udir.no/kl06/v201906/programomraader/BATMF2----',
+            tittel: {
+              default: 'Tømrer',
+              nb: 'Tømrer',
+              nn: 'Tømrar',
+              en: 'Carpentry',
+              sm: 'Ceahkkun'
+            },
+            trinn: 'vg2',
+            opplaeringssted: 'http://psi.udir.no/kl06/opplaeringssted_skole'
+          },
+          arbeidsoppgaver: 'optional',
+          tilbakemelding: 'Lav måloppnåelse | Middels måloppnåelse | Høy måloppnåelse'
+        }
+      ],
+      year: '2020/2021'
     },
     generateContent: (student, content) => {
-      if (!student) throw new Error('Missing required argumnet "student"')
-      const { note } = content
-      if (!note) throw new Error('Missing required argument "content.note"')
+      if (!content.utplassering) throw new Error('Missing required argument "content.utplassering"')
+      if (!content.kompetansemal || (Array.isArray(content.kompetansemal) && content.kompetansemal.length === 0)) throw new Error('"content.kompetansemal" must be an array with at least one element')
+      content.fravar.dager = content.fravar.dager.toString()
+      content.fravar.timer = content.fravar.timer.toString()
       return {
-        note
+        ...content,
+        year: getCurrentSchoolYear()
       }
     }
   }

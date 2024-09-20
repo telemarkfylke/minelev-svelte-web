@@ -1,5 +1,4 @@
 import { getAuthenticatedUser } from '$lib/authentication'
-import { brregSearch } from '$lib/minelev-api/brreg'
 import { getGrepKompetaansemaal } from '$lib/minelev-api/grep'
 import { json } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'

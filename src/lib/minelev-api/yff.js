@@ -2,6 +2,7 @@ import { logger } from '@vtfk/logger'
 import { env } from '$env/dynamic/private'
 import { getStudentDocuments } from './get-student-documents'
 import vtfkSchoolsInfo from 'vtfk-schools-info'
+import { yffEvalueringsdata } from '$lib/document-types/data/document-data'
 
 // Skal også kunne klikke rediger på en læreplan, og vite om vi kan opprette en tilbakemelding. Kan vi få et endepunkt som returnerer dette og det andre? Nei trolig ikke, men de kan bruke de samme sjekkene. Så kan vi bare kjøre eget kall på elevsiden for å hente yff-ene med litt ekstra properties.
 
@@ -189,4 +190,74 @@ export const getYffDocuments = async (user, studentFeidenavn) => {
   yffResultDocuments.sort((a, b) => b.created.timestamp - a.created.timestamp)
 
   return yffResultDocuments
+}
+
+/**
+ *
+ * @param {import("$lib/authentication").User} user
+ * @param {string} studentFeidenavn
+ * @returns list of documents
+ */
+export const getAvailableTilbakemeldinger = async (user, studentFeidenavn) => {
+  const loggerPrefix = `getAvailableTilbakemeldinger - user: ${user.principalName} - student: ${studentFeidenavn}`
+  logger('info', [loggerPrefix, 'New request'])
+
+  // Validate parameteres
+  if (!user) {
+    logger('error', [loggerPrefix, 'Missing required argument "user'])
+    throw new Error('Missing required argument "user"')
+  }
+  if (!studentFeidenavn) {
+    logger('error', [loggerPrefix, 'Missing required argument "studentFeidenavn'])
+    throw new Error('Missing required argument "studentFeidenavn"')
+  }
+  logger('info', [loggerPrefix, 'Fetching available yff-documents for student'])
+  const yffDocuments = await getStudentDocuments(user, studentFeidenavn, { types: ['yff'] }) // Lucky for us - documents here are returned newest first, so we don't have to check dates
+  const laereplaner = yffDocuments.filter(doc => doc.variant === 'laereplan') // js filter preserves order of elements, so we don't mess with newest first
+  const bekreftelser = yffDocuments.filter(doc => doc.variant === 'bekreftelse')
+  const tilbakemeldinger = yffDocuments.filter(doc => doc.variant === 'tilbakemelding')
+  logger('info', [loggerPrefix, `Found ${yffDocuments.length} yff-documents: ${bekreftelser.length} bekreftelser, ${laereplaner.length} laereplaner, and ${tilbakemeldinger.length} laereplaner`])
+
+  const availableTilbakemeldinger = []
+  // Går gjennom læreplaner - lager opp "ferdige læreplaner" som IKKE har en tilbakemelding på seg, kan returneres og bygges videre på
+  for (const laereplan of laereplaner) {
+    // Sjekk om den utplasseringens id allerede er håndtert
+    if (availableTilbakemeldinger.some(melding => melding.utplassering._id === laereplan.content.utplassering.id)) continue // Siden lista vi iterer er sortert etter nyeste først
+    // Sjekk om den har en tilbakemelding knyttet til utplasseringen allerede (da er den låst / ferdig)
+    if (tilbakemeldinger.some(melding => melding.content.utplassering._id === laereplan.content.utplassering.id)) continue
+    // Sjekk om vi har en bekreftelse for denne utplasseringen, hvis ikke kan vi ikke lage tilbakemelding
+    const correspondingBekreftelse = bekreftelser.find(bekreftelse => bekreftelse._id.toString() === laereplan.content.utplassering.id)
+    if (!correspondingBekreftelse) {
+      logger('warn', [loggerPrefix, `Laereplan ${laereplan._id.toString()} does not have bekreftelse, cannot create tilbakemelding`])
+      continue
+    }
+    // Her har vi en læreplan som har bekreftelse, og ikke har tilbakemelding enda, da kan vi opprette tilbakemelding
+    logger('info', [loggerPrefix, `Laereplan ${laereplan._id.toString()} is the latest one, and not completed (no tilbakemelding), adding bekreftelse and maal to tilbakemelding content as available for creation`])
+    const tilbakemeldingContent = {
+      utplassering: {
+        _id: correspondingBekreftelse._id.toString(),
+        ...correspondingBekreftelse.content.bekreftelse,
+        level: correspondingBekreftelse.content.level
+      },
+      evalueringsdata: yffEvalueringsdata,
+      ordenatferd: {
+        orden: {
+          title: 'Orden (punktlighet)'
+        },
+        atferd: {
+          title: 'Atferd (holdninger, respekt)'
+        }
+      },
+      fravar: {
+        dager: '',
+        timer: '',
+        varslet: ''
+      },
+      kompetansemal: laereplan.content.utplassering.maal
+    }
+    availableTilbakemeldinger.push(tilbakemeldingContent)
+  }
+
+  logger('info', [loggerPrefix, `Finished creating available tilbakemeldinger - total ${availableTilbakemeldinger.length} available tilbakemeldinger for creation. Returning`])
+  return availableTilbakemeldinger
 }

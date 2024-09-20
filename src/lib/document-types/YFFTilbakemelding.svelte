@@ -29,122 +29,47 @@
   // Tilbakemelding content data
   let content = ''
 
-  // Tilgjengelige læreplaner
-  let laereplaner = null
-  let originalLaereplaner = null
-  let laereplanError = ""
+  // Tilgjengelige tilbakemeldinger
+  let tilbakemeldinger = null
+  let originalTilbakemeldinger = null
+  let tilbakemeldingError = ""
 
-  // Henter læreplan med utplasseringsdata
+  // Henter tilbakemeldinger med utplasseringsdata og mål
   onMount(async () => {
-    laereplaner = ""
+    tilbakemeldinger = ""
     try {
-      const { data } = await axios.get(`/api/students/${$page.params.feidenavnPrefix}/yff/availablelaereplaner`)
-      originalLaereplaner = data
-      laereplaner = JSON.parse(JSON.stringify(originalLaereplaner))
+      const { data } = await axios.get(`/api/students/${$page.params.feidenavnPrefix}/yff/availabletilbakemeldinger`)
+      originalTilbakemeldinger = data
+      tilbakemeldinger = JSON.parse(JSON.stringify(originalTilbakemeldinger))
       const utplasseringid = $page.url.searchParams.get('utplasseringid')
       if (utplasseringid) {
-        console.log("Utplasseringid", utplasseringid)
-        const selectedLaereplan = laereplaner.find(plan => plan.utplassering.id === utplasseringid)
-        console.log("Selected laereplan", selectedLaereplan)
-        if (selectedLaereplan) content = selectedLaereplan
+        const selectedTilbakemelding = tilbakemeldinger.find(melding => melding.utplassering._id === utplasseringid)
+        if (selectedTilbakemelding) content = selectedTilbakemelding
+      }
+      if (tilbakemeldinger.length === 1) {
+        content = tilbakemeldinger[0]
       }
     } catch (error) {
-      laereplaner = null
-      originalLaereplaner = null
-      laereplanError = error.stack || error.toString()
+      tilbakemeldinger = null
+      originalTilbakemeldinger = null
+      tilbakemeldingError = error.stack || error.toString()
     }
   })
 
-  const resetLaereplan = () => {
-    if (content?.utplassering?.id) {
-      const correspondingOriginal = originalLaereplaner.find(plan => plan.utplassering.id === content.utplassering.id)
-      content.utplassering.maal = JSON.parse(JSON.stringify(correspondingOriginal.utplassering.maal)) // Setter maal tilbake til original i tilfelle noen har knota - men kun maal for å ikke knekke bind mot objektet
-    }
-  }
-
-  const getStudentUtdanningsprogram = (schoolNumber) => {
-    if (isCompletedDocument) return []
-    const utdanningsprogrammer = studentData.yffSchools.find(school => school.skolenummer === schoolNumber).utdanningsprogrammer
-    return utdanningsprogrammer
-  }
-
-  const getStudentLevels = (schoolNumber) => {
-    if (isCompletedDocument) return []
-    return studentData.basisgrupper.filter(gruppe => gruppe.skole.skolenummer === schoolNumber).map(gruppe => gruppe.trinn.toLowerCase())
-  }
-
-  // Programområder (skal legges til på mål - så vi legger de tigjengelige til her)
-  let currentProgramomraader = []
-
-
-  const getStudentProgramomraader = (schoolNumber) => {
-    if (isCompletedDocument) return []
-    const utdanningsprogrammer = getStudentUtdanningsprogram(schoolNumber)
-    const programomraader = utdanningsprogrammer.map(program => program.programomrade).flat().map(omrade => omrade.substring(omrade.lastIndexOf('/') + 1))
-    return programomraader
-  }
-
-  const levels = [
-    {
-      name: 'VG 1',
-      value: 'vg1'
-    },
-    {
-      name: 'VG 2',
-      value: 'vg2'
-    },
-    {
-      name: 'VG 3',
-      value: 'vg3'
-    }
-  ]
-
-  // GREP henting av kompetansemål
-  const grepSource = {
-    level: getStudentLevels(selectedSchoolNumber).length === 1 ? getStudentLevels(selectedSchoolNumber)[0] : '',
-    utdanningsprogram: getStudentUtdanningsprogram(selectedSchoolNumber).length === 1 ? getStudentUtdanningsprogram(selectedSchoolNumber)[0].kode : '',
-    programomraade: getStudentProgramomraader(selectedSchoolNumber).length === 1 ? getStudentProgramomraader(selectedSchoolNumber)[0] : '' 
-  }
-  
-  const getGrepUtdanningsprogrammer = async () => {
-    const { data } = await axios.get(`/api/grep/utdanningsprogrammer`)
-    return data
-  }
-
-  const getGrepProgramomraader = async (utdanningsprogram, trinn) => {
-    const { data } = await axios.get(`/api/grep/programomraader?utdanningsprogram=${utdanningsprogram}&trinn=${trinn}`)
-    currentProgramomraader = data
-    return data
-  }
-
-  const getGrepKompetansemaal = async (programomraade) => {
-    const { data } = await axios.get(`/api/grep/kompetansemaal?programomraade=${programomraade}`)
-    return data
-  }
-
-  const addKompetansemaal = (maal) => {
-    content.utplassering.maal = [...content.utplassering.maal, maal] // To make it reactive
-  }
-
-  const removeKompetansemaal = (index) => {
-    content.utplassering.maal = content.utplassering.maal.filter((_, i) => i !== index) // To make it reactive
-  }
-
-  const handleKompetansemaalCheckbox = (event, maal) => {
-    event.preventDefault()
-    if (event.currentTarget.checked) {
-      const currentProgramomraade = currentProgramomraader.find(omraade => omraade.kode === grepSource.programomraade)
-      if (!currentProgramomraade) throw new Error(`Programområde ${grepSource.programomraade} ikke funnet`)
-      addKompetansemaal({ grep: maal, programomraade: currentProgramomraade, arbeidsoppgaver: '' })
-    } else {
-      content.utplassering.maal = content.utplassering.maal.filter((m) => m.grep.kode !== maal.kode) // To make it reactive
+  const resetTilbakemelding = () => {
+    if (content?.utplassering?._id) {
+      const correspondingOriginal = originalTilbakemeldinger.find(melding => melding.utplassering._id === content.utplassering._id)
+      // For å ikke knekke objekt-referansen..
+      for (const [key, value] of Object.entries(correspondingOriginal)) {
+        content[key] = JSON.parse(JSON.stringify(value))
+      }
     }
   }
 
   $: canClickSend = true // Vi prøver oss med innebygget form validation i browser i stedet :)
 
   let previewBase64
-  const sendLaereplan = async (preview=false) => {
+  const sendTilbakemelding = async (preview=false) => {
     const validData = formElement.reportValidity()
     if (!validData) {
       previewLoading = false
@@ -156,7 +81,7 @@
       const payload = {
         documentTypeId,
         type: 'yff',
-        variant: 'laereplan',
+        variant: 'tilbakemelding',
         schoolNumber: selectedSchoolNumber,
         documentData: content,
         preview
@@ -185,32 +110,35 @@
 {/if}
 
 <form bind:this={formElement}>
-  <!-- Utplassering læreplanen er knyttet til -->
+  <!-- Utplassering tilbakemeldingen er knyttet til -->
   {#if isCompletedDocument}
-    <h4 class="sectionTitle">
-      Utplasseringssted for den lokale læreplanen
-    </h4>
-    <div>{documentContent.utplassering.name}</div>
-  {:else if laereplanError}
+    <div style="display: none;"></div>
+  {:else if tilbakemeldingError}
     <section class="error">
       <h4>En feil har oppstått 😩</h4>
-      <p>{laereplanError}</p>
+      <p>{tilbakemeldingError}</p>
     </section>
   {:else}
     <section>
       <h3>
-        Utplasseringssted for den lokale læreplanen
+        Utplasseringssted for tilbakemeldingen
       </h3>
-      {#if !laereplaner}
+      {#if !tilbakemeldinger}
         <LoadingSpinner width={"1.5"} />
+      {:else if tilbakemeldinger.length === 0}
+        <div>
+          For å opprette en tilbakemelding må du først ha opprettet en bekreftelse på utplassering, og deretter en lokal læreplan for den samme utplasseringen.
+          <br />
+          <a href="/elever/{studentFeidenavnPrefix}"><span class="material-symbols-outlined">arrow_back</span>Gå tilbake til eleven</a>
+        </div>
       {:else}
         <div class="label-select">
           <label for="utplassering">Utplasseringssted</label>
-          <select bind:value={content} id="utplassering" on:change={resetLaereplan}>
+          <select bind:value={content} id="utplassering" on:change={resetTilbakemelding}>
             <option value="">--Velg utplasseringssted--</option>
             <hr />
-            {#each laereplaner as laereplan}
-              <option value={laereplan}>{laereplan.utplassering.name}</option>
+            {#each tilbakemeldinger as tilbakemelding}
+              <option value={tilbakemelding}>{tilbakemelding.utplassering.bedriftsData.navn}</option>
             {/each}
           </select>
         </div>
@@ -218,135 +146,212 @@
     </section>
   {/if}
 
-  <!-- Velging av kompetansemål for læreplanen -->
+  <!-- Utplasseringsted informasjon -->
   {#if isCompletedDocument}
-    <!-- Denne blokka brukes bare til oppretting og redigering av læreplanen, og vi viser den ikke for ferdige dokumenter -->
-  {:else if content?.utplassering?.id}
+    <section>
+      <h4>Informasjon om utplasseringen</h4>
+      <div><strong>Bedrift: </strong>{documentContent.utplassering.bedriftsData.navn}</div>
+      <div><strong>Tidsom: </strong>{documentContent.utplassering.fraDato} - {documentContent.utplassering.tilDato} ({documentContent.utplassering.daysPerWeek} dager i uken)</div>
+      <div><strong>Kontaktperson(er): </strong>
+        {#each documentContent.utplassering.kontaktpersonData as kontaktperson}
+          <div>
+              - {kontaktperson.navn} {#if kontaktperson.avdeling}({kontaktperson.avdeling}){/if}, {kontaktperson.telefon || kontaktperson.epost || "Ingen kontaktinfo"}
+          </div>
+        {/each}
+      </div>
+    </section>
+  {:else if content?.utplassering?._id}
     <section>
       <h3>
-        Legg til kompetansemål
+        Informasjon om utplasseringen
       </h3>
-      <strong>Hent kompetansemål fra</strong>
-      <div class="grepSourceSelection">
-        <div>
-          {#await getGrepUtdanningsprogrammer()}
-            <LoadingSpinner width={"1.5"} />
-          {:then utdanningsprogrammer}
-            <div class="label-select">
-              <label for="utdanningsprogram">Utdanningsprogram</label>
-              <select bind:value={grepSource.utdanningsprogram} on:change={() => { grepSource.programomraade = '' }} id="utdanningsprogram">
-                <option value="">--Velg utdanningsprogram--</option>
-                <hr />
-                {#each utdanningsprogrammer as utdanningsprogram}
-                  <option value={utdanningsprogram.kode}>{utdanningsprogram.tittel.nb}</option>
-                {/each}
-              </select>
-            </div>
-          {:catch error}
-            <div class="error">
-              <h4>Det oppstod en feil :(</h4>
-              <p>{error.toString()}</p>
-            </div>
-          {/await}
-        </div>
-        {#if grepSource.utdanningsprogram}
+      <div><strong>Bedrift: </strong>{content.utplassering.bedriftsData.navn}</div>
+      <div><strong>Tidsom: </strong>{content.utplassering.fraDato} - {content.utplassering.tilDato} ({content.utplassering.daysPerWeek} dager i uken)</div>
+      <div><strong>Kontaktperson(er): </strong>
+        {#each content.utplassering.kontaktpersonData as kontaktperson}
           <div>
-            <div class="label-select">
-              <label for="level">Trinn</label>
-              <select bind:value={grepSource.level} on:change={() => { console.log("hallo"); grepSource.programomraade = '' }} id="level">
-                <option value="">--Velg trinn--</option>
-                <hr />
-                {#each levels as level}
-                  <option value={level.value}>{level.name}</option>
-                {/each}
-              </select>
-            </div>
+             - {kontaktperson.navn} {#if kontaktperson.avdeling}({kontaktperson.avdeling}){/if}, {kontaktperson.telefon || kontaktperson.epost || "Ingen kontaktinfo"}
           </div>
-        {/if}
-        {#if grepSource.utdanningsprogram && grepSource.level}
-          {#await getGrepProgramomraader(grepSource.utdanningsprogram, grepSource.level)}
-            <LoadingSpinner width={"1.5"} />
-          {:then programomraader}
-            <div>
-              <div class="label-select">
-                <label for="programomraade">Programområde</label>
-                <select bind:value={grepSource.programomraade} id="programomraade">
-                  <option value="">--Velg programområde--</option>
-                  <hr />
-                  {#each programomraader as programomraade}
-                    <option value={programomraade.kode}>{programomraade.tittel.nb.length > 40 ? `${programomraade.tittel.nb.substring(0, 37)}...` : programomraade.tittel.nb}</option>
-                  {/each}
-                </select>
-              </div>
-            </div>
-          {:catch error}
-            <div class="error">
-              <h4>Det oppstod en feil :(</h4>
-              <p>{error.toString()}</p>
-            </div>
-          {/await}
-        {/if}
+        {/each}
       </div>
-      <br />
-      <!-- Kompetansemål man kan velge fra -->
-      {#if grepSource.programomraade}
-        <div><strong>Kompetansemål</strong></div>
-        <button class="link" on:click={(e) => { e.preventDefault(); showKompetansemaal = !showKompetansemaal } }>{showKompetansemaal ? "Skjul" : "Vis"} kompetansemål</button>
-        {#await getGrepKompetansemaal(grepSource.programomraade)}
-          <LoadingSpinner width={"1.5"} />
-        {:then kompetansemaal}
-          {#if showKompetansemaal}
-            {#each kompetansemaal as maal}
-              <div class="kompetansemaal">
-                {#if content.utplassering.maal.find(m => m.grep.kode === maal.kode)}
-                  <input type="checkbox" checked id="km-{maal.kode}" on:change={(event) => handleKompetansemaalCheckbox(event, maal)} name="maal" value={maal} />
-                {:else}
-                  <input type="checkbox" id="km-{maal.kode}" on:change={(event) => handleKompetansemaalCheckbox(event, maal)} name="maal" value={maal} />
-                {/if}
-                <label for="km-{maal.kode}">{maal.tittel.nb}</label><br>
-              </div>
-            {/each}
-          {/if}
-        {:catch error}
-          <div class="error">
-            <h4>Det oppstod en feil :(</h4>
-            <p>{error.toString()}</p>
-          </div>
-        {/await}
-      {/if}
     </section>
   {/if}
-  
-  <!-- Valgte kompetansemål med beskrivelse -->
+
+  <!-- Kompetansemål og arbeidsoppgaver -->
   {#if isCompletedDocument}
-    <h4 class="sectionTitle">Kompetansemål i den lokale læreplanen</h4>
-    {#each documentContent.utplassering.maal as maal, maalIndex}
-      <div class="staticMaal">
-        <div><strong>Programområde: </strong>{maal.programomraade.tittel.nb}</div>
-        <div><strong>Kompetansemål: </strong>{maal.grep.tittel.nb}</div>
-        {#if maal.arbeidsoppgaver}
-          <div><strong>Arbeidsoppgaver: </strong>{maal.arbeidsoppgaver}</div>
-        {/if}
-      </div>
-    {/each}
-  {:else if content?.utplassering?.id && Array.isArray(content?.utplassering?.maal) && content?.utplassering?.maal.length > 0}
+    <section>
+      <h4>
+        Kompetansemål og arbeidsoppgaver
+      </h4>
+      {#each documentContent.kompetansemal as maal}
+        <div class="maal">
+          <div><strong>Mål: </strong>{maal.grep.tittel.nb}</div>
+          {#if maal.arbeidsoppgaver}
+            <div><strong>Arbeidsoppgaver: </strong>{maal.arbeidsoppgaver}</div>
+          {/if}
+          <div><strong>Måloppnåelse: </strong>{maal.tilbakemelding}</div>
+        </div>
+      {/each}
+    </section>
+  {:else if content?.utplassering?._id}
     <section>
       <h3>
-        Beskriv kompetansemål med arbeidsoppgaver
+        Kompetansemål og arbeidsoppgaver
       </h3>
-      {#each content.utplassering.maal as maal, maalIndex}
-        <div class="lareplanKompetansemaal">
-          <div class="lareplanKompetansemaalTittel">
-            <div>{maal.programomraade.tittel.nb}</div>
-            <button class="link" on:click={(e) => { e.preventDefault(); removeKompetansemaal(maalIndex); } }><span class="material-symbols-outlined">delete</span>Fjern</button>
-          </div>
-          <div><strong>{maalIndex + 1}. {maal.grep.tittel.nb}</strong></div>
-          <div class="label-input">
-            <label for="oppgaver-{maal.grep.kode}">Beskriv arbeidsoppgaver (valgfritt)</label>
-            <input id="oppgaver-{maal.grep.kode}" type="text" bind:value={maal.arbeidsoppgaver} placeholder="Utdyp arbeidsoppgaver for kompetansemålet" />
+      {#each content.kompetansemal as maal}
+        <div class="maal">
+          <div><strong>Mål: </strong>{maal.grep.tittel.nb}</div>
+          {#if maal.arbeidsoppgaver}
+            <div><strong>Arbeidsoppgaver: </strong>{maal.arbeidsoppgaver}</div>
+          {/if}
+          <div class="radioFlex">
+            <div>
+              <input type="radio" id="score-{maal.grep.kode}-lav" bind:group={maal.tilbakemelding} name="score-{maal.grep.kode}" value="Lav måloppnåelse" required />
+              <label for="score-{maal.grep.kode}-lav">Lav måloppnåelse</label><br>
+            </div>
+            <div>
+              <input type="radio" id="score-{maal.grep.kode}-middels" bind:group={maal.tilbakemelding} name="score-{maal.grep.kode}" value="Middels måloppnåelse" required />
+              <label for="score-{maal.grep.kode}-middels">Middels måloppnåelse</label><br>
+            </div>
+            <div>
+              <input type="radio" id="score-{maal.grep.kode}-hoy" bind:group={maal.tilbakemelding} name="score-{maal.grep.kode}" value="Høy måloppnåelse" required />
+              <label for="score-{maal.grep.kode}-hoy">Høy måloppnåelse</label><br>
+            </div>
           </div>
         </div>
       {/each}
+    </section>
+  {/if}
+
+  <!-- Virksomhetens inntrykk av eleven -->
+  {#if isCompletedDocument}
+    <section>
+      <h4>
+        Virksomhetens inntrykk av eleven
+      </h4>
+      {#each Object.entries(documentContent.evalueringsdata) as evalueringspunkt}
+        <div class="maal">
+          <div><strong>{evalueringspunkt[1].title.nb}</strong></div>
+          <div>{evalueringspunkt[1].score === '0' ? 'Ikke aktuelt' : evalueringspunkt[1].score}</div>
+        </div>
+      {/each}
+    </section>
+  {:else if content?.utplassering?._id}
+    <section>
+      <h3>
+        Virksomhetens inntrykk av eleven
+      </h3>
+      {#each Object.entries(content.evalueringsdata) as evalueringspunkt, index}
+        <div class="maal">
+          <div><strong>{evalueringspunkt[1].title.nb}</strong></div>
+          <div class="radioFlex">
+            <div>
+              <input type="radio" id="score-{evalueringspunkt[0]}-under" bind:group={content.evalueringsdata[evalueringspunkt[0]].score} name="score-{evalueringspunkt[0]}" value="Under forventet" required />
+              <label for="score-{evalueringspunkt[0]}-under">Under forventet</label><br>
+            </div>
+            <div>
+              <input type="radio" id="score-{evalueringspunkt[0]}-som" bind:group={content.evalueringsdata[evalueringspunkt[0]].score} name="score-{evalueringspunkt[0]}" value="Som forventet" required />
+              <label for="score-{evalueringspunkt[0]}-som">Som forventet</label><br>
+            </div>
+            <div>
+              <input type="radio" id="score-{evalueringspunkt[0]}-over" bind:group={content.evalueringsdata[evalueringspunkt[0]].score} name="score-{evalueringspunkt[0]}" value="Over forventet" required />
+              <label for="score-{evalueringspunkt[0]}-over">Over forventet</label><br>
+            </div>
+            <div>
+              <input type="radio" id="score-{evalueringspunkt[0]}-uaktuelt" bind:group={content.evalueringsdata[evalueringspunkt[0]].score} name="score-{evalueringspunkt[0]}" value="0" required /> <!--blank value?-->
+              <label for="score-{evalueringspunkt[0]}-uaktuelt">Ikke aktuelt</label><br>
+            </div>
+          </div>
+        </div>
+      {/each}
+    </section>
+  {/if}
+
+  <!-- Orden og atferd -->
+  {#if isCompletedDocument}
+    <section>
+      <h4>
+        Orden og atferd
+      </h4>
+      {#each Object.entries(documentContent.ordenatferd) as evalueringspunkt}
+        <div class="maal">
+          <div><strong>{evalueringspunkt[1].title}</strong></div>
+          <div>{evalueringspunkt[1].score === '0' ? 'Ikke aktuelt' : evalueringspunkt[1].score}</div>
+        </div>
+      {/each}
+    </section>
+  {:else if content?.utplassering?._id}
+    <section>
+      <h3>
+        Orden og atferd
+      </h3>
+      {#each Object.entries(content.ordenatferd) as evalueringspunkt, index}
+        <div class="maal">
+          <div><strong>{evalueringspunkt[1].title}</strong></div>
+          <div class="radioFlex">
+            <div>
+              <input type="radio" id="score-{evalueringspunkt[0]}-under" bind:group={content.ordenatferd[evalueringspunkt[0]].score} name="score-{evalueringspunkt[0]}" value="Under forventet" required />
+              <label for="score-{evalueringspunkt[0]}-under">Under forventet</label><br>
+            </div>
+            <div>
+              <input type="radio" id="score-{evalueringspunkt[0]}-som" bind:group={content.ordenatferd[evalueringspunkt[0]].score} name="score-{evalueringspunkt[0]}" value="Som forventet" required />
+              <label for="score-{evalueringspunkt[0]}-som">Som forventet</label><br>
+            </div>
+            <div>
+              <input type="radio" id="score-{evalueringspunkt[0]}-over" bind:group={content.ordenatferd[evalueringspunkt[0]].score} name="score-{evalueringspunkt[0]}" value="Over forventet" required />
+              <label for="score-{evalueringspunkt[0]}-over">Over forventet</label><br>
+            </div>
+          </div>
+        </div>
+      {/each}
+    </section>
+  {/if}
+
+  <!-- Fravær -->
+  {#if isCompletedDocument}
+    <section>
+      <h4>
+        Fravær under utplasseringen
+      </h4>
+      <div><strong>Antall hele dager fravær: </strong>{documentContent.fravar.dager}</div>
+      <div><strong>Antall timer fravær: </strong>{documentContent.fravar.timer}</div>
+      <div><strong>Varslet eleven selv om fraværet? </strong>{documentContent.fravar.varslet.substring(0,1).toUpperCase()}{documentContent.fravar.varslet.substring(1)}</div>
+    </section>
+  {:else if content?.utplassering?._id}
+    <section>
+      <h3>
+        Fravær under utplasseringen
+      </h3>
+      <div class="datetimeStuff">
+        <div class="label-input required">
+          <label for="fravardager">Antall hele dager fravær</label>
+          <input required id="fravardager" type="number" bind:value={content.fravar.dager} placeholder="Antall hele dager fravær"  />
+        </div>
+        <div class="label-input required">
+          <label for="fravartimer">Antall timer fravær</label>
+          <input required id="fravartimer" type="number" bind:value={content.fravar.timer} placeholder="Antall timer fravær" />
+        </div>
+      </div>
+      <div><strong>Varslet eleven selv om fraværet?</strong></div>
+      <div class="radioFlex">
+        <div>
+          <input type="radio" id="fravar-varslet-ja" bind:group={content.fravar.varslet} name="fravar-varslet" value="ja" required />
+          <label for="fravar-varslet-ja">Ja</label><br>
+        </div>
+        <div>
+          <input type="radio" id="fravar-varslet-nei" bind:group={content.fravar.varslet} name="fravar-varslet" value="nei" required />
+          <label for="fravar-varslet-nei">Nei</label><br>
+        </div>
+        <div>
+          <input type="radio" id="fravar-varslet-avogtil" bind:group={content.fravar.varslet} name="fravar-varslet" value="av og til" required />
+          <label for="fravar-varslet-avogtil">Av og til</label><br>
+        </div>
+        <div>
+          <input type="radio" id="fravar-varslet-uaktuelt" bind:group={content.fravar.varslet} name="fravar-varslet" value="0" required />
+          <label for="fravar-varslet-uaktuelt">Ikke aktuelt</label><br>
+        </div>
+      </div>
+
     </section>
   {/if}
 
@@ -358,22 +363,22 @@
     </section>
   {/if}
 
-  {#if !isCompletedDocument && Array.isArray(content?.utplassering?.maal) && content?.utplassering?.maal.length > 0}
+  {#if !isCompletedDocument && content?.utplassering?._id}
     <div class="form-buttons">
       {#if canClickSend}
         {#if previewLoading}
           <button disabled><LoadingSpinner width={"1.5"} />Forhåndsvisning</button>
         {:else}
-          <button type="submit" on:click={(e) => {e.preventDefault(); previewLoading=true; sendLaereplan(true);}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+          <button type="submit" on:click={(e) => { e.preventDefault(); previewLoading=true; sendTilbakemelding(true); } }><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
         {/if}
         {#if sendLoading}
           <button disabled><LoadingSpinner width={"1.5"} />Lagre og send</button>
         {:else}
-          <button type="submit" class="filled" on:click={(e) => {e.preventDefault(); sendLoading=true; sendLaereplan();}}><span class="material-symbols-outlined">send</span>Lagre og send</button>
+          <button type="submit" class="filled" on:click={(e) => { e.preventDefault(); sendLoading=true; sendTilbakemelding(); } }><span class="material-symbols-outlined">send</span>Send</button>
         {/if}
       {:else}
         <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
-        <button disabled><span class="material-symbols-outlined">send</span>Lagre og send</button>
+        <button disabled><span class="material-symbols-outlined">send</span>Send</button>
       {/if}
     </div>
     <PdfPreview {showPreview} base64Data={previewBase64} closePreview={() => {showPreview = false}} />
@@ -392,36 +397,28 @@
     /* background-color: var(--primary-color-20); */
     padding-bottom: 0.5rem;
   }
-  .grepSourceSelection {
+  .maal {
+    padding: 1rem;
+  }
+  .maal:nth-child(even) {
+    background-color: var(--primary-color-20);
+  }
+
+  .radioFlex {
     display: flex;
-    gap: 1rem;
     flex-wrap: wrap;
+    gap: 0rem 0.8rem;
   }
   .error {
     color: var(--error-color);
     background-color: var(--error-background-color);
     padding: 0.5rem 1rem;
   }
-  
-  .kompetansemaal {
+  .datetimeStuff {
     display: flex;
-    padding: 0.2rem 0.2rem;
-    align-items: center;
-    gap: 0.2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
   }
-  .kompetansemaal:nth-child(odd), .lareplanKompetansemaal:nth-child(even) {
-    background-color: var(--primary-color-20);
-  }
-  .lareplanKompetansemaal {
-    padding: 1rem 1rem;
-  }
-  .lareplanKompetansemaalTittel {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .staticMaal {
-    padding-bottom: 1rem;
-    /* background-color: var(--primary-color-20); */
-  }
+
 </style>

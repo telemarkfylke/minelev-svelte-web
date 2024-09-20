@@ -91,6 +91,8 @@
                     <div><strong>{document.content.bekreftelse.bedriftsNavn}</strong></div>
                     {#if !document.hasLaereplan && !document.hasTilbakemelding}
                       <a href="/elever/{document.student.feidenavnPrefix}/nyttdokument?document_type=yff-laereplan&utplasseringid={document._id.toString()}" style="font-size: var(--font-size-root);"><span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span>Opprett læreplan</a>
+                    {:else if !document.hasTilbakemelding && document.hasLaereplan}
+                      <a href="/elever/{document.student.feidenavnPrefix}/nyttdokument?document_type=yff-tilbakemelding&utplasseringid={document._id.toString()}" style="font-size: var(--font-size-root);"><span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span>Opprett tilbakemelding</a>
                     {/if}
                   {/if}
                   {#if document.variant === 'laereplan'}

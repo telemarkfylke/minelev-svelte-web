@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/private'
 import { getAuthenticatedUser } from '$lib/authentication'
-import { getAvailableLaereplaner, getYffDocuments } from '$lib/minelev-api/yff'
+import { getYffDocuments } from '$lib/minelev-api/yff'
 import { json } from '@sveltejs/kit'
 import { logger } from '@vtfk/logger'
 

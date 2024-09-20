@@ -142,7 +142,7 @@ export const getGrepUtdanningsprogrammer = async (user) => {
  * @returns {Promise<Utdanningsprogram>}
  */
 export const getGrepUtdanningsprogram = async (user, kodeOrUri) => {
-  const loggerPrefix = `getGrepUtdanningsprogram - user: ${user.principalName}`
+  // const loggerPrefix = `getGrepUtdanningsprogram - user: ${user.principalName}`
   if (!kodeOrUri) throw new Error('Missing required parameter: kodeOrUri')
   let uri
   let httpsUri

@@ -42,9 +42,7 @@
       laereplaner = JSON.parse(JSON.stringify(originalLaereplaner))
       const utplasseringid = $page.url.searchParams.get('utplasseringid')
       if (utplasseringid) {
-        console.log("Utplasseringid", utplasseringid)
         const selectedLaereplan = laereplaner.find(plan => plan.utplassering.id === utplasseringid)
-        console.log("Selected laereplan", selectedLaereplan)
         if (selectedLaereplan) content = selectedLaereplan
       }
     } catch (error) {
