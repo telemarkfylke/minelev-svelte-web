@@ -213,6 +213,11 @@ export const getGrepProgramomraader = async (user, utdanningsprogramKode, aarstr
  */
 export const getGrepKompetaansemaal = async (user, programomraadeKode, onlyProgramfag = true) => {
   const loggerPrefix = `getGrepKompetaansemaal - user: ${user.principalName} - ${programomraadeKode} - onlyProgramfag: ${onlyProgramfag}`
+  // WAF (app gateway blocks query params with dashes due to SQL comment sequenct... So we tweak it a bit)
+  if (programomraadeKode.includes('DASHLINEDELUXE')) {
+    logger('info', [loggerPrefix, 'We have DASHLINEDELUXE, replacing DASHLINEDELUXE with ----, due to WAF'])
+    programomraadeKode = programomraadeKode.replace('DASHLINEDELUXE', '----') // haha
+  }
   const grepCache = getGrepCache()
   const cacheKey = `kompetansemaal-${programomraadeKode}`
   const cachedData = grepCache.get(cacheKey)
