@@ -372,7 +372,7 @@
           <button type="submit" on:click={(e) => { e.preventDefault(); previewLoading=true; sendTilbakemelding(true); } }><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
         {/if}
         {#if sendLoading}
-          <button disabled><LoadingSpinner width={"1.5"} />Lagre og send</button>
+          <button disabled><LoadingSpinner width={"1.5"} />Send</button>
         {:else}
           <button type="submit" class="filled" on:click={(e) => { e.preventDefault(); sendLoading=true; sendTilbakemelding(); } }><span class="material-symbols-outlined">send</span>Send</button>
         {/if}
