@@ -115,6 +115,9 @@
   }
 
   const getGrepKompetansemaal = async (programomraade) => {
+    if (programomraade.includes('----')) {
+      programomraade = programomraade.replace('----', 'DASHLINEDELUXE')
+    }
     const { data } = await axios.get(`/api/grep/kompetansemaal?programomraade=${programomraade}`)
     return data
   }
