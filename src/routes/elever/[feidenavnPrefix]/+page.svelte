@@ -11,7 +11,7 @@
 
   let student = data.students.find(stud => stud.feidenavnPrefix === $page.params.feidenavnPrefix)
   const accessTo = {
-    yff: student.availableDocumentTypes.some(docType => docType.id === 'yff'),
+    yff: data.studentData.hasYff,
     varsel: student.availableDocumentTypes.some(docType => docType.id.startsWith('varsel')),
     varselFag: student.availableDocumentTypes.some(docType => docType.id === 'varsel-fag'),
     varselOrden: student.availableDocumentTypes.some(docType => docType.id === 'varsel-orden'),
@@ -30,11 +30,18 @@
 
   onMount(async () => {
     try {
-      const { data } = await axios.get(`/api/students/${$page.params.feidenavnPrefix}/documents`)
-      documents.yff = data.filter(doc => doc.type === "yff")
-      documents.varsel = data.filter(doc => doc.type === 'varsel')
-      documents.elevsamtale = data.filter(doc => doc.type === 'samtale')
-      documents.notat = data.filter(doc => doc.type === 'notat')
+      {
+        const { data } = await axios.get(`/api/students/${$page.params.feidenavnPrefix}/documents`)
+        documents.varsel = data.filter(doc => doc.type === 'varsel')
+        documents.elevsamtale = data.filter(doc => doc.type === 'samtale')
+        documents.notat = data.filter(doc => doc.type === 'notat')
+      }
+        {
+          if (data.studentData.hasYff) {
+          const { data } = await axios.get(`/api/students/${$page.params.feidenavnPrefix}/yff/documents`)
+          documents.yff = data
+        }
+      }
     } catch (error) {
       documentErrorMessage = `Det skjedde en feil ved henting av elevens dokumenter: ${error.toString()}`
     }
@@ -61,13 +68,42 @@
   <div class="documentsBox yff">
     <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Yrkesfaglig fordypning</h3>
     <div class="boxContent">
-      Denne eleven har yrkesfaglig fordypning
+      <div>
+        Her finner du dokumenter knyttet til elevens yrkesfaglige fordypning (YFF). Dette kan være bekreftelse på utplassering, lokale læreplaner og tilbakemelding på utplassering.
+        <br />
+        For å opprette en tilbakemelding på utplassering, må det først opprettes bekreftelse på utplassering, og deretter en lokal læreplan for utplasseringen.
+      </div>
+      <br />
       {#if loadingDocuments}
         <LoadingSpinner width="1" />
       {:else}
         {#if documents.yff.length > 0}
-          {#each documents.yff as doc}
-            <div>{JSON.stringify(doc)}</div>
+          {#each documents.yff as document}
+            <div class="documentContainer">
+              <div class="documentInfo">
+                  <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                  <div class="documentTitle"><a href="/elever/{document.student.feidenavnPrefix}/dokumenter/{document._id}">{document.title}</a></div>
+                  <div class="documentStatus">{documentStatuses.find(s => s.id === document.status[document.status.length - 1].status)?.short.nb || 'Ukjent status'}</div>
+                  <div class="mobileCreatedBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+              <div class="documentDetails">
+                  {#if document.variant === 'bekreftelse'}
+                    <div><strong>{document.content.bekreftelse.bedriftsNavn}</strong></div>
+                    {#if !document.hasLaereplan && !document.hasTilbakemelding}
+                      <a href="/elever/{document.student.feidenavnPrefix}/nyttdokument?document_type=yff-laereplan&utplasseringid={document._id.toString()}" style="font-size: var(--font-size-root);"><span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span>Opprett læreplan</a>
+                    {:else if !document.hasTilbakemelding && document.hasLaereplan}
+                      <a href="/elever/{document.student.feidenavnPrefix}/nyttdokument?document_type=yff-tilbakemelding&utplasseringid={document._id.toString()}" style="font-size: var(--font-size-root);"><span class="material-symbols-outlined" style="font-size: 1.2rem;">add</span>Opprett tilbakemelding</a>
+                    {/if}
+                  {/if}
+                  {#if document.variant === 'laereplan'}
+                    <div><strong>{document.content.utplassering.name}</strong></div>
+                    {#if !document.hasTilbakemelding}
+                      <a href="/elever/{document.student.feidenavnPrefix}/nyttdokument?document_type=yff-laereplan&utplasseringid={document.content.utplassering.id}" style="font-size: var(--font-size-root);"><span class="material-symbols-outlined" style="font-size: 1.2rem;">edit_note</span>Rediger læreplan</a>
+                    {/if}
+                  {/if}
+                  <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+            </div>
           {/each}
         {:else}
           Ingen tilgjengelige yff-dokumenter
@@ -75,9 +111,9 @@
       {/if}
     </div>
     <div class="boxAction">
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument`)}><span class="material-symbols-outlined">add</span>Ny læreplan</button>
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument`)}><span class="material-symbols-outlined">add</span>Ny vurdering ellerno</button>
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument`)}><span class="material-symbols-outlined">add</span>???</button>
+      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-bekreftelse`)}><span class="material-symbols-outlined">add</span>Ny bekreftelse på utplassering</button>
+      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-laereplan`)}><span class="material-symbols-outlined">edit_note</span>Lokal læreplan</button>
+      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-tilbakemelding`)}><span class="material-symbols-outlined">add</span>Ny tilbakemelding på utplassering</button>
     </div>
   </div>
 {/if}

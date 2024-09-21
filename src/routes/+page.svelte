@@ -45,8 +45,7 @@
     {#if data.systemInfo.YFF_ENABLED}
         <h3 class="boxTitle">Om YFF-modulen</h3>
         <div class=textBox>
-            YFF-modulen for å håndtere elevens utplasseringer er ikke klar,
-            dette jobbes med.
+            YFF-modulen er nå klar. Dersom du har elever som går et yrkesfaglig utdanningsprogram, kan du nå opprette bekreftelse på utplassering, lokal læreplan, og tilbakemelding på utplassering. Gå inn på en elev for å opprette YFF-dokumenter.
         </div>
     {/if}
 </div>

@@ -83,6 +83,9 @@ const mockStudents = [
             aktiv: true,
             navn: 'Tømrer',
             systemId: 'BATMF2----',
+            grepreferanse: [
+              'https://psi.udir.no/kl06/BATMF2----'
+            ],
             utdanningsprogram: [
               {
                 systemId: {
@@ -392,9 +395,9 @@ const mockStudents = [
                 systemId: {
                   identifikatorverdi: 'BA'
                 },
-                navn: 'Bygg- og anleggsteknikk',
+                navn: 'Idrettsfag',
                 grepreferanse: [
-                  'https://psi.udir.no/kl06/BA'
+                  'https://psi.udir.no/kl06/ID'
                 ]
               }
             ]
