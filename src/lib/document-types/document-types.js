@@ -447,7 +447,7 @@ export const documentTypes = [
           avdeling: 'optional',
           type: 'enhet eller underenhet'
         },
-        level: 'VG1',
+        level: 'VG1'
       },
       evalueringsdata: {
         hms: {

@@ -269,7 +269,7 @@ export const yffEvalueringsdata = {
     title: {
       nb: 'Eleven følger retningslinjer og HMS innenfor fagområdet',
       nn: 'Eleven følgjer retningslinjer og HMS innanfor fagområdet'
-    },
+    }
   },
   'respekt-retningslinjer': {
     title: {
@@ -314,4 +314,3 @@ export const yffEvalueringsdata = {
     }
   }
 }
-
