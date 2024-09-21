@@ -101,6 +101,9 @@
                       <a href="/elever/{document.student.feidenavnPrefix}/nyttdokument?document_type=yff-laereplan&utplasseringid={document.content.utplassering.id}" style="font-size: var(--font-size-root);"><span class="material-symbols-outlined" style="font-size: 1.2rem;">edit_note</span>Rediger læreplan</a>
                     {/if}
                   {/if}
+                  {#if document.variant === 'tilbakemelding'}
+                    <div><strong>{document.content.utplassering.bedriftsNavn}</strong></div>
+                  {/if}
                   <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
               </div>
             </div>
