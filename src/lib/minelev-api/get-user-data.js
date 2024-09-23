@@ -183,7 +183,12 @@ export const getUserData = async (user) => {
     }
 
     logger('info', [loggerPrefix, 'Got data from FINT - validating undervsiningsforhold description'])
-    const validUndervisningsforhold = teacher.undervisningsforhold.filter(forhold => forhold.aktiv && allowedUndervisningsforholdDescription.includes(forhold.beskrivelse))
+    const whitelistedTeachers = (env.WHITELISTED_TEACHERS && env.WHITELISTED_TEACHERS.split(',').map(user => user.trim())) || []
+    // Special case for whitelisted teachers - they can have any undervisningsforhold description
+    const teacherIsWhitelisted = whitelistedTeachers.includes(teacher.upn)
+    if (teacherIsWhitelisted) logger('warn', [loggerPrefix, 'Teacher is whitelisted - will ignore invalid undervisningsforhold descriptions, adn give teacher access'])
+    
+    const validUndervisningsforhold = teacher.undervisningsforhold.filter(forhold => (forhold.aktiv && allowedUndervisningsforholdDescription.includes(forhold.beskrivelse)) || (forhold.aktiv && teacherIsWhitelisted))
     const invalidUndervisningsforhold = teacher.undervisningsforhold.filter(forhold => forhold.aktiv && !allowedUndervisningsforholdDescription.includes(forhold.beskrivelse))
     if (invalidUndervisningsforhold.length > 0) {
       for (const invalid of invalidUndervisningsforhold) {
