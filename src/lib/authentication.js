@@ -86,7 +86,7 @@ export const getAuthenticatedUser = async (headers) => {
     headers.set('x-ms-client-principal', mockClaimsBase64)
   }
 
-  // Get MS Auth headers
+  // Get MS Auth headers (https://learn.microsoft.com/en-us/azure/app-service/configure-authentication-user-identities)
   const principalName = headers.get('x-ms-client-principal-name')
   const principalId = headers.get('x-ms-client-principal-id')
   const encodedClaims = headers.get('x-ms-client-principal')
@@ -100,6 +100,7 @@ export const getAuthenticatedUser = async (headers) => {
   if (!decodedClaims) throw error(500, 'Det e itj no token her')
   const roles = decodedClaims.claims.filter(claim => claim.typ === 'roles').map(claim => claim.val)
   const name = decodedClaims.claims.find(claim => claim.typ === 'name').val
+  const audience = decodedClaims.claims.find(claim => claim.typ === 'aud').val
 
   let activeRole = ''
   if (roles.length === 0) throw new Error('DU HAKKE TILGANG PÅ NOE DU!')
@@ -152,6 +153,7 @@ export const getAuthenticatedUser = async (headers) => {
     principalName,
     principalId,
     name,
+    audience,
     activeRole,
     roles: repackedRoles,
     hasAdminRole,
