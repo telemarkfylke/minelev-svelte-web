@@ -44,6 +44,10 @@ export const getAuthenticatedUser = async (headers) => {
       auth_typ: 'aad',
       claims: [
         {
+          typ: 'aud',
+          val: 'guid-guid'
+        },
+        {
           typ: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
           val: `demo.spokelse@${env.FEIDENAVN_SUFFIX}`
         },
