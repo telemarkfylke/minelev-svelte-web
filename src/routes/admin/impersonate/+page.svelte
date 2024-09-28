@@ -18,7 +18,6 @@
   onMount(async () => {
     try {
       const { data } = await axios.get(`/api/admin/getavailableusers`)
-      console.log(data)
       availableLeaders = data.availableLeaders
       availableTeachers = data.availableTeachers
     } catch (error) {
@@ -39,13 +38,11 @@
     isLoading = true
     try {
       if (!target) throw new Error('Du må velge en bruker')
-      console.log(target, type)
       const { data } = await axios.post('/api/admin/setimpersonation', { target, targetName, type })
       isLoading = false
       invalidateAll()
       return data
     } catch (error) {
-      console.log(error.response?.data)
       errorMessage = error.response?.data || error.toString()
     }
     isLoading = false
