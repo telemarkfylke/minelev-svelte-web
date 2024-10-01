@@ -32,7 +32,7 @@ export const getAvailableUsers = async (user) => {
     }
   }
   logger('info', ['No application users in cache - fetching from Microsoft Graph'])
-  const applicationUsers = await getApplicationUsers(env.FRONTENT_APP_ID)
+  const applicationUsers = await getApplicationUsers(env.FRONTEND_APP_ID)
   const leaders = applicationUsers.filter(user => user.appRoleValue === env.LEDER_ROLE)
   const teachers = applicationUsers.filter(user => user.appRoleValue === env.DEFAULT_ROLE)
   internalCache.set(leaderKey, leaders)
