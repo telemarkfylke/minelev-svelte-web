@@ -110,51 +110,53 @@
     {/if}
 </div>
 
-<h2 class="boxTitle">
-    <span class="material-symbols-outlined">bar_chart</span>
-    Statistikk for dine basisgrupper
-</h2>
-<div class="stats">
-    {#if !getGroupStats}
-        <button on:click={() => { getGroupStats = true }}>Hent statistikk for basisgrupper</button>
-    {/if}
-    {#if getGroupStats}
-        {#await getGroupsStatistics()}
-            <LoadingSpinner width="3" />
-        {:then response}
-            {#if !response}
-                Du har ikke tilgang til noen elever, og derfor ikke tilgang til statistikk heller.
-            {:else if response.stats.length === 0}
-                Ingen dokumenter å lage statistikk for enda...
-            {:else}
-                {#each response.stats as docType}
-                    <h3>{docType.title}</h3>
-                    {#each docType.basisgrupper as basisgruppe}
-                        <div class="statisticsRow">
-                            <div class="statisticsType"><a href="/klasser/{basisgruppe.systemId}">{basisgruppe.basisgruppe}</a></div>
-                            <div class="statisticsCount">{basisgruppe.count}</div>
-                            <div class="statisticsBar">
-                                <div style="width: {(basisgruppe.count / basisgruppe.maxCount) * 100}%; background-color: var(--secondary-color-50); color: var(--secondary-color-50);">i</div>
+{#if data.classes.some(group => group.type === 'basisgruppe')}
+    <h2 class="boxTitle">
+        <span class="material-symbols-outlined">bar_chart</span>
+        Statistikk for dine basisgrupper
+    </h2>
+    <div class="stats">
+        {#if !getGroupStats}
+            <button on:click={() => { getGroupStats = true }}>Hent statistikk for basisgrupper</button>
+        {/if}
+        {#if getGroupStats}
+            {#await getGroupsStatistics()}
+                <LoadingSpinner width="3" />
+            {:then response}
+                {#if !response}
+                    Du har ikke tilgang til noen elever, og derfor ikke tilgang til statistikk heller.
+                {:else if response.stats.length === 0}
+                    Ingen dokumenter å lage statistikk for enda...
+                {:else}
+                    {#each response.stats as docType}
+                        <h3>{docType.title}</h3>
+                        {#each docType.basisgrupper as basisgruppe}
+                            <div class="statisticsRow">
+                                <div class="statisticsType"><a href="/klasser/{basisgruppe.systemId}">{basisgruppe.basisgruppe}</a></div>
+                                <div class="statisticsCount">{basisgruppe.count}</div>
+                                <div class="statisticsBar">
+                                    <div style="width: {(basisgruppe.count / basisgruppe.maxCount) * 100}%; background-color: var(--secondary-color-50); color: var(--secondary-color-50);">i</div>
+                                </div>
                             </div>
+                        {/each}
+                    {/each}
+                    <h3>Total for dine elever</h3>
+                    {#each response.total as docType}
+                            <div class="statisticsRow">
+                            <div class="statisticsType">{docType.title}</div>
+                            <div class="statisticsCount">{docType.count}</div>
                         </div>
                     {/each}
-                {/each}
-                <h3>Total for dine elever</h3>
-                {#each response.total as docType}
-                    <div class="statisticsRow">
-                        <div class="statisticsType">{docType.title}</div>
-                        <div class="statisticsCount">{docType.count}</div>
-                    </div>
-                {/each}
-            {/if}
-        {:catch error}
-            <div class="error-box">
-                <h4>En feil har oppstått 😩</h4>
-                <p>Det skjedde en feil ved henting av statistikk: {error.toString()}</p>
-            </div>
-        {/await}
-    {/if}
-</div>
+                {/if}
+            {:catch error}
+                <div class="error-box">
+                    <h4>En feil har oppstått 😩</h4>
+                    <p>Det skjedde en feil ved henting av statistikk: {error.toString()}</p>
+                </div>
+            {/await}
+        {/if}
+    </div>  
+{/if}
 
 <h2 class="boxTitle">
     <span class="material-symbols-outlined">list</span>

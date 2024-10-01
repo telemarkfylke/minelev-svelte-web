@@ -215,7 +215,7 @@ export const getApplicationUsers = async (appId) => {
 
   logger('info', [loggerPrefix, `Got ${userAssignments.length} userAssignments after adding group members, adding role names and returning`])
   const users = userAssignments.map(userAssignment => { return { ...userAssignment, appRoleValue: relevantAppRoles.find(role => role.id === userAssignment.appRoleId).value } })
-  
+
   // Legg til MOCK auth sin bruker med de rollene den har satt i env om vi har MOCK_AUTH lik true
   if (env.MOCK_AUTH && env.NODE_ENV !== 'production') {
     if (env.MOCK_AUTH_LARER_ROLE) {

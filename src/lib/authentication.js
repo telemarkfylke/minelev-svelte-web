@@ -114,7 +114,11 @@ export const getAuthenticatedUser = async (headers) => {
     logger('info', ['User has more than one role, checking for active role'])
     const activeDbRole = await getActiveRole(principalId)
     if (!activeDbRole) {
-      activeRole = roles[0]
+      if (roles.includes(env.LEDER_ROLE)) {
+        activeRole = env.LEDER_ROLE // Default to leder if user have several, and none selected in db
+      } else {
+        activeRole = roles[0] // Else just set first role as active
+      }
     } else {
       logger('info', [`User ${principalName} has active db role: ${activeDbRole}`, 'Verifying and setting active'])
       if (!roles.includes(activeDbRole)) {

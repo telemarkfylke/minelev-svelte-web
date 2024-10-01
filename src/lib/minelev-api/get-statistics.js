@@ -3,9 +3,7 @@ import { getUserData } from './get-user-data'
 import { getMockDb } from '$lib/mock-db'
 import { closeMongoClient, getMongoClient } from '$lib/mongo-client'
 import { env } from '$env/dynamic/private'
-import { documentTypes, documentTypes, getCurrentSchoolYear } from '$lib/document-types/document-types'
-import getSchools from 'vtfk-schools-info'
-import { school } from '../../routes/admin/lederaccess/SchoolAccess.svelte'
+import { documentTypes, getCurrentSchoolYear } from '$lib/document-types/document-types'
 
 /**
  *
@@ -104,7 +102,7 @@ export const getSchoolStatistics = async (user) => {
     }
   } else {
     // Hent fra mongodb
-    logger('info', [loggerPrefix, `Building stats from mongodb`])
+    logger('info', [loggerPrefix, 'Building stats from mongodb'])
     try {
       const mongoClient = await getMongoClient()
       const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)
@@ -290,7 +288,7 @@ export const getGroupsStatistics = async (user) => {
     }
   } else {
     // Hent fra mongodb
-    logger('info', [loggerPrefix, `Building stats from mongodb`])
+    logger('info', [loggerPrefix, 'Building stats from mongodb'])
     try {
       const mongoClient = await getMongoClient()
       const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)

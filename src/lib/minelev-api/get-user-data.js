@@ -4,7 +4,7 @@ import { fintSchool } from '$lib/fintfolk-api/school'
 import { fintTeacher } from '$lib/fintfolk-api/teacher'
 import { getInternalCache } from '$lib/internal-cache'
 import { getMockDb } from '$lib/mock-db'
-import { getMongoClient } from '$lib/mongo-client'
+import { getMongoClient, closeMongoClient } from '$lib/mongo-client'
 import { getSystemInfo } from '$lib/system-info'
 import { logger } from '@vtfk/logger'
 import vtfkSchoolsInfo from 'vtfk-schools-info'
@@ -117,7 +117,6 @@ export const getAvailableDocumentTypesForLeader = (student) => {
   return availableDocumentTypes
 }
 
-
 /**
  * @typedef ElevKlasse
  * @property {string} navn
@@ -208,8 +207,9 @@ export const getUserData = async (user) => {
   // If regular teacher or administrator impersonating teacher
   if (user.activeRole === env.DEFAULT_ROLE || (user.hasAdminRole && user.impersonating?.type === 'larer')) {
     loggerPrefix += ' - role: Teacher'
-    logger('info', [loggerPrefix, 'Fetching teacher data from FINT'])
+    if (user.impersonating?.type === 'larer') loggerPrefix += ` - impersonating: ${user.impersonating.target}`
     const teacherUpn = user.hasAdminRole && user.impersonating?.type === 'larer' ? user.impersonating.target : user.principalName
+    logger('info', [loggerPrefix, 'Fetching teacher data from FINT with teacher id', teacherUpn])
     const teacher = await fintTeacher(teacherUpn)
     if (!teacher) return userData
 
@@ -298,9 +298,10 @@ export const getUserData = async (user) => {
   // If leder / rådgiver or administrator impersonating teacher
   if (user.activeRole === env.LEDER_ROLE || (user.hasAdminRole && user.impersonating?.type === 'leder')) {
     loggerPrefix += ' - role: Leder'
+    if (user.impersonating?.type === 'leder') loggerPrefix += ` - impersonating: ${user.impersonating.target}`
     logger('info', [loggerPrefix, 'Checking school access'])
     const leaderId = user.hasAdminRole && user.impersonating?.type === 'leder' ? user.impersonating.target : user.principalId
-    
+    logger('info', [loggerPrefix, 'Fetching leader data with leader id', leaderId])
     let schoolAccessEntries = []
     // Sjekker først om vi har schoolaccessEntries for brukeren i cachen
     const internalCache = getInternalCache()
@@ -341,7 +342,7 @@ export const getUserData = async (user) => {
       logger('info', [loggerPrefix, 'User has no school access entries - returning?'])
     }
     logger('info', [loggerPrefix, `User has access to schools: ${schoolAccessEntries.map(entry => entry.schoolName).join(', ')}, fetching data for schools`])
-    
+
     let students = []
     const classes = []
     for (const entry of schoolAccessEntries) {
