@@ -253,7 +253,7 @@
           <div>
             <div class="label-select">
               <label for="level">Trinn</label>
-              <select bind:value={grepSource.level} on:change={() => { console.log("hallo"); grepSource.programomraade = '' }} id="level">
+              <select bind:value={grepSource.level} on:change={() => { grepSource.programomraade = '' }} id="level">
                 <option value="">--Velg trinn--</option>
                 <hr />
                 {#each levels as level}

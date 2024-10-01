@@ -88,8 +88,13 @@ export const getDocument = async (user, studentFeidenavn, documentId) => {
     }
     hasAccessToDocumentTypeAtSchool = currentDocumentType.schools.some(school => school.skolenummer === document.school.id)
   } else if (user.activeRole === env.LEDER_ROLE || (user.hasAdminRole && user.impersonating?.type === 'leder')) {
-    logger('info', [loggerPrefix, `User is leder or admin impersonating leder, checking that leder has access to school ${document.school.shortname}`])
-    logger('warn', [loggerPrefix, 'IS LEDER, NEED TO IMPLEMENT THIS - IF HAS ACCESS TO SCHOOL OF DOCUMENT, LEDER SHOULD HAVE ACCESS!!!'])
+    logger('info', [loggerPrefix, `User is leder or admin impersonating leder, checking that leder has access to documenttype ${document.documentTypeId} for school ${document.school.shortname}`])
+    const currentDocumentType = teacherStudent.availableDocumentTypes.find(docType => docType.id === document.documentTypeId)
+    if (!currentDocumentType) {
+      logger('warn', [loggerPrefix, `No access to view this documenttype "${document.documentTypeId}" for student "${studentFeidenavn}"`])
+      throw new Error(`No access to view this documenttype "${document.documentTypeId}" for student "${studentFeidenavn}"`)
+    }
+    hasAccessToDocumentTypeAtSchool = currentDocumentType.schools.some(school => school.skolenummer === document.school.id)
   }
 
   if (!hasAccessToDocumentTypeAtSchool) {

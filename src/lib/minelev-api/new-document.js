@@ -53,8 +53,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
   }
 
   // Check if regular teacher or administrator impersonating teacher
-  const canCreateDocument = user.activeRole === env.DEFAULT_ROLE || (user.hasAdminRole && user.impersonating?.type === 'larer')
-  if (!canCreateDocument) {
+  if (!user.canCreateDocuments) {
     logger('warn', [loggerPrefix, 'Not allowed to create documents with current role'])
     throw new Error('Not allowed to create documents with current role')
   }

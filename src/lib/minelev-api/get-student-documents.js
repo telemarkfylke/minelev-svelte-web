@@ -97,6 +97,10 @@ export const getStudentDocuments = async (user, studentFeidenavn, docFilter) => 
           documentQuery.variant = { $in: docFilter.variants }
         }
       }
+      if (documentQuery.$or.length === 0) {
+        logger('info', [loggerPrefix, 'No documentTypes available for student - documentQuery', documentQuery, 'returning empty array'])
+        return []
+      }
       logger('info', [loggerPrefix, 'Documentquery successfully built', documentQuery, 'Fetching from db'])
       const mongoClient = await getMongoClient()
       const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(`${env.MONGODB_DOCUMENTS_COLLECTION}-${getCurrentSchoolYear('-')}`)

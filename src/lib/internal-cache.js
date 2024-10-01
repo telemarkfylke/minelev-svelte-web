@@ -10,7 +10,7 @@ let internalCache = null
 export const getInternalCache = () => {
   if (!internalCache) {
     logger('info', ['internal-cache', 'Internal cache does not exist - creating'])
-    internalCache = new NodeCache({ stdTTL: 10000 })
+    internalCache = new NodeCache({ stdTTL: 10000, useClones: false })
     logger('info', ['internal-cache', 'Internal cache created - returning'])
   }
   return internalCache

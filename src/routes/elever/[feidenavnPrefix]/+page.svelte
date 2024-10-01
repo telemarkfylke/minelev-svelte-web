@@ -51,8 +51,10 @@
 </script>
 
 <div class="actionBar">
-  <a class="button" href="{$page.url.pathname}/nyttdokument"><span class="material-symbols-outlined">add</span>Nytt dokument</a>
-  {#if accessTo.notat}
+  {#if data.user.canCreateDocuments}
+    <a class="button" href="{$page.url.pathname}/nyttdokument"><span class="material-symbols-outlined">add</span>Nytt dokument</a>
+  {/if}
+  {#if accessTo.notat && data.user.canCreateDocuments}
     <a class="button" href="{$page.url.pathname}/nyttdokument?document_type=notat"><span class="material-symbols-outlined">add</span>Nytt notat</a>
   {/if}
 </div>
@@ -113,11 +115,13 @@
         {/if}
       {/if}
     </div>
-    <div class="boxAction">
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-bekreftelse`)}><span class="material-symbols-outlined">add</span>Ny bekreftelse på utplassering</button>
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-laereplan`)}><span class="material-symbols-outlined">edit_note</span>Lokal læreplan</button>
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-tilbakemelding`)}><span class="material-symbols-outlined">add</span>Ny tilbakemelding på utplassering</button>
-    </div>
+    {#if data.user.canCreateDocuments}
+      <div class="boxAction">
+        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-bekreftelse`)}><span class="material-symbols-outlined">add</span>Ny bekreftelse på utplassering</button>
+        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-laereplan`)}><span class="material-symbols-outlined">edit_note</span>Lokal læreplan</button>
+        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-tilbakemelding`)}><span class="material-symbols-outlined">add</span>Ny tilbakemelding på utplassering</button>
+      </div>
+    {/if}
   </div>
 {/if}
 {#if accessTo.varsel}
@@ -150,15 +154,17 @@
         {/if}
       {/if}
     </div>
-    <div class="boxAction">
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-fag`)}><span class="material-symbols-outlined">add</span>Nytt varsel fag</button>
-      {#if accessTo.varselOrden}
-        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-orden`)}><span class="material-symbols-outlined">add</span>Nytt varsel orden</button>
-      {/if}
-      {#if accessTo.varselAtferd}
-        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-atferd`)}><span class="material-symbols-outlined">add</span>Nytt varsel atferd</button>
-      {/if}
-    </div>
+    {#if data.user.canCreateDocuments}
+      <div class="boxAction">
+        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-fag`)}><span class="material-symbols-outlined">add</span>Nytt varsel fag</button>
+        {#if accessTo.varselOrden}
+          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-orden`)}><span class="material-symbols-outlined">add</span>Nytt varsel orden</button>
+        {/if}
+        {#if accessTo.varselAtferd}
+          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-atferd`)}><span class="material-symbols-outlined">add</span>Nytt varsel atferd</button>
+        {/if}
+      </div>
+    {/if}
   </div>
 {/if}
 {#if accessTo.elevsamtale}
@@ -188,9 +194,11 @@
         {/if}
       {/if}
     </div>
-    <div class="boxAction">
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=samtale`)}><span class="material-symbols-outlined">add</span>Ny elevsamtale</button>
-    </div>
+    {#if data.user.canCreateDocuments}
+      <div class="boxAction">
+        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=samtale`)}><span class="material-symbols-outlined">add</span>Ny elevsamtale</button>
+      </div>
+    {/if}
   </div>
 {/if}
 {#if accessTo.notat}
@@ -219,9 +227,11 @@
         {/if}
       {/if}
     </div>
-    <div class="boxAction">
-      <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=notat`)}><span class="material-symbols-outlined">add</span>Nytt notat</button>
-    </div>
+    {#if data.user.canCreateDocuments}
+      <div class="boxAction">
+        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=notat`)}><span class="material-symbols-outlined">add</span>Nytt notat</button>
+      </div>
+    {/if}
   </div>
 {/if}
 

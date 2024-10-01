@@ -22,6 +22,7 @@ export const documentTypes = [
   {
     id: 'varsel-fag',
     title: 'Varsel fag',
+    type: 'varsel',
     accessCondition: 'hasUndervisningsgruppe',
     matchContent: { // What should be the result of generateContent()
       year: '2023/2024',
@@ -94,6 +95,7 @@ export const documentTypes = [
   {
     id: 'varsel-orden',
     title: 'Varsel orden',
+    type: 'varsel',
     accessCondition: 'isContactTeacher',
     matchContent: {
       year: '2023/2024',
@@ -139,6 +141,7 @@ export const documentTypes = [
   {
     id: 'varsel-atferd',
     title: 'Varsel atferd',
+    type: 'varsel',
     accessCondition: 'isContactTeacher',
     matchContent: {
       year: '2023/2024',
@@ -184,6 +187,7 @@ export const documentTypes = [
   {
     id: 'samtale',
     title: 'Elevsamtale',
+    type: 'samtale',
     accessCondition: 'isContactTeacher',
     matchContent: {
       year: '2023/2024'
@@ -198,6 +202,7 @@ export const documentTypes = [
   {
     id: 'notat',
     title: 'Notat',
+    type: 'notat',
     accessCondition: 'hasUndervisningsgruppe',
     isEncrypted: true,
     matchContent: {
@@ -215,6 +220,7 @@ export const documentTypes = [
   {
     id: 'yff-bekreftelse',
     title: 'YFF - Bekreftelse på utplassering',
+    type: 'yff',
     accessCondition: 'yffEnabled',
     isEncrypted: false,
     matchContent: {
@@ -358,6 +364,7 @@ export const documentTypes = [
   {
     id: 'yff-laereplan',
     title: 'YFF - Lokal læreplan',
+    type: 'yff',
     accessCondition: 'yffEnabled',
     isEncrypted: false,
     matchContent: {
@@ -411,6 +418,7 @@ export const documentTypes = [
   {
     id: 'yff-tilbakemelding',
     title: 'YFF - Tilbakemelding på utplassering',
+    type: 'yff',
     accessCondition: 'yffEnabled',
     isEncrypted: false,
     matchContent: {
