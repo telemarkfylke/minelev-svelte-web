@@ -55,7 +55,9 @@
 	{:else}
 	<div class="studentRow header">
 		<div class="studentInfo">Navn</div>
-		<div class="studentAction">Handling</div>
+		{#if data.user.canCreateDocuments}
+			<div class="studentAction">Handling</div>
+		{/if}
 	</div>
 		{#each students.slice(currentPage * studentsPerPage, (currentPage * studentsPerPage) + studentsPerPage) as student}
 			<div class=studentRow>
@@ -68,17 +70,19 @@
 					</div>
 					<div class="studentId">{student.feidenavnPrefix}</div>
 				</div>
-				<div class="studentAction" use:clickOutside on:click_outside={() => {studentMenus[student.elevnummer] = false}}>
-					<button class="action studentButton{studentMenus[student.elevnummer] ? ' cheatActive' : ''}" on:click={() => {studentMenus[student.elevnummer] = !studentMenus[student.elevnummer]}}>
-						<span class="material-symbols-outlined">more_vert</span>
-					</button>
-					{#if studentMenus[student.elevnummer]}
-						<div class="studentMenu">
-							<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument`)}}>Nytt dokument</button>
-							<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument?type=notat`)}}>Nytt notat</button>
-						</div>
-					{/if}
-				</div>
+				{#if data.user.canCreateDocuments}
+					<div class="studentAction" use:clickOutside on:click_outside={() => {studentMenus[student.elevnummer] = false}}>
+						<button class="action studentButton{studentMenus[student.elevnummer] ? ' cheatActive' : ''}" on:click={() => {studentMenus[student.elevnummer] = !studentMenus[student.elevnummer]}}>
+							<span class="material-symbols-outlined">more_vert</span>
+						</button>
+						{#if studentMenus[student.elevnummer]}
+							<div class="studentMenu">
+								<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument`)}}>Nytt dokument</button>
+								<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument?type=notat`)}}>Nytt notat</button>
+							</div>
+						{/if}
+					</div>
+				{/if}
 			</div>
 		{/each}
 		<Pagination {currentPage} elementName={'elever'} elementsPerPage={studentsPerPage} maxPageNumbers={11} {gotoPage} {nextPage} {previousPage} numberOfElements={students.length} />

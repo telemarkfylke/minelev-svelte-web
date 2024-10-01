@@ -1,6 +1,10 @@
 import { env } from '$env/dynamic/private'
 import { documentTypes } from '$lib/document-types/document-types'
+import { fintSchool } from '$lib/fintfolk-api/school'
 import { fintTeacher } from '$lib/fintfolk-api/teacher'
+import { getInternalCache } from '$lib/internal-cache'
+import { getMockDb } from '$lib/mock-db'
+import { getMongoClient } from '$lib/mongo-client'
 import { getSystemInfo } from '$lib/system-info'
 import { logger } from '@vtfk/logger'
 import vtfkSchoolsInfo from 'vtfk-schools-info'
@@ -77,6 +81,42 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
   }
   return availableDocumentTypes
 }
+
+// Tar inn en elev en leder har tilgang på ved en skole - returnerer en liste over alle dokumenttype for skolen inntil videre
+/**
+ *
+ * @param {TeacherStudent} student
+ * @returns {AvailableDocumentType[]}
+ */
+export const getAvailableDocumentTypesForLeader = (student) => {
+  const availableDocumentTypes = []
+  for (const docType of documentTypes) {
+    if (['isContactTeacher', 'hasUndervisningsgruppe'].includes(docType.accessCondition)) {
+      const docTypeSchools = student.skoler // Kun skoler der leder har tilgang på eleven
+      if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools })
+    }
+    if ((env.YFF_ENABLED && env.YFF_ENABLED === 'true') && docType.accessCondition === 'yffEnabled') {
+      // Yff blir også validert på elev-nivå ved henting av elev, samt ved innsending og henting av yff-data, her blir det kun sjekket at skolen har YFF, og at env YFF er enabled
+      // Sjekker hvilke skoler som har yff
+      const docTypeSchools = student.skoler.filter(skole => {
+        if (env.MOCK_API === 'true') return true
+        const schoolsInfo = vtfkSchoolsInfo({ schoolNumber: skole.skolenummer })
+        if (!schoolsInfo) return false
+        if (!Array.isArray(schoolsInfo)) return false
+        if (schoolsInfo.length === 0) {
+          logger('warn', [`Could not find any school with schoolNumber "${skole.skolenummer}" in vtfk-schools-info!!`])
+          return false
+        }
+        const schoolInfo = schoolsInfo[0]
+        if (schoolInfo.yff) return true
+        return false
+      })
+      if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun hvis YFF er enabled, og hvis skolen har skrudd på yff i vtfk-schools-info
+    }
+  }
+  return availableDocumentTypes
+}
+
 
 /**
  * @typedef ElevKlasse
@@ -187,7 +227,7 @@ export const getUserData = async (user) => {
     // Special case for whitelisted teachers - they can have any undervisningsforhold description
     const teacherIsWhitelisted = whitelistedTeachers.includes(teacher.upn)
     if (teacherIsWhitelisted) logger('warn', [loggerPrefix, 'Teacher is whitelisted - will ignore invalid undervisningsforhold descriptions, adn give teacher access'])
-    
+
     const validUndervisningsforhold = teacher.undervisningsforhold.filter(forhold => (forhold.aktiv && allowedUndervisningsforholdDescription.includes(forhold.beskrivelse)) || (forhold.aktiv && teacherIsWhitelisted))
     const invalidUndervisningsforhold = teacher.undervisningsforhold.filter(forhold => forhold.aktiv && !allowedUndervisningsforholdDescription.includes(forhold.beskrivelse))
     if (invalidUndervisningsforhold.length > 0) {
@@ -243,7 +283,7 @@ export const getUserData = async (user) => {
       students = students.filter(stud => stud.feidenavn)
     }
 
-    logger('info', [loggerPrefix, `Done repacking fint data - found ${students.length} students available for user. Adding feidenavnPrefix for all students. And sorting students alphabetically`])
+    logger('info', [loggerPrefix, `Done repacking fint data - found ${students.length} students available for user. Adding feidenavnPrefix and availableDocumentTypes for all students. And sorting students alphabetically`])
     // Sleng på kort-feidenavn på alle elever, og gyldige dokumenttyper for eleven
     students = students.map(stud => { return { ...stud, feidenavnPrefix: stud.feidenavn.substring(0, stud.feidenavn.indexOf('@')), availableDocumentTypes: getAvailableDocumentTypesForTeacher(stud) } })
     students.sort((a, b) => (a.navn > b.navn) ? 1 : (b.navn > a.navn) ? -1 : 0)
@@ -255,10 +295,107 @@ export const getUserData = async (user) => {
     return userData
   }
 
-  // TODO - finn ut av leder rådgiver
-  if (user.activeRole === env.LEDER_ROLE) {
-    console.log('En leder rådgiver aiaiai')
+  // If leder / rådgiver or administrator impersonating teacher
+  if (user.activeRole === env.LEDER_ROLE || (user.hasAdminRole && user.impersonating?.type === 'leder')) {
+    loggerPrefix += ' - role: Leder'
+    logger('info', [loggerPrefix, 'Checking school access'])
+    const leaderId = user.hasAdminRole && user.impersonating?.type === 'leder' ? user.impersonating.target : user.principalId
+    
+    let schoolAccessEntries = []
+    // Sjekker først om vi har schoolaccessEntries for brukeren i cachen
+    const internalCache = getInternalCache()
+    const cacheKey = `schoolAccessEntries-${leaderId}` // Fjernes fra cache dersom det gjøres endringer i tilganger for brukeren av en admin (see leder-access.js)
+    if (internalCache.has(cacheKey)) {
+      logger('info', [loggerPrefix, 'Found school access entries in cache - no need to get them from db'])
+      schoolAccessEntries = internalCache.get(cacheKey)
+    } else {
+      logger('info', [loggerPrefix, 'No school access entries in cache, fetching from db'])
+      if (env.MOCK_API === 'true') {
+        logger('info', [loggerPrefix, 'MOCK_API is enabled, getting school access entries from mockdb'])
+        const mockDb = getMockDb()
+        const mockDbKeys = mockDb.keys()
+        for (const key of mockDbKeys) {
+          const entry = mockDb.get(key)
+          if (entry.type === 'school-access' && entry.enabled && entry.principalId === leaderId) schoolAccessEntries.push(entry)
+        }
+        logger('info', [loggerPrefix, `MOCK_API is enabled, found ${schoolAccessEntries.length} mock school access entries`])
+      } else {
+        try {
+          logger('info', [loggerPrefix, 'Getting all school access entries for user from db'])
+          const mongoClient = await getMongoClient()
+          const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_LEDER_SCHOOL_ACCESS_COLLECTION)
+          const accessEntries = await collection.find({ enabled: true, principalId: leaderId }).toArray()
+          logger('info', [loggerPrefix, `Found ${accessEntries.length} school access entries for user in db`])
+          schoolAccessEntries = accessEntries
+        } catch (error) {
+          if (error.toString().startsWith('MongoTopologyClosedError')) {
+            logger('warn', 'Oh no, topology is closed! Closing client')
+            closeMongoClient()
+          }
+          throw error
+        }
+      }
+    }
+    internalCache.set(cacheKey, schoolAccessEntries)
+    if (schoolAccessEntries.length === 0) {
+      logger('info', [loggerPrefix, 'User has no school access entries - returning?'])
+    }
+    logger('info', [loggerPrefix, `User has access to schools: ${schoolAccessEntries.map(entry => entry.schoolName).join(', ')}, fetching data for schools`])
+    
+    let students = []
+    const classes = []
+    for (const entry of schoolAccessEntries) {
+      logger('info', [loggerPrefix, `Fetching data for school ${entry.schoolNumber} from FINT`])
+      const school = await fintSchool(entry.schoolNumber)
+      logger('info', [loggerPrefix, `Got data for school ${entry.schoolNumber} from FINT`])
+
+      school.kortnavn = school.organisasjon?.kortnavn || 'SKOLE' // Simple tweak to make sure we have a shortname
+      const miniSchool = repackMiniSchool(school, false)
+
+      // Dytt inn alle elevene på skolen
+      for (const student of school.elever) {
+        const existingStudent = students.find(stud => stud.elevnummer === student.elevnummer)
+        if (existingStudent) {
+          if (!existingStudent.skoler.some(skole => skole.skolenummer === school.skolenummer)) existingStudent.skoler.push(miniSchool)
+        } else {
+          students.push({ ...student, klasser: [], skoler: [miniSchool] })
+        }
+      }
+      // Dytt inn alle elever fra basisgruppene (og basisgruppene på eleven)
+      for (const basisgruppe of school.basisgrupper.filter(gruppe => gruppe.aktiv)) {
+        classes.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, fag: ['Basisgruppe'], skole: miniSchool.navn })
+        for (const elev of basisgruppe.elever) {
+          // Vi bør ha eleven allerede, men sjekker for sikkerhets skyld
+          const existingStudent = students.find(student => student.elevnummer === elev.elevnummer)
+          if (existingStudent) {
+            if (!existingStudent.klasser.some(group => group.systemId === basisgruppe.systemId)) existingStudent.klasser.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, skole: miniSchool })
+            if (!existingStudent.skoler.some(skole => skole.skolenummer === school.skolenummer)) existingStudent.skoler.push(miniSchool)
+          } else {
+            students.push({ ...elev, klasser: [{ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, skole: miniSchool }], skoler: [miniSchool] })
+          }
+        }
+      }
+    }
+
+    // Filtrer vekk elever uten feidenavn - fåkke brukt de (enda hvertfall)
+    const studentsWithoutFeidenavn = students.filter(stud => !stud.feidenavn)
+    if (studentsWithoutFeidenavn.length > 0) {
+      logger('warn', [loggerPrefix, `Found ${studentsWithoutFeidenavn.length} students without feidenavn, filtering them away...`])
+      students = students.filter(stud => stud.feidenavn)
+    }
+
+    logger('info', [loggerPrefix, `Done repacking fint data - found ${students.length} students available for user. Adding feidenavnPrefix and availableDocumentTypes for all students. And sorting students alphabetically`])
+    // Sleng på kort-feidenavn på alle elever, og gyldige dokumenttyper for eleven
+    students = students.map(stud => { return { ...stud, feidenavnPrefix: stud.feidenavn.substring(0, stud.feidenavn.indexOf('@')), availableDocumentTypes: getAvailableDocumentTypesForLeader(stud) } })
+    students.sort((a, b) => (a.navn > b.navn) ? 1 : (b.navn > a.navn) ? -1 : 0)
+    logger('info', [loggerPrefix, 'Finished. Returning userData'])
+
+    userData.classes = classes
+    userData.students = students
+
+    return userData
   }
 
+  // Probs admin user
   return userData
 }

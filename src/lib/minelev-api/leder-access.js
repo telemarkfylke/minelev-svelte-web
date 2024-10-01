@@ -62,6 +62,12 @@ const getAvailableLeaders = async (user) => {
  */
 export const setSchoolAccess = async (user, lederPrincipalId, schoolNumber) => {
   if (!user.hasAdminRole) throw new Error('Du har ikke tilgang til å gjøre dette')
+  {
+    // Wipe cached entry for user if it exists
+    const cacheKey = `schoolAccessEntries-${lederPrincipalId}`
+    const internalCache = getInternalCache()
+    internalCache.del(cacheKey)
+  }
   const availableLeaders = await getAvailableLeaders(user)
   const leader = availableLeaders.find(leader => leader.principalId === lederPrincipalId)
   if (!leader) throw new Error(`Fant ingen leder-bruker med denne principalId ${lederPrincipalId}`)
@@ -180,6 +186,14 @@ const getSchoolAccess = async (user, lederPrincipalId) => {
  */
 export const disableSchoolAccess = async (user, lederPrincipalId, schoolNumber) => {
   if (!user.hasAdminRole) throw new Error('Du har ikke tilgang til å gjøre dette')
+
+  {
+    // Wipe cached entry for user if it exists
+    const cacheKey = `schoolAccessEntries-${lederPrincipalId}`
+    const internalCache = getInternalCache()
+    internalCache.del(cacheKey)
+  }
+
   const accessEntries = await getSchoolAccess(user, lederPrincipalId)
   const accessEntriesToDisable = accessEntries.filter(entry => entry.schoolNumber === schoolNumber)
   logger('info', [`${user.principalName} - Disabling ${accessEntriesToDisable.length} school access entries for ${lederPrincipalId} and ${schoolNumber}`])

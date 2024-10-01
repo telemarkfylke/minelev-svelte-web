@@ -121,10 +121,10 @@ export const getApplicationUsers = async (appId) => {
 
   if (env.MOCK_API === 'true') {
     logger('info', [loggerPrefix, 'MOCK_API is enabled, returning mock'])
-    return [
+    const mockUsers = [
       {
         appRoleValue: env.LEDER_ROLE,
-        appRoleId: 'mockId1',
+        appRoleId: 'mockleder',
         id: 'mockId1',
         principalDisplayName: 'Mock Leder 1',
         principalId: 'mockPrincipalId1',
@@ -132,7 +132,7 @@ export const getApplicationUsers = async (appId) => {
       },
       {
         appRoleValue: env.LEDER_ROLE,
-        appRoleId: 'mockId2',
+        appRoleId: 'mockleder',
         id: 'mockId2',
         principalDisplayName: 'Mock Leder 2',
         principalId: 'mockPrincipalId2',
@@ -140,7 +140,7 @@ export const getApplicationUsers = async (appId) => {
       },
       {
         appRoleValue: env.LEDER_ROLE,
-        appRoleId: 'mockId3',
+        appRoleId: 'mockleder',
         id: 'mockId3',
         principalDisplayName: 'Mock Leder 3',
         principalId: 'mockPrincipalId3',
@@ -148,13 +148,38 @@ export const getApplicationUsers = async (appId) => {
       },
       {
         appRoleValue: env.DEFAULT_ROLE,
-        appRoleId: 'mockId4',
+        appRoleId: 'mocklarer',
         id: 'mockId4',
         principalDisplayName: 'Mock Lærer 1',
         principalId: 'mockPrincipalId4',
         principalType: 'User'
       }
     ]
+    // Legg til MOCK auth sin bruker med de rollene den har satt i env
+    if (env.MOCK_AUTH) {
+      if (env.MOCK_AUTH_LARER_ROLE) {
+        mockUsers.push({
+          appRoleValue: env.DEFAULT_ROLE,
+          appRoleId: 'mocklarer',
+          id: 'mockId6',
+          principalDisplayName: 'Demo Spøkelse',
+          principalId: '12345-4378493-fjdiofjd',
+          principalType: 'User'
+        })
+      }
+      if (env.MOCK_AUTH_LEDER_ROLE) {
+        mockUsers.push({
+          appRoleValue: env.LEDER_ROLE,
+          appRoleId: 'mockleder',
+          id: 'mockId7',
+          principalDisplayName: 'Demo Spøkelse',
+          principalId: '12345-4378493-fjdiofjd',
+          principalType: 'User'
+        })
+      }
+    }
+
+    return mockUsers
   }
 
   logger('info', [loggerPrefix, 'Getting all app roles for app', appId])
@@ -190,5 +215,30 @@ export const getApplicationUsers = async (appId) => {
 
   logger('info', [loggerPrefix, `Got ${userAssignments.length} userAssignments after adding group members, adding role names and returning`])
   const users = userAssignments.map(userAssignment => { return { ...userAssignment, appRoleValue: relevantAppRoles.find(role => role.id === userAssignment.appRoleId).value } })
+  
+  // Legg til MOCK auth sin bruker med de rollene den har satt i env om vi har MOCK_AUTH lik true
+  if (env.MOCK_AUTH && env.NODE_ENV !== 'production') {
+    if (env.MOCK_AUTH_LARER_ROLE) {
+      users.push({
+        appRoleValue: env.DEFAULT_ROLE,
+        appRoleId: 'mocklarer',
+        id: 'mockId6',
+        principalDisplayName: 'Demo Spøkelse',
+        principalId: '12345-4378493-fjdiofjd',
+        principalType: 'User'
+      })
+    }
+    if (env.MOCK_AUTH_LEDER_ROLE) {
+      users.push({
+        appRoleValue: env.LEDER_ROLE,
+        appRoleId: 'mockleder',
+        id: 'mockId7',
+        principalDisplayName: 'Demo Spøkelse',
+        principalId: '12345-4378493-fjdiofjd',
+        principalType: 'User'
+      })
+    }
+  }
+
   return users
 }

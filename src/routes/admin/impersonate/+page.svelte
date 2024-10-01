@@ -39,8 +39,8 @@
     try {
       if (!target) throw new Error('Du må velge en bruker')
       const { data } = await axios.post('/api/admin/setimpersonation', { target, targetName, type })
-      isLoading = false
       invalidateAll()
+      isLoading = false
       return data
     } catch (error) {
       errorMessage = error.response?.data || error.toString()
@@ -53,8 +53,8 @@
     errorMessage = ''
     try {
       const { data } = await axios.delete('/api/admin/deleteimpersonation')
-      isLoading = false
       invalidateAll()
+      isLoading = false
       return data
     } catch (error) {
       console.log(error)
@@ -87,7 +87,7 @@
       <div class="teacherImpersonate">
         <div><strong>Søk etter en lærer du trenger å logge inn som</strong></div>
         <input style="width: 25rem;" bind:value={teacherSearchValue} type="text" placeholder="Skriv inn et navn" />
-        {#if teacherSearchValue.length >= 0}
+        {#if teacherSearchValue.length >= 3}
           {#if searchForUser(teacherSearchValue, availableTeachers).length === 0}
             <div><i>Ingen brukere funnet med det navnet...</i></div>
           {:else}
@@ -99,7 +99,26 @@
             {/each}
           {/if}
         {:else}
-          <div><i>Skriv minst 0 tegn for å søke</i></div>
+          <div><i>Skriv minst 3 tegn for å søke</i></div>
+        {/if}
+      </div>
+      <br />
+      <div class="leaderImpersonate">
+        <div><strong>Søk etter en leder du trenger å logge inn som</strong></div>
+        <input style="width: 25rem;" bind:value={leaderSearchValue} type="text" placeholder="Skriv inn et navn" />
+        {#if leaderSearchValue.length >= 3}
+          {#if searchForUser(leaderSearchValue, availableLeaders).length === 0}
+            <div><i>Ingen brukere funnet med det navnet...</i></div>
+          {:else}
+            {#each searchForUser(leaderSearchValue, availableLeaders) as user}
+              <div class="user">
+                {user.principalDisplayName} ({user.principalId})
+                <button class="link" on:click={() => { setImpersonation(user.principalId, user.principalDisplayName, 'leder') } }><span class="material-symbols-outlined">supervisor_account</span>Logg inn som</button>
+              </div>
+            {/each}
+          {/if}
+        {:else}
+          <div><i>Skriv minst 3 tegn for å søke</i></div>
         {/if}
       </div>
     {/if}

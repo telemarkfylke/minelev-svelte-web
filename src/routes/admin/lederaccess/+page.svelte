@@ -3,7 +3,7 @@
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import axios from 'axios';
   import { onMount } from 'svelte';
-    import SchoolAccess from './SchoolAccess.svelte';
+  import SchoolAccess from './SchoolAccess.svelte';
 
   /** @type {import('./$types').PageData} */
   export let data
@@ -39,6 +39,9 @@
   <h2>Administrator</h2>
   <h3>Leder/Rådgiver-tilganger til skoler</h3>
   <p>Her kan du se og endre tilganger til ledere og rådgivere på skoler</p>
+  {#if errorMessage}
+    <div class="error">{errorMessage}</div>
+  {/if}
   {#if !Array.isArray(schoolAccess)}
     <LoadingSpinner width="2" />
   {:else}
@@ -53,5 +56,8 @@
 {/if}
 
 <style>
+  .error {
+    color: red;
+  }
 
 </style>

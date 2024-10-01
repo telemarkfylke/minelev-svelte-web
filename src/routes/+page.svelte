@@ -2,15 +2,19 @@
     import { goto } from "$app/navigation";
     import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
     import { prettyPrintDate } from "$lib/helpers/pretty-date";
+    import { error } from "@sveltejs/kit";
     import axios from "axios";
     import { onMount } from "svelte";
 
     /** @type {import('./$types').PageData} */
-    export let data;
+    export let data
 
-    let documents = [];
-    let loadingDocuments = true;
-    let documentErrorMessage = "";
+    let documents = []
+    let loadingDocuments = true
+    let documentErrorMessage = ""
+
+    let getStats = false
+    let getGroupStats = false
 
     onMount(async () => {
         try {
@@ -20,7 +24,17 @@
             documentErrorMessage = `Det skjedde en feil ved henting av siste aktivitet: ${error.toString()}`;
         }
         loadingDocuments = false;
-    });
+    })
+
+    const getSchoolStatistics = async () => {
+        const statsResult = await axios.get(`/api/statistics/schools`)
+        return statsResult.data
+    }
+
+    const getGroupsStatistics = async () => {
+        const statsResult = await axios.get(`/api/statistics/groups`)
+        return statsResult.data
+    }
 
     const getDocumentSubtitle = (document) => {
         if (document.documentTypeId === 'varsel-fag') {
@@ -51,6 +65,98 @@
 </div>
 
 <h2 class="boxTitle">
+    <span class="material-symbols-outlined">bar_chart</span>
+    Statistikk per skole
+</h2>
+<div class="stats">
+    {#if !getStats}
+        <button on:click={() => { getStats = true }}>Hent statistikk for skoler</button>
+    {/if}
+    {#if getStats}
+        {#await getSchoolStatistics()}
+            <LoadingSpinner width="3" />
+        {:then response}
+            {#if !response}
+                Du har ikke tilgang til noen elever, og derfor ikke tilgang til statistikk heller.
+            {:else if response.stats.length === 0}
+                Ingen dokumenter å lage statistikk for enda...
+            {:else}
+                {#each response.stats as school}
+                    <h3>{school.skolenavn}</h3>
+                    {#each school.documentTypes as docType}
+                        <div class="statisticsRow">
+                            <div class="statisticsType">{docType.title}</div>
+                            <div class="statisticsCount">{docType.count}</div>
+                            <div class="statisticsBar">
+                                <div style="width: {(docType.count / docType.maxCount) * 100}%; background-color: var(--tertiary-color-50); color: var(--tertiary-color-50);">i</div>
+                            </div>
+                        </div>
+                    {/each}
+                {/each}
+                <h3>Total</h3>
+                {#each response.total as docType}
+                    <div class="statisticsRow">
+                        <div class="statisticsType">{docType.title}</div>
+                        <div class="statisticsCount">{docType.count}</div>
+                    </div>
+                {/each}
+            {/if}
+        {:catch error}
+            <div class="error-box">
+                <h4>En feil har oppstått 😩</h4>
+                <p>Det skjedde en feil ved henting av statistikk: {error.toString()}</p>
+            </div>
+        {/await}
+    {/if}
+</div>
+
+<h2 class="boxTitle">
+    <span class="material-symbols-outlined">bar_chart</span>
+    Statistikk for dine basisgrupper
+</h2>
+<div class="stats">
+    {#if !getGroupStats}
+        <button on:click={() => { getGroupStats = true }}>Hent statistikk for basisgrupper</button>
+    {/if}
+    {#if getGroupStats}
+        {#await getGroupsStatistics()}
+            <LoadingSpinner width="3" />
+        {:then response}
+            {#if !response}
+                Du har ikke tilgang til noen elever, og derfor ikke tilgang til statistikk heller.
+            {:else if response.stats.length === 0}
+                Ingen dokumenter å lage statistikk for enda...
+            {:else}
+                {#each response.stats as docType}
+                    <h3>{docType.title}</h3>
+                    {#each docType.basisgrupper as basisgruppe}
+                        <div class="statisticsRow">
+                            <div class="statisticsType"><a href="/klasser/{basisgruppe.systemId}">{basisgruppe.basisgruppe}</a></div>
+                            <div class="statisticsCount">{basisgruppe.count}</div>
+                            <div class="statisticsBar">
+                                <div style="width: {(basisgruppe.count / basisgruppe.maxCount) * 100}%; background-color: var(--secondary-color-50); color: var(--secondary-color-50);">i</div>
+                            </div>
+                        </div>
+                    {/each}
+                {/each}
+                <h3>Total for dine elever</h3>
+                {#each response.total as docType}
+                    <div class="statisticsRow">
+                        <div class="statisticsType">{docType.title}</div>
+                        <div class="statisticsCount">{docType.count}</div>
+                    </div>
+                {/each}
+            {/if}
+        {:catch error}
+            <div class="error-box">
+                <h4>En feil har oppstått 😩</h4>
+                <p>Det skjedde en feil ved henting av statistikk: {error.toString()}</p>
+            </div>
+        {/await}
+    {/if}
+</div>
+
+<h2 class="boxTitle">
     <span class="material-symbols-outlined">list</span>
     Aktivitetslogg
 </h2>
@@ -64,6 +170,7 @@
         {#if loadingDocuments}
         <LoadingSpinner width="3" />
         {:else if documents.length > 0}
+            Viser siste {documents.length} dokumenter
             {#each documents as document}
                 <div class="documentContainer">
                     <div class="documentInfo">
@@ -98,6 +205,29 @@
         align-items: center;
         gap: 0.5rem;
     }
+    .stats {
+        padding: 0rem 2rem;
+        margin-bottom: 2rem;
+    }
+    .statisticsRow {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.1rem 0rem;
+    }
+    .statisticsType {
+        flex-shrink: 0;
+        width: 17rem;
+    }
+    .statisticsCount {
+        text-align: right;
+        width: 3rem;
+        flex-shrink: 0;
+    }
+    .statisticsBar {
+        width: 100%;
+        flex-grow: 1;
+    }
     .documentContainer {
         display: flex;
         padding: 1rem 2rem;
@@ -128,6 +258,15 @@
     @media only screen and (max-width: 768px) {
         .documentContainer {
             gap: 0.5rem;
+        }
+        .statisticsBar {
+            display: none;
+        }
+        .statisticsType {
+            width: auto;
+        }
+        .statisticsCount {
+            width: auto;
         }
     }
 

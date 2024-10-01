@@ -106,7 +106,7 @@ const mockStudents = [
               slutt: '9999-12-31T00:00:00Z',
               aktiv: true
             },
-            navn: '2TMA',
+            navn: '2BU',
             systemId: '1476223',
             aktiv: true, // Om både medlemskap og basisgruppen er aktiv
             trinn: 'VG2',
@@ -390,6 +390,9 @@ const mockStudents = [
             aktiv: true,
             navn: 'Tømrer',
             systemId: 'BATMF2----',
+            grepreferanse: [
+              'https://psi.udir.no/kl06/BATMF2----'
+            ],
             utdanningsprogram: [
               {
                 systemId: {

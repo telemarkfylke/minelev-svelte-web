@@ -25,6 +25,7 @@ import { getAdminImpersonation } from './minelev-api/admin-impersonation'
  * @property {Role[]} roles list of available roles
  * @property {boolean} hasAdminRole if user has admin role
  * @property {Impersonation} [impersonating] is adminuser impersonating another user
+ * @property {boolean} canCreateDocuments if user can create documents or not
  *
 */
 
@@ -153,6 +154,11 @@ export const getAuthenticatedUser = async (headers) => {
     if (impersonation) impersonating = impersonation
   }
 
+  let canCreateDocuments = false
+  if (activeRole === env.DEFAULT_ROLE || (hasAdminRole && impersonating && impersonating.type === 'larer')) {
+    canCreateDocuments = true
+  }
+
   return {
     principalName,
     principalId,
@@ -161,6 +167,7 @@ export const getAuthenticatedUser = async (headers) => {
     activeRole,
     roles: repackedRoles,
     hasAdminRole,
-    impersonating
+    impersonating,
+    canCreateDocuments
   }
 }

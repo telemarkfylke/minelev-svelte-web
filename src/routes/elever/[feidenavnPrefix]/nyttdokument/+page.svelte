@@ -12,7 +12,6 @@
   /** @type {import('./$types').PageData} */
   export let data
 
-
   const studentFeidenavnPrefix = $page.params.feidenavnPrefix
   const teacherStudent = data.students.find(stud => stud.feidenavnPrefix === studentFeidenavnPrefix)
   const studentData = data.studentData
