@@ -2,8 +2,8 @@ import { env } from '$env/dynamic/private'
 import { logger } from '@vtfk/logger'
 import { getMsalToken } from './msal-token'
 import axios from 'axios'
-import { getInternalCache } from './internal-cache'
 import vtfkSchoolsInfo from 'vtfk-schools-info'
+import { getInternalCache } from './internal-cache'
 
 /**
    * @typedef {Object} AppRole
@@ -43,6 +43,8 @@ const getApplicationRoles = async (appId) => {
  * @typedef {Object} GroupMember
  * @property {string} id
  * @property {string} displayName
+ * @property {string} userPrincipalName
+ *
  */
 
 /**
@@ -53,7 +55,7 @@ const getApplicationRoles = async (appId) => {
 const getGroupMembers = async (groupId) => {
   // OBS OBS trenger groupMember.read.all
   const accessToken = await getMsalToken({ scope: graphScope })
-  let groupMembersUrl = `${graphUrl}/groups/${groupId}/members?$select=id,displayName&$top=999&$count=true`
+  let groupMembersUrl = `${graphUrl}/groups/${groupId}/members?$select=id,displayName,userPrincipalName&$top=999&$count=true`
   const members = []
   let finished = false
   while (!finished) {
@@ -187,7 +189,7 @@ export const getApplicationUsers = async (appId) => {
   logger('info', [loggerPrefix, 'Getting all app roles for app', appId])
   const allAppRoles = await getApplicationRoles(appId)
   const relevantAppRoles = allAppRoles.appRoles.filter(appRole => appRole.isEnabled && appRole.allowedMemberTypes.includes('User'))
-  logger('info', [loggerPrefix, `Got ${relevantAppRoles.length} relevant appRoles, total number of app roles: ${allAppRoles.length}`])
+  logger('info', [loggerPrefix, `Got ${relevantAppRoles.length} relevant appRoles, total number of app roles: ${allAppRoles.appRoles.length}`])
 
   logger('info', [loggerPrefix, 'Getting all app role assignments for app', appId])
   const allAppRoleAssignments = await getAppRoleAssignments(appId)
