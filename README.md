@@ -43,9 +43,14 @@ Startup command: `node /home/site/wwwroot/build/` (evt `ORIGIN=https://{minelevu
 - Sjekk dokumenttyper og tilgangskrav i [document-types.js](./src/lib/document-types/document-types.js)
 
 ### Leder
-TODO
 - Leder / Rådgiver har ikke tilgang på å produsere dokumenter, men skal kunne se dokumenter tilhørende skolen(e) de har tilgang på. Og se statistikk for skolen de har tilgang på.
-- Tilgang styres først ved at de har tilgang på leder / rådgiver rollen fra app registration / enterprise appen for frontend, og deretter mot mongodb for å sjekke hvilke skole(r) de har tilgang på
+
+#### Leder / Rådgiver tilgang
+- Styres basert på Entra ID tilgangsgrupper. En per skole
+- Legg til en bruker i skolens tilgangsgruppe for å gi brukeren tilgang på alle dokumenter for skolen
+- Gruppenavn: A-TILGANG-MINELEV-LEDER-{SKOLEKORTNAVN}
+- Gruppebeskrivelse: Gruppe for å gi leder / rådgiver tilgang til {Skolenavn} i MinElev
+- Gruppen må også legges til på enterprise appen, med rollen "Leder"
 
 ## YFF beskrivelse
 Tilleggsmodul for Yrkesfaglig fordypning, for å dokumentere utplassering, opprette / redigere lokal læreplan, og sende tilbakemelding på en utplassering

@@ -2,6 +2,8 @@ import { env } from '$env/dynamic/private'
 import { logger } from '@vtfk/logger'
 import { getMsalToken } from './msal-token'
 import axios from 'axios'
+import vtfkSchoolsInfo from 'vtfk-schools-info'
+import { getInternalCache } from './internal-cache'
 
 /**
    * @typedef {Object} AppRole
@@ -41,6 +43,8 @@ const getApplicationRoles = async (appId) => {
  * @typedef {Object} GroupMember
  * @property {string} id
  * @property {string} displayName
+ * @property {string} userPrincipalName
+ *
  */
 
 /**
@@ -51,7 +55,7 @@ const getApplicationRoles = async (appId) => {
 const getGroupMembers = async (groupId) => {
   // OBS OBS trenger groupMember.read.all
   const accessToken = await getMsalToken({ scope: graphScope })
-  let groupMembersUrl = `${graphUrl}/groups/${groupId}/members?$select=id,displayName&$top=999&$count=true`
+  let groupMembersUrl = `${graphUrl}/groups/${groupId}/members?$select=id,displayName,userPrincipalName&$top=999&$count=true`
   const members = []
   let finished = false
   while (!finished) {
@@ -185,7 +189,7 @@ export const getApplicationUsers = async (appId) => {
   logger('info', [loggerPrefix, 'Getting all app roles for app', appId])
   const allAppRoles = await getApplicationRoles(appId)
   const relevantAppRoles = allAppRoles.appRoles.filter(appRole => appRole.isEnabled && appRole.allowedMemberTypes.includes('User'))
-  logger('info', [loggerPrefix, `Got ${relevantAppRoles.length} relevant appRoles, total number of app roles: ${allAppRoles.length}`])
+  logger('info', [loggerPrefix, `Got ${relevantAppRoles.length} relevant appRoles, total number of app roles: ${allAppRoles.appRoles.length}`])
 
   logger('info', [loggerPrefix, 'Getting all app role assignments for app', appId])
   const allAppRoleAssignments = await getAppRoleAssignments(appId)
@@ -241,4 +245,176 @@ export const getApplicationUsers = async (appId) => {
   }
 
   return users
+}
+
+/**
+ * @typedef {Object} LeaderUserProps
+ * @property {string} appRoleValue
+ * @property {string} principalName upn
+ * @property {string} schoolNumber
+ * @property {string} schoolName
+ */
+
+/**
+ * @typedef {AppRoleAssignment & LeaderUserProps} LeaderUser
+ */
+
+/**
+ *
+ * @param {string} appId
+ * @returns {Promise<LeaderUser[]>}
+ */
+export const getAllLeaderUsers = async (appId) => {
+  /*
+  Ledere kommer fra egne tilgangsgrupper per skole, der gruppen er satt til å få leder-rolle i enterprise-appen. Ny skole => ny gruppe med leder-rolle.
+  Skolen hentes fra gruppas navn, og vi kan slenge på skolenummer og navn på skolen fra vtfk-schools info. Merk at gruppas navn må matche et eller annet i vtfk-schools - tipper kortnavn
+  Vi kan expande appRoleAssignment med upn siden alle brukerne ligger i en gruppe, og vi må hente de fra gruppa
+  */
+  const loggerPrefix = `getAllLeaderUsers - ${appId}`
+
+  const cacheKey = 'all-leader-users'
+  const internalCache = getInternalCache()
+  const cachedData = internalCache.get(cacheKey)
+  if (cachedData) {
+    logger('info', [loggerPrefix, 'Found leader users in cache - quick returning'])
+    return cachedData
+  }
+
+  if (env.MOCK_API === 'true') {
+    logger('info', [loggerPrefix, 'MOCK_API is enabled, returning mock'])
+    const mockUsers = [
+      {
+        appRoleValue: env.LEDER_ROLE,
+        appRoleId: 'mockleder',
+        id: 'mockId1',
+        principalDisplayName: 'Mock Leder 1',
+        principalId: 'mockPrincipalId1',
+        principalName: `mockPrincipal1@${env.FEIDENAVN_SUFFIX}`,
+        principalType: 'User',
+        schoolNumber: '12345',
+        schoolName: 'Mock Skole 1',
+        schoolShortName: 'MS1'
+      },
+      {
+        appRoleValue: env.LEDER_ROLE,
+        appRoleId: 'mockleder',
+        id: 'mockId2',
+        principalDisplayName: 'Mock Leder 2',
+        principalId: 'mockPrincipalId2',
+        principalName: `mockPrincipal2@${env.FEIDENAVN_SUFFIX}`,
+        principalType: 'User',
+        schoolNumber: '23456',
+        schoolName: 'Mock Skole 2',
+        schoolShortName: 'MS2'
+      },
+      {
+        appRoleValue: env.LEDER_ROLE,
+        appRoleId: 'mockleder',
+        id: 'mockId3',
+        principalDisplayName: 'Mock Leder 3',
+        principalId: 'mockPrincipalId3',
+        principalName: `mockPrincipal3@${env.FEIDENAVN_SUFFIX}`,
+        principalType: 'User',
+        schoolNumber: '34567',
+        schoolName: 'Mock Skole 3',
+        schoolShortName: 'MS3'
+      }
+    ]
+    // Legg til MOCK auth sin bruker med de rollene den har satt i env
+    if (env.MOCK_AUTH) {
+      if (env.MOCK_AUTH_LEDER_ROLE) {
+        mockUsers.push({
+          appRoleValue: env.LEDER_ROLE,
+          appRoleId: 'mockleder',
+          id: 'mockId7',
+          principalDisplayName: 'Demo Spøkelse',
+          principalId: '12345-4378493-fjdiofjd',
+          principalName: `demo.spokelse@${env.FEIDENAVN_SUFFIX}`,
+          principalType: 'User',
+          schoolNumber: '12345',
+          schoolName: 'Mordor vidergående skole',
+          schoolShortName: 'MRD'
+        })
+      }
+    }
+
+    internalCache.set(cacheKey, mockUsers)
+
+    return mockUsers
+  }
+
+  logger('info', [loggerPrefix, 'Getting all app roles for app', appId])
+  const allAppRoles = await getApplicationRoles(appId)
+  const relevantAppRoles = allAppRoles.appRoles.filter(appRole => appRole.isEnabled && appRole.allowedMemberTypes.includes('User'))
+  logger('info', [loggerPrefix, `Got ${relevantAppRoles.length} relevant appRoles, total number of app roles: ${allAppRoles.appRoles.length}`])
+
+  logger('info', [loggerPrefix, 'Getting all app role assignments for app', appId])
+  const allAppRoleAssignments = await getAppRoleAssignments(appId)
+
+  const leaderAppRole = relevantAppRoles.find(role => role.value === env.LEDER_ROLE)
+
+  const leaderGroupAssignments = allAppRoleAssignments.filter(appRoleAssignment => appRoleAssignment.principalType === 'Group' && appRoleAssignment.appRoleId === leaderAppRole.id)
+  logger('info', [loggerPrefix, `Got ${leaderGroupAssignments.length} leader group appRoleAssignments, total number of app role assignments (including groups): ${allAppRoleAssignments.length}`])
+
+  logger('info', [loggerPrefix, `Getting school data (vtfk-schools-info) for all ${leaderGroupAssignments.length} groups`])
+
+  const leaderUsers = []
+
+  for (const groupAssignment of leaderGroupAssignments) {
+    const allSchools = vtfkSchoolsInfo().map(school => { return { schoolNumber: school.schoolNumber, fullname: school.fullName, shortName: school.shortName } })
+
+    const groupNameParts = groupAssignment.principalDisplayName.split('-')
+    const groupSchoolShortName = groupNameParts[groupNameParts.length - 1].trim()
+
+    const school = allSchools.find(school => school.shortName === groupSchoolShortName)
+    if (!school) {
+      logger('warn', [loggerPrefix, 'Could not find school for group', groupAssignment.principalDisplayName, 'group does not have valid school short name at end - skipping group'])
+      continue
+    }
+
+    logger('info', [loggerPrefix, 'Found school for group', groupAssignment.principalDisplayName, 'school', school.fullname, 'Fetching members for group'])
+
+    const groupMembers = await getGroupMembers(groupAssignment.principalId)
+    logger('info', [loggerPrefix, `Got ${groupMembers.length} members for group`, groupAssignment.principalDisplayName, 'adding them to userAssignments if they are not already there'])
+    for (const groupMember of groupMembers) {
+      if (!leaderUsers.some(user => user.principalId === groupMember.id && user.schoolNumber === school.schoolNumber)) {
+        leaderUsers.push({
+          appRoleId: groupAssignment.appRoleId,
+          appRoleValue: relevantAppRoles.find(role => role.id === groupAssignment.appRoleId).value,
+          id: groupAssignment.id,
+          principalDisplayName: groupMember.displayName,
+          principalId: groupMember.id,
+          principalType: 'User',
+          principalName: groupMember.userPrincipalName,
+          schoolNumber: school.schoolNumber,
+          schoolName: school.fullname,
+          schoolShortName: school.shortName
+        })
+      }
+    }
+  }
+
+  logger('info', [loggerPrefix, `Got a total of ${leaderUsers.length} leaderUsers after fetching all group members, setting in cache, and returning`])
+
+  // Legg til MOCK auth sin bruker med de rollene den har satt i env om vi har MOCK_AUTH lik true
+  if (env.MOCK_AUTH && env.NODE_ENV !== 'production') {
+    if (env.MOCK_AUTH_LEDER_ROLE) {
+      leaderUsers.push({
+        appRoleValue: env.LEDER_ROLE,
+        appRoleId: 'mockleder',
+        id: 'mockId7',
+        principalDisplayName: 'Demo Spøkelse',
+        principalId: '12345-4378493-fjdiofjd',
+        principalType: 'User',
+        principalName: `demo.spokelse@${env.FEIDENAVN_SUFFIX}`,
+        schoolNumber: '12345',
+        schoolName: 'Mordor vidergående skole',
+        schoolShortName: 'MRD'
+      })
+    }
+  }
+
+  internalCache.set(cacheKey, leaderUsers)
+
+  return leaderUsers
 }
