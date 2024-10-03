@@ -2,9 +2,6 @@ import { env } from '$env/dynamic/private'
 import { documentTypes } from '$lib/document-types/document-types'
 import { fintSchool } from '$lib/fintfolk-api/school'
 import { fintTeacher } from '$lib/fintfolk-api/teacher'
-import { getInternalCache } from '$lib/internal-cache'
-import { getMockDb } from '$lib/mock-db'
-import { getMongoClient, closeMongoClient } from '$lib/mongo-client'
 import { getSystemInfo } from '$lib/system-info'
 import { logger } from '@vtfk/logger'
 import vtfkSchoolsInfo from 'vtfk-schools-info'
@@ -306,7 +303,7 @@ export const getUserData = async (user) => {
     logger('info', [loggerPrefix, 'Fetching leader data with leader id', leaderId])
     // Sjekker først om vi har schoolaccess for brukeren i cachen
     const leaderAccess = await getLeaderAccess(user)
-    
+
     let students = []
     const classes = []
     for (const schoolAccess of leaderAccess) {

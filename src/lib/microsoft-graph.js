@@ -3,6 +3,7 @@ import { logger } from '@vtfk/logger'
 import { getMsalToken } from './msal-token'
 import axios from 'axios'
 import { getInternalCache } from './internal-cache'
+import vtfkSchoolsInfo from 'vtfk-schools-info'
 
 /**
    * @typedef {Object} AppRole
