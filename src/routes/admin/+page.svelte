@@ -9,7 +9,7 @@
     <span class="material-symbols-outlined">supervisor_account</span><a href="/admin/impersonate">Logg inn som en annen bruker for feilsøking</a>
   </div>
   <div class="adminOption">
-    <span class="material-symbols-outlined">person_add</span><a href="/admin/lederaccess">Rediger leder/rådgiver-tilganger til skole</a>
+    <span class="material-symbols-outlined">group</span><a href="/admin/lederaccess">Se oversikt over ledertilganger</a>
   </div>
   <br>
 {:else}

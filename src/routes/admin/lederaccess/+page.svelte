@@ -1,54 +1,59 @@
 <script>
   import { invalidateAll } from '$app/navigation';
   import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+  import { prettyPrintDate } from '$lib/helpers/pretty-date';
   import axios from 'axios';
   import { onMount } from 'svelte';
-  import SchoolAccess from './SchoolAccess.svelte';
 
   /** @type {import('./$types').PageData} */
   export let data
 
   let errorMessage = ''
+  let searchValue
+  let loading
 
-  let availableLeaders = 'hei'
-  let schoolAccess = null
+  let schoolAccess = []
+
+  const getLeaderAccess = async () => {
+    errorMessage = ''
+    loading = true
+    try {
+      const { data } = await axios.get(`/api/admin/getleaderaccess`)
+      schoolAccess = data
+    } catch (error) {
+      console.log(error.response?.data)
+      errorMessage = error.response?.data || error.toString()
+    }
+    loading = false
+  }
 
   onMount(async () => {
-    try {
-      const { data } = await axios.get(`/api/admin/getschoolaccessandleaders`)
-      availableLeaders = data.availableLeaders
-      schoolAccess = data.schoolAccess
-    } catch (error) {
-      errorMessage = `Det skjedde en feil ved henting av tilganger: ${error.toString()}`
-    }
+    await getLeaderAccess()
   })
-
-  const refresh = async () => {
-    try {
-      const { data } = await axios.get(`/api/admin/getschoolaccessandleaders`)
-      availableLeaders = data.availableLeaders
-      schoolAccess = data.schoolAccess
-    } catch (error) {
-      errorMessage = `Det skjedde en feil ved henting av tilganger: ${error.toString()}`
-    }
-  }
 
 </script>
 
 {#if data.user.hasAdminRole}
   <h2>Administrator</h2>
-  <h3>Leder/Rådgiver-tilganger til skoler</h3>
-  <p>Her kan du se og endre tilganger til ledere og rådgivere på skoler</p>
-  {#if errorMessage}
-    <div class="error">{errorMessage}</div>
-  {/if}
-  {#if !Array.isArray(schoolAccess)}
-    <LoadingSpinner width="2" />
+  <h3>Se oversikt over ledertilganger</h3>
+
+  <p>
+    Tilgang for ledere / rådgivere styres av tilgangsgrupper i EntraID. Servicedesk kan legge til brukere i gruppe A-TILGANG-MINELEV-LEDER-{"{SKOLEKORTNAVN}"}.
+  </p>
+  {#if loading}
+    <LoadingSpinner />
   {:else}
-    <div class="schools">
-      {#each schoolAccess as school}
-        <SchoolAccess {school} {availableLeaders} refreshFunction={refresh} />
+    {#each schoolAccess as school}
+      <h3>{school.schoolName}</h3>
+      {#each school.leaders as leader}
+        <div>{leader.displayName} ({leader.principalName})</div>
       {/each}
+    {/each}
+  {/if}
+  {#if errorMessage}
+    <div>
+      <p>Det skjedde en feil</p>
+      <p>{JSON.stringify(errorMessage)}</p>
     </div>
   {/if}
 {:else}
@@ -56,8 +61,5 @@
 {/if}
 
 <style>
-  .error {
-    color: red;
-  }
 
 </style>

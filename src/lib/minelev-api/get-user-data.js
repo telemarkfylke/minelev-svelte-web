@@ -8,6 +8,7 @@ import { getMongoClient, closeMongoClient } from '$lib/mongo-client'
 import { getSystemInfo } from '$lib/system-info'
 import { logger } from '@vtfk/logger'
 import vtfkSchoolsInfo from 'vtfk-schools-info'
+import { getLeaderAccess } from './leder-access'
 
 const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1', 'Spesialkonsulent']
 
@@ -301,54 +302,21 @@ export const getUserData = async (user) => {
     if (user.impersonating?.type === 'leder') loggerPrefix += ` - impersonating: ${user.impersonating.target}`
     logger('info', [loggerPrefix, 'Checking school access'])
     const leaderId = user.hasAdminRole && user.impersonating?.type === 'leder' ? user.impersonating.target : user.principalId
-    logger('info', [loggerPrefix, 'Fetching leader data with leader id', leaderId])
-    let schoolAccessEntries = []
-    // Sjekker først om vi har schoolaccessEntries for brukeren i cachen
-    const internalCache = getInternalCache()
-    const cacheKey = `schoolAccessEntries-${leaderId}` // Fjernes fra cache dersom det gjøres endringer i tilganger for brukeren av en admin (see leder-access.js)
-    if (internalCache.has(cacheKey)) {
-      logger('info', [loggerPrefix, 'Found school access entries in cache - no need to get them from db'])
-      schoolAccessEntries = internalCache.get(cacheKey)
-    } else {
-      logger('info', [loggerPrefix, 'No school access entries in cache, fetching from db'])
-      if (env.MOCK_API === 'true') {
-        logger('info', [loggerPrefix, 'MOCK_API is enabled, getting school access entries from mockdb'])
-        const mockDb = getMockDb()
-        const mockDbKeys = mockDb.keys()
-        for (const key of mockDbKeys) {
-          const entry = mockDb.get(key)
-          if (entry.type === 'school-access' && entry.enabled && entry.principalId === leaderId) schoolAccessEntries.push(entry)
-        }
-        logger('info', [loggerPrefix, `MOCK_API is enabled, found ${schoolAccessEntries.length} mock school access entries`])
-      } else {
-        try {
-          logger('info', [loggerPrefix, 'Getting all school access entries for user from db'])
-          const mongoClient = await getMongoClient()
-          const collection = mongoClient.db(env.MONGODB_DB_NAME).collection(env.MONGODB_LEDER_SCHOOL_ACCESS_COLLECTION)
-          const accessEntries = await collection.find({ enabled: true, principalId: leaderId }).toArray()
-          logger('info', [loggerPrefix, `Found ${accessEntries.length} school access entries for user in db`])
-          schoolAccessEntries = accessEntries
-        } catch (error) {
-          if (error.toString().startsWith('MongoTopologyClosedError')) {
-            logger('warn', 'Oh no, topology is closed! Closing client')
-            closeMongoClient()
-          }
-          throw error
-        }
-      }
-    }
-    internalCache.set(cacheKey, schoolAccessEntries)
-    if (schoolAccessEntries.length === 0) {
-      logger('info', [loggerPrefix, 'User has no school access entries - returning?'])
-    }
-    logger('info', [loggerPrefix, `User has access to schools: ${schoolAccessEntries.map(entry => entry.schoolName).join(', ')}, fetching data for schools`])
 
+    logger('info', [loggerPrefix, 'Fetching leader data with leader id', leaderId])
+    // Sjekker først om vi har schoolaccess for brukeren i cachen
+    const leaderAccess = await getLeaderAccess(user)
+    
     let students = []
     const classes = []
-    for (const entry of schoolAccessEntries) {
-      logger('info', [loggerPrefix, `Fetching data for school ${entry.schoolNumber} from FINT`])
-      const school = await fintSchool(entry.schoolNumber)
-      logger('info', [loggerPrefix, `Got data for school ${entry.schoolNumber} from FINT`])
+    for (const schoolAccess of leaderAccess) {
+      logger('info', [loggerPrefix, `Fetching data for school ${schoolAccess.schoolName} (${schoolAccess.schoolNumber}) from FINT`])
+      const school = await fintSchool(schoolAccess.schoolNumber)
+      if (!school) {
+        logger('warn', [loggerPrefix, `School ${schoolAccess.schoolName} with schoolNumber (${schoolAccess.schoolNumber}) does not exist in FINT, skipping`])
+        continue
+      }
+      logger('info', [loggerPrefix, `Got data for school ${schoolAccess.schoolName} (${schoolAccess.schoolNumber}) from FINT`])
 
       school.kortnavn = school.organisasjon?.kortnavn || 'SKOLE' // Simple tweak to make sure we have a shortname
       const miniSchool = repackMiniSchool(school, false)

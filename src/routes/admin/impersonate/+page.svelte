@@ -1,66 +1,36 @@
 <script>
   import { invalidateAll } from '$app/navigation';
-  import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
   import axios from 'axios';
-  import { onMount } from 'svelte';
 
   /** @type {import('./$types').PageData} */
   export let data
 
+  let impersonationTarget
   let errorMessage = ''
 
-  let availableLeaders = null
-  let availableTeachers = null
-  let schoolAccess = null
-
-  let isLoading
-
-  onMount(async () => {
-    try {
-      const { data } = await axios.get(`/api/admin/getavailableusers`)
-      availableLeaders = data.availableLeaders
-      availableTeachers = data.availableTeachers
-    } catch (error) {
-      errorMessage = `Det skjedde en feil ved henting av brukere: ${error.toString()}`
-    }
-  })
-
-  let teacherSearchValue = ''
-  let leaderSearchValue = ''
-
-  const searchForUser = (searchValue, userlist) => {
-    // !school.accessEntries.some(entry => entry.principalId === leader.principalId) && 
-    return userlist.filter(user => user.principalDisplayName.toLowerCase().startsWith(searchValue.toLowerCase())).slice(0, 10)
-  }
-
-  const setImpersonation = async (target, targetName, type) => {
+  const setImpersonation = async (type) => {
     errorMessage = ''
-    isLoading = true
     try {
-      if (!target) throw new Error('Du må velge en bruker')
-      const { data } = await axios.post('/api/admin/setimpersonation', { target, targetName, type })
+      if (!impersonationTarget) throw new Error('Du må skrive et gyldig brukernavn / epost')
+      const { data } = await axios.post('/api/admin/setimpersonation', { target: impersonationTarget, type })
       invalidateAll()
-      isLoading = false
       return data
     } catch (error) {
+      console.log(error.response?.data)
       errorMessage = error.response?.data || error.toString()
     }
-    isLoading = false
   }
 
   const deleteImpersonation = async () => {
-    isLoading = true
     errorMessage = ''
     try {
       const { data } = await axios.delete('/api/admin/deleteimpersonation')
       invalidateAll()
-      isLoading = false
       return data
     } catch (error) {
       console.log(error)
       errorMessage = error.response?.data || error.toString()
     }
-    isLoading = false
   }
 
 </script>
@@ -69,72 +39,30 @@
   <h2>Administrator</h2>
   <h3>Logg inn som en annen bruker for feilsøking</h3>
   <p>Merk at dette logges</p>
-
+  <br>
   {#if data.user.impersonating}
-    Du er logget inn som <strong>{data.user.impersonating.targetName || data.user.impersonating.target}</strong> med rollen <strong>{data.user.impersonating.type}</strong>
-    <button on:click={deleteImpersonation}>Fjern innloggingen som {data.user.impersonating.targetName || data.user.impersonating.target}</button>
-    <br>
+    Du er allerede logget inn som <strong>{data.user.impersonating.target}</strong> med rollen <strong>{data.user.impersonating.type}</strong>
+    <button on:click={deleteImpersonation}>Fjern innloggingen som {data.user.impersonating.target}</button>
+    <br>  
   {/if}
 
+  <div class="label-input">
+    <label for="impersonationTarget">Brukernavnet til den du vil logge inn som (må være nøyaktig)</label>
+    <input bind:value={impersonationTarget} id="impersonationTarget" type="email" placeholder="f. eks per.son@fylke.no" />
+  </div>
+  <br>
+  <button on:click={() => setImpersonation('larer')}>Logg in som lærer</button>
+  <button on:click={() => setImpersonation('leder')}>Logg in som leder / rådgiver</button>
   {#if errorMessage}
-    <div class="error">{JSON.stringify(errorMessage)}</div>
-  {:else if isLoading}
-    <LoadingSpinner width="2" />
-  {:else}
-    {#if !Array.isArray(availableLeaders)}
-      <LoadingSpinner width="2" />
-    {:else}
-      <div class="teacherImpersonate">
-        <div><strong>Søk etter en lærer du trenger å logge inn som</strong></div>
-        <input style="width: 25rem;" bind:value={teacherSearchValue} type="text" placeholder="Skriv inn et navn" />
-        {#if teacherSearchValue.length >= 3}
-          {#if searchForUser(teacherSearchValue, availableTeachers).length === 0}
-            <div><i>Ingen brukere funnet med det navnet...</i></div>
-          {:else}
-            {#each searchForUser(teacherSearchValue, availableTeachers) as user}
-              <div class="user">
-                {user.principalDisplayName} ({user.principalId})
-                <button class="link" on:click={() => { setImpersonation(user.principalId, user.principalDisplayName, 'larer') } }><span class="material-symbols-outlined">supervisor_account</span>Logg inn som</button>
-              </div>
-            {/each}
-          {/if}
-        {:else}
-          <div><i>Skriv minst 3 tegn for å søke</i></div>
-        {/if}
-      </div>
-      <br />
-      <div class="leaderImpersonate">
-        <div><strong>Søk etter en leder du trenger å logge inn som</strong></div>
-        <input style="width: 25rem;" bind:value={leaderSearchValue} type="text" placeholder="Skriv inn et navn" />
-        {#if leaderSearchValue.length >= 3}
-          {#if searchForUser(leaderSearchValue, availableLeaders).length === 0}
-            <div><i>Ingen brukere funnet med det navnet...</i></div>
-          {:else}
-            {#each searchForUser(leaderSearchValue, availableLeaders) as user}
-              <div class="user">
-                {user.principalDisplayName} ({user.principalId})
-                <button class="link" on:click={() => { setImpersonation(user.principalId, user.principalDisplayName, 'leder') } }><span class="material-symbols-outlined">supervisor_account</span>Logg inn som</button>
-              </div>
-            {/each}
-          {/if}
-        {:else}
-          <div><i>Skriv minst 3 tegn for å søke</i></div>
-        {/if}
-      </div>
-    {/if}
+    <div>
+      <p>Det skjedde en feil :(</p>
+      <p>{JSON.stringify(errorMessage)}</p>
+    </div>
   {/if}
 {:else}
   Du har ikke tilgang på denne siden
 {/if}
 
 <style>
-  .user {
-    display: flex;
-    align-items: center;
-    padding: 0.2rem 0rem;
-    gap: 0.5rem;
-  }
-  .error {
-    color: var(--error-color);
-  }
+
 </style>

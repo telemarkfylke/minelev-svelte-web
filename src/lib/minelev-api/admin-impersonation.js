@@ -21,15 +21,14 @@ export const getAdminImpersonation = (user) => {
  * @param {"larer" | "leder"} type
  * @returns
  */
-export const setAdminImpersonation = async (user, target, targetName, type) => {
+export const setAdminImpersonation = async (user, target, type) => {
   if (!user.hasAdminRole) throw new Error('You do not have permission to do this')
   if (typeof target !== 'string') throw new Error('target må værra string')
   if (!target.endsWith(`@${env.FEIDENAVN_SUFFIX}`) && !isGuid(target)) throw new Error(`Target må ende på @${env.FEIDENAVN_SUFFIX} eller værra en guid`)
   if (!['larer', 'leder'].includes(type)) throw new Error('type må værra "larer" eller "leder"')
-  if (!targetName) throw new Error('targetName må værra satt')
   const internalCache = getInternalCache()
-  internalCache.set(`${user.principalId}-impersonation`, { target, targetName, type })
-  logger('warn', [`Admin user ${user.principalName} is impersonating user ${targetName} (${target}) (type: ${type})`, `${user.principalName} probably need to do this, but logging for extra safety.`, 'Saving impersonation-logEntry to db as well'])
+  internalCache.set(`${user.principalId}-impersonation`, { target, type })
+  logger('warn', [`Admin user ${user.principalName} is impersonating user ${target} (type: ${type})`, `${user.principalName} probably need to do this, but logging for extra safety.`, 'Saving impersonation-logEntry to db as well'])
   if (env.MOCK_API === 'true') return
   try {
     const mongoClient = await getMongoClient()
@@ -41,7 +40,6 @@ export const setAdminImpersonation = async (user, target, targetName, type) => {
         principalId: user.principalId
       },
       impersonationTarget: target,
-      impersonationTargetName: targetName,
       impersonationRole: type
     }
     const insertLogResult = await collection.insertOne(logEntry)

@@ -118,13 +118,13 @@
       <div class="userContainer">
         <div class="displayName">
           <span>
-            {data.user.name} {data.user.impersonating ? `( ${data.user.impersonating.targetName || data.user.impersonating.target} )` : ''}
+            {data.user.name} {data.user.impersonating ? `( ${data.user.impersonating.target} )` : ''}
           </span>
           <span style="font-size: var(--font-size-small);">{data.user.roles.find(role => role.value === data.user.activeRole).roleName} {data.user.impersonating ? `( ${data.user.impersonating.type} )` : ''}</span>
         </div>
         <div class="displayNameMobile">
           <span>
-            {getInitials(data.user.name)} {data.user.impersonating ? `( ${data.user.impersonating.targetName || data.user.impersonating.target} )` : ''}
+            {getInitials(data.user.name)} {data.user.impersonating ? `( ${data.user.impersonating.target} )` : ''}
           </span>
           <span style="font-size: var(--font-size-small);">{data.user.roles.find(role => role.value === data.user.activeRole).roleName} {data.user.impersonating ? `( ${data.user.impersonating.type} )` : ''}</span>
         </div>

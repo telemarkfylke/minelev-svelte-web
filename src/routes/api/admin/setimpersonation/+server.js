@@ -4,13 +4,12 @@ import { json } from '@sveltejs/kit'
 
 export const POST = async ({ params, request, url }) => {
   try {
-    const { target, targetName, type } = await request.json()
+    const { target, type } = await request.json()
     if (!type) return json({ message: 'Missing "type"' }, { status: 400 })
     if (!target) return json({ message: 'Missing "target"' }, { status: 400 })
-    if (!targetName) return json({ message: 'Missing "targetName"' }, { status: 400 })
 
     const user = await getAuthenticatedUser(request.headers)
-    await setAdminImpersonation(user, target, targetName, type)
+    await setAdminImpersonation(user, target, type)
 
     return json({ target, type })
   } catch (error) {
