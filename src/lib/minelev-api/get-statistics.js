@@ -31,7 +31,7 @@ export const getSchoolStatistics = async (user) => {
   const userData = await getUserData(user)
   const availableStudents = userData.students
 
-  if (availableStudents.length === 0) {
+  if (!user.hasAdminRole && availableStudents.length === 0) {
     logger('info', [loggerPrefix, 'No available students. No access to stats'])
     return null
   }
