@@ -1,56 +1,93 @@
 # MinElev WEB
 SvelteKit Web app
 
+## Generell beskrivelse
+Web app der lærere kan logge på, velge en elev de har tilgang på, for så å se eller opprette dokumenter som legges i køen til [MinElev Roboten](https://github.com/vtfk/minelev-robot).
+
+Kontaktlærere kan opprette og se:
+- Varsel atferd
+- Varsel orden
+- Elevsamtale gjennomført / ikke gjennomført
+- Notat
+
+Faglærere kan opprette og se:
+- Varsel fag
+- Notat
+
+Ledere kan se:
+- Alle elever og dokumenter for skolen sin
+
+Dersom YFF-modulen er skrudd på, kan lærere som har elever som går et yrkesfaglig utdanningsprogram også opprette og se:
+- Bekreftelse på utplassering
+- Lokal læreplan
+- Tilbakemelding på utplassering
+
 ## Avhengigheter
 - MongoDb database
-- Azure app registration som representerer backend
-- FINT-FOLK api
+- Azure app registration som representerer backend - for server-side kall
+- [Azure web app med Entra ID built-in authenticaton](https://learn.microsoft.com/en-us/azure/app-service/overview-authentication-authorization)
+- [FINT-FOLK-API](https://github.com/vtfk/azf-fint-folk-api)
 
-## Deployment
-Deploy som Azure Web App, med authentication enabled via microsoft authentication. Authentication modulen injecter 
-Startup command: `node /home/site/wwwroot/build/` (evt `ORIGIN=https://{minelevurl}.no node /home/site/wwwroot/build/` dersom du deployer bak app gateway / load balancer ellerno)
+## Arkitektur
+Et SvelteKit prosjekt som kjøres på en Azure app service / Azure web app på nodejs runtime
 
-## Løsningsbeskrivelse
-### Hjem
-- Backend henter brukerdata + elever, klasser, og gyldige dokumenttyper som bruker har tilgang på
-- Henter siste aktivitet (siste dokumenter) for elever og dokumenttyper man har tilgang på
+### Built-in authentication (Entra ID)
+- Alle kall mot web-appen går gjennom Azure built in authentication. Bruker-info injectes i header før requestene til slutt når web-appen.
+- Videre api-kall mot FINT osv skjer server-side.
 
-### Elever
-- Viser oversikt over elevene man har tilgang på. Kan klikke seg videre til eleven
+### Authorization
+#### Lærer
+- Kun tilgang på elever de har tilgang på i VIS. Tilgang på dokumenttyper basert på om de er faglærer eller kontaktlærer for en elev.
 
-### Elever/{feidenavnPrefix}
-- Viser elevdokumenter man har tilgang på, og man kan opprette nye dokumenter
-
-### Elever/{feidenavnPrefix}/nyttdokument
-- Her kan man opprette et nytt dokument for eleven
-
-### Elever/{feidenavnPrefix}/dokumenter/{dokumentid}
-- Viser informasjon om et spesifikt dokument
-
-### Klasser
-- Viser oversikt over klasser man har tilgang på
-
-### Klasser/{klasseid}
-- Viser elevene i en gitt klasse
-
-### Admin
-- Viser admin-greier
-
-## Tilgangsstyring
-### Lærer
-- Henter elever fra lærerens basisgrupper og undervisningsgrupper
-- Per elev - sjekker hvilke dokumenttyper læreren kan opprette, og på hvilke skoler
-- Sjekk dokumenttyper og tilgangskrav i [document-types.js](./src/lib/document-types/document-types.js)
-
-### Leder
-- Leder / Rådgiver har ikke tilgang på å produsere dokumenter, men skal kunne se dokumenter tilhørende skolen(e) de har tilgang på. Og se statistikk for skolen de har tilgang på.
-
-#### Leder / Rådgiver tilgang
-- Styres basert på Entra ID tilgangsgrupper. En per skole
+#### Leder
+- Ikke tilgang til å produsere dokumenter, kun se.
+- Tilgang på alle elever og tilhørende dokumenter ved en skole de har tilgang på.
+- Tilgang styres basert på Entra ID tilgangsgrupper. En per skole.
 - Legg til en bruker i skolens tilgangsgruppe for å gi brukeren tilgang på alle dokumenter for skolen
 - Gruppenavn: A-TILGANG-MINELEV-LEDER-{SKOLEKORTNAVN}
 - Gruppebeskrivelse: Gruppe for å gi leder / rådgiver tilgang til {Skolenavn} i MinElev
 - Gruppen må også legges til på enterprise appen, med rollen "Leder"
+
+#### Admin
+- Tilgang til å se hvilke brukere som har leder-tilgang
+
+## Deployment
+Deploy som Azure Web App, med authentication enabled via entra-id authentication. 
+Startup command: `node /home/site/wwwroot/build/` (evt `ORIGIN=https://{minelevurl}.no node /home/site/wwwroot/build/` dersom du deployer bak app gateway / load balancer ellerno)
+
+## Løsningsbeskrivelse
+På rot (+layout.sever.js) hentes data for brukeren
+- Hvilken bruker det er
+- Hvilke elever brukeren har tilgang på, og per elev:
+  - Hvilke dokumenter brukeren har tilgang til å opprette / se på denne eleven, og på hvilke skoler
+- Hvilke klasser brukeren har tilgang på, og hvilke elever som er i disse klassene
+
+Brukeren kan se en oversikt over disse elevene i /elever, og klikke seg videre inn på /elever/[feidenavnPrefix]
+
+På /elever/[feidenavnPrefix] hentes også faggruppene til eleven (fordi det ikke finnes noen relasjon mellom lærer og faggrupper i FINT... og vi trenger faggrupper for varsler i fag). På denne siden kan en bruker opprette dokumenter om hen har tilgang til å gjøre det.
+
+På /elever/[feidenavnPrefix]/nyttdokument kan brukeren velge en dokumenttype hen har tilgang til å opprette på denne eleven, fylle inn nødvendig data, og se forhåndsvisning eller lagre dokumentet til MinElev-køen.
+
+På /elever/[feidenavnPrefix]/dokumenter/[dokumentId] hentes data for dette dokumnetet dersom brukeren har tilgang til det
+
+På rot kan man også se overordnet statistikk for alle skoler, og statistikk for sine basisgrupper, dersom man har basisgrupper.
+
+På /klasser kan man se en oversikt over sine klasser, og klikke seg videre inn på en klasse
+
+På /klasser[klasseid] kan man se hvilke elever man har i den klassen og klikke seg videre inn på en elev. Dersom det er en basisgruppe, kan man også alle dokumentene for denne basisgruppen
+
+## Bare litt info om man skal gjøre no utvikling her
+### Dokumenttyper
+Om du trenger å legge til en dokumenttype - legg inn her [./src/lib/document-types/document-types.js](./src/lib/document-types/document-types.js)
+- Velg en accessCondition for dokumenttypen eller opprett en ny dersom det trengs (implementer den nye evt i [./src/lib/minelev-api/get-user-data.js](./src/lib/minelev-api/get-user-data.js))
+- Se på en av de andre dokumenttypene for å se hvordan den skal se ut
+  - Metadata for dokumenttypen (navn osv)
+  - matchContent property (hva slags data kreves for at dokumentet har alt den trenger / er "ferdig")
+  - generateContent funksjon, tar inn student, og content. Content er input fra brukeren, student er data på valgt elev. Det som returneres av generateContent må matche det i matchContent property for dokumenttypen
+  - smell på isEncrypted: true dersom du trenger at content blir kryptert med custom nøkkel i databasen
+
+### Data-henting
+- Gjør all data-henting server-side. Pass på hva du returnere til frontend / sluttbruker
 
 ## YFF beskrivelse
 Tilleggsmodul for Yrkesfaglig fordypning, for å dokumentere utplassering, opprette / redigere lokal læreplan, og sende tilbakemelding på en utplassering
@@ -62,21 +99,8 @@ Alle lærere får i utgangspunktet se YFF-dokumenter i aktivitetsloggen for sine
 
 ### Tilgang på YFF-modulen
 - Dersom YFF er enabled, har alle lærere tilgang automatisk til å se alle YFF-dokumentene for en elev (både faglærer og kontaktlærer)
-- Dersom YFF er enabled, har alle lærere tilgang på å opprette YFF-dokumenter på en elev, så lenge de har tilgang på eleven - OG dersom elevens utdanningsprogram ved skolen lærer har tilgang på er yrkesfaglig!
-- Om et utdanningsp
-
-### Hvem har YFF
-- Skolen må ha YFF enabled (vtfk-schools-info)
-- Enten
-  - Eleven er medlem av klasse med fagkode som inneholder "yff" (kanskje ta en titt på fagkodene)
-  - Eleven har utdanningsprogram.type === 'yrkesfaglig' eller 'ukjent'
-  - Eleven mangler utdanningsprogram
-- Sjekk rett på eleven når den slås opp fra FINT-FOLK (drit i på forhånd ved lærerdata)
-- Alle lærere kan se utplasseringen til eleven, hvis de har tilgang på eleven ved YFF-skole, og de kan også redigere YFF-greiene. Så lenge eleven er yrkesfaglig liksom.
-- Kan da slå opp grep-referansen på programområde til eleven, og sjekke direkte om den er yrkesfaglig
-
-- Sjekk heller om læreren har en klasse ved yff-skole der faget er "yff"? Kan også slå opp på eleven da - for å sjekke utdanningsprogam
-- Må spørre Greppern, kanskje like greit å spørre om et og et utdanningsprogram per undervisningsforhold. Hvor mange utdanningsprogram har vi egt? Kan vi cache det i minne eller fil?
+- Dersom YFF er enabled, har alle lærere tilgang på å opprette YFF-dokumenter på en elev, så lenge de har tilgang på eleven - OG dersom elevens utdanningsprogram ved skolen lærer har tilgang på er yrkesfaglig eller ukjent.
+- Data om utdanningsprogram hentes via SparQl-spørringer mot GREP (udir) - sjekk [greo.js](./src/lib/minelev-api/grep.js) om du er nysgjerrig, og har altfor mye tid...
 
 ### YFF-bekreftelse
 Bekreftelse på en utplassering har denne dataen
@@ -125,7 +149,7 @@ En tilbamelding på utplassering kan først opprettes når en lokal læreplan og
     - Middels måloppnåelse
     - Høy måloppnåelse
 - Virksomhetens inntrykk av eleven
-  - Ser ut som hardkoda liste over punkter med valg: (sjekk minelev-web for å finne punktene)
+  - Hardkodet liste med valg, se [yffEvalueringsdata](./src/lib/document-types/data/document-data.js)
     - Under forventet
     - Som forventet
     - Over forventet
@@ -149,22 +173,11 @@ En tilbamelding på utplassering kan først opprettes når en lokal læreplan og
     - Ikke aktuelt
 
 ### Flyt i ny løsning
-Du kan alltd opprette bekreftelse på utplassering (så mange du vil)
-Du kan alltid opprette lokal læreplan, og den KAN knyttes til en utplassering, en skole, eller ungdomsbedrift
-En lokal læreplan kan også redigeres - men bare frem til det er opprettet en tilbakemelding på utplassering?? Eller frem til den er sendt og arkivert?
-Kun lokal læreplan knyttet til utplassering kan brukes til tikbakemelding på utplassering?? Ingen er sikre, så vi får ta høyde for litt mer her?
-Du kan opprette tilbakemelding på utplassering dersom det både foreligger en bekreftet utplassering og en lokal læreplan for denne utplasseringen (som er sendt / arkivert)
-
-- Lagre en yff-utplassering i mongodb (bruk _id som nøkkelen) når det opprettes en bekreftelse
-- Lagre en yff-laereplan i mongodb når det opprettes en laereplan. Denne kan redigeres. OBS vtfk-løsning lagrer et og et mål i mongodb - hvorfor det mon tro?
-
-
-Spørsmålet er - skal jeg legge alt på nyttdokument-siden?? Eller lage en eget elever/feidenavnPrefix/yff ellerno
-Hvis jeg legger det på nyttdokument:
-- Har valgt dokumentttype og skole
-- Hvordan redigere en læreplan da! - Klikk rediger - bli sendt til nyttdokument?document_type=yff-laereplan&id={laereplan_id}
-- Kan da ha et felt for "laereplan", med valg NY f.eks? Og hvis den er valgt, så redigerer man en eksisterende??
-
+- Man kan alltid opprette bekreftelse på utplassering (så mange man vil)
+- Man kan alltid opprette en lokal læreplan (så mange man vil). En lokal læreplan KAN knyttes til en bekreftelse på utplassering - eller en skole, eller en ungdomsbedrift
+  - En lokal læreplan kan også redigeres underveis i utplasseringen - men den låses for redigering når det har kommet en tilbakemelding på utplasseringen den er knyttet til.
+  - Alle nye versjoner av en læreplan legges i MinElev-køen.
+- Man kan KUN opprette en tilbakemelding på en utplasssering, der det foreligger en bekreftelse på utplasseringen OG det er opprettet en lokal læreplan knyttet til den samme utplasseringen.
 
 ## Developing
 Once you've installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
