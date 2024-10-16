@@ -179,7 +179,48 @@ En tilbamelding på utplassering kan først opprettes når en lokal læreplan og
   - Alle nye versjoner av en læreplan legges i MinElev-køen.
 - Man kan KUN opprette en tilbakemelding på en utplasssering, der det foreligger en bekreftelse på utplasseringen OG det er opprettet en lokal læreplan knyttet til den samme utplasseringen.
 
+### BRREG
+- Bruker brreg til å søke opp bedrifter, enten på navn eller orgnr, for å knytte en bekreftelse på utplassering til en bedrift. Se [./src/lib/minelev-api/brreg.js](./src/lib/minelev-api/brreg.js) og [brreg api-dokumentasjon](https://data.brreg.no/enhetsregisteret/api/dokumentasjon/no/index.html)
+
+### GREP
+- Brukes til å hente utdanningsprogrammer, programområder, og kompetansemål fra udir via noen sparQl-spørringer... Se [./src/lib/minelev-api/grep.js](./src/lib/minelev-api/grep.js) og [grep api-dokumentasjon](https://github.com/Utdanningsdirektoratet/Grep_SPARQL/wiki)
+
+
 ## Developing
+Opprett en .env fil med følgende verdier (bytt ut med reelle verdier da)
+```bash
+PUBLIC_ELEVDOK_URL="https://elevdok.fylke.no"
+PDF_API_KEY="nøkkel til pdf-api"
+PDF_API_URL="https://pdf.api.fylke.no/api/generate"
+MOCK_AUTH="true | false" # Om lokal utvikling, sett til true
+MOCK_API="true | false" # Om du bare knoter med frontend, så kan den settes til true
+MOCK_AUTH_LARER_ROLE="true | false" # Om mock-auth er true, har du default-rollen?
+MOCK_AUTH_LEDER_ROLE="true | false" # Om mock-auth er true, har du leder-rollen?
+MOCK_AUTH_ADMIN_ROLE="true | false" # Om mock-auth er true, har du admin-rollen?
+DEFAULT_ROLE="MinElev.Larer" # Sett til samme som i enterprise appen din
+LEDER_ROLE="MinElev.Leder" # Sett til samme som i enterprise appen din
+ADMIN_ROLE="MinElev.Admin" # Sett til samme som i enterprise appen din
+APPREG_CLIENT_ID="dev backend appreg client id"
+APPREG_CLIENT_SECRET="dev backend appreg client secret"
+APPREG_TENANT_ID="dev backend appreg tenant id"
+FEIDENAVN_SUFFIX="fylke.no"
+MONGODB_CONNECTION_STRING="mongodb+srv://{user}:{pwd}@{cluster}.mongodb.net/?retryWrites=true&w=majority"
+MONGODB_DB_NAME="minelev-test"
+MONGODB_DOCUMENTS_COLLECTION="documents"
+MONGODB_USER_SETTINGS_COLLECTION="user-settings"
+MONGODB_USER_IMPERSONATION_COLLECTION="user-impersonation-log"
+MONGODB_LEDER_SCHOOL_ACCESS_COLLECTION="leder-school-access"
+FINTFOLK_API_URL="https://fintfolk.api.fylke.no/api"
+FINTFOLK_API_SCOPE="https://fintfolk-{env}.api.fylke.no/.default"
+MAINTENANCE_MODE="false | true"
+ENCRYPTION_SECRET="en hemmelig custom enctryption secret"
+YFF_ENABLED="false | true" # Om YFF-modulen er skrudd av eller på
+BRREG_API_URL="https://{brreg-url}/enhetsregisteret/api" # Kreves av YFF-modulen
+GREP_SPARQL_URL="https://{sparql-url}/repositories/{version}" # Kreves av YFF-modulen
+FRONTEND_APP_ID="dev frontend appreg client id" # brukes for å hente ledertilganger
+```
+
+
 Once you've installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
 ```bash
