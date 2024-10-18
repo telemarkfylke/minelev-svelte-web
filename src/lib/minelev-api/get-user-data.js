@@ -56,6 +56,14 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
           docTypeSchools.push(school)
         }
       }
+      // Vi må la kontaktlærere få lov til dette også (selv om de ikke har eleven i en undervisningsgruppe), siden de er kontaklærere da
+      const kontaktlarerSchools = student.skoler.filter(skole => skole.kontaktlarer) // Kun skoler der læreren er kontaktlærer for eleven
+      for (const school of kontaktlarerSchools) {
+        if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
+          docTypeSchools.push(school)
+        }
+      }
+      
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
     }
     if ((env.YFF_ENABLED && env.YFF_ENABLED === 'true') && docType.accessCondition === 'yffEnabled') {
