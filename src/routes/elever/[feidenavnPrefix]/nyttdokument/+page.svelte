@@ -13,7 +13,7 @@
   export let data
 
   const studentFeidenavnPrefix = $page.params.feidenavnPrefix
-  const teacherStudent = data.students.find(stud => stud.feidenavnPrefix === studentFeidenavnPrefix)
+  const teacherStudent = JSON.parse(JSON.stringify(data.students.find(stud => stud.feidenavnPrefix === studentFeidenavnPrefix))) // Håper ikke det knekker no...
   const studentData = data.studentData
 
   let documentTypeId = $page.url.searchParams.get('document_type') || undefined
@@ -28,6 +28,14 @@
     })
     teacherStudent.availableDocumentTypes = teacherStudent.availableDocumentTypes.filter(docType => docType.schools.length > 0)
   }
+
+  // Filtrer vekk readonly dokumettyper
+  teacherStudent.availableDocumentTypes = teacherStudent.availableDocumentTypes.filter(docType => {
+    if (data.systemInfo.VARSEL_READONLY && ['varsel-fag', 'varsel-orden', 'varsel-atferd'].includes(docType.id)) return false
+    if (data.systemInfo.ELEVSAMTALE_READONLY && ['samtale'].includes(docType.id)) return false
+    if (data.systemInfo.NOTAT_READONLY && ['notat'].includes(docType.id)) return false
+    return true
+  })
 
   const getAvailableSchools = (documentTypeId) => {
     const availableSchools = documentTypeId ? teacherStudent.availableDocumentTypes.find(docType => docType.id === documentTypeId).schools : []

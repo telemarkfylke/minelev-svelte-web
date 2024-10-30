@@ -62,6 +62,29 @@
             YFF-modulen er nå klar. Dersom du har elever som går et yrkesfaglig utdanningsprogram, kan du nå opprette bekreftelse på utplassering, lokal læreplan, og tilbakemelding på utplassering. Gå inn på en elev for å opprette YFF-dokumenter.
         </div>
     {/if}
+    {#if data.systemInfo.ELEVSAMTALE_READONLY || data.systemInfo.NOTAT_READONLY || data.systemInfo.VARSEL_READONLY}
+        <h3 class="boxTitle">⚠️ OBS!</h3>
+        <div class="textBox">
+            Arkivkjernen i Visma InSchool er nå aktivert. Dette betyr at følgende dokumenttyper må opprettes i Visma InSchool:
+            {#if data.systemInfo.VARSEL_READONLY}
+                <div>
+                    ● Varsler
+                </div>
+            {/if}
+            {#if data.systemInfo.ELEVSAMTALE_READONLY}
+                <div>
+                    ● Elevsamtaler
+                </div>
+            {/if}
+            {#if data.systemInfo.NOTAT_READONLY}
+                <div>
+                    ● Notater
+                </div>
+            {/if}
+            <br>
+            <a href="/" target="_blank">Se opplæringsmateriell for mer informasjon</a>
+        </div>
+    {/if}
 </div>
 
 <h2 class="boxTitle">
