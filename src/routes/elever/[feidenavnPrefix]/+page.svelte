@@ -155,15 +155,23 @@
       {/if}
     </div>
     {#if data.user.canCreateDocuments}
-      <div class="boxAction">
-        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-fag`)}><span class="material-symbols-outlined">add</span>Nytt varsel fag</button>
-        {#if accessTo.varselOrden}
-          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-orden`)}><span class="material-symbols-outlined">add</span>Nytt varsel orden</button>
-        {/if}
-        {#if accessTo.varselAtferd}
-          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-atferd`)}><span class="material-symbols-outlined">add</span>Nytt varsel atferd</button>
-        {/if}
-      </div>
+      {#if data.systemInfo.VARSEL_READONLY}
+        <div class="boxAction">
+          <div class="readOnlyInfo">
+            OBS! Varselbrev skal nå opprettes i Visma InSchool. Se <a href="/" target="_blank">opplæringsmateriell</a>
+          </div>
+        </div>
+      {:else}
+        <div class="boxAction">
+          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-fag`)}><span class="material-symbols-outlined">add</span>Nytt varsel fag</button>
+          {#if accessTo.varselOrden}
+            <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-orden`)}><span class="material-symbols-outlined">add</span>Nytt varsel orden</button>
+          {/if}
+          {#if accessTo.varselAtferd}
+            <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=varsel-atferd`)}><span class="material-symbols-outlined">add</span>Nytt varsel atferd</button>
+          {/if}
+        </div>
+      {/if}
     {/if}
   </div>
 {/if}
@@ -195,9 +203,17 @@
       {/if}
     </div>
     {#if data.user.canCreateDocuments}
-      <div class="boxAction">
-        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=samtale`)}><span class="material-symbols-outlined">add</span>Ny elevsamtale</button>
-      </div>
+      {#if data.systemInfo.ELEVSAMTALE_READONLY}
+        <div class="boxAction">
+          <div class="readOnlyInfo">
+            OBS! Elevsamtaler skal nå dokumenteres i Visma InSchool. Se <a href="/" target="_blank">opplæringsmateriell</a>
+          </div>
+        </div>
+      {:else}
+        <div class="boxAction">
+          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=samtale`)}><span class="material-symbols-outlined">add</span>Ny elevsamtale</button>
+        </div>
+      {/if}
     {/if}
   </div>
 {/if}
@@ -228,9 +244,17 @@
       {/if}
     </div>
     {#if data.user.canCreateDocuments}
-      <div class="boxAction">
-        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=notat`)}><span class="material-symbols-outlined">add</span>Nytt notat</button>
-      </div>
+      {#if data.systemInfo.NOTAT_READONLY}
+        <div class="boxAction">
+          <div class="readOnlyInfo">
+            OBS! Notater skal nå opprettes i Visma InSchool. Se <a href="/" target="_blank">opplæringsmateriell</a>
+          </div>
+        </div>
+      {:else}
+        <div class="boxAction">
+          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=notat`)}><span class="material-symbols-outlined">add</span>Nytt notat</button>
+        </div>
+      {/if}
     {/if}
   </div>
 {/if}
@@ -261,6 +285,11 @@
     gap: 0.5rem;
     margin: 2rem 0rem 0rem 0rem;
     flex-wrap: wrap;
+  }
+  .readOnlyInfo {
+    background-color: var(--warning-background-color);
+    border: 2px solid var(--warning-color);
+    padding: 1rem;
   }
   .documentContainer {
     display: flex;

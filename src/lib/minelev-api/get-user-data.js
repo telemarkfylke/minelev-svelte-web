@@ -63,7 +63,6 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
           docTypeSchools.push(school)
         }
       }
-      
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
     }
     if ((env.YFF_ENABLED && env.YFF_ENABLED === 'true') && docType.accessCondition === 'yffEnabled') {

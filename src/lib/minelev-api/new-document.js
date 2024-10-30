@@ -72,6 +72,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
 
   const teacherStudent = availableStudents.find(stud => stud.feidenavn === studentFeidenavn)
   const currentDocumentType = teacherStudent.availableDocumentTypes.find(docType => docType.id === documentTypeId)
+
   if (!currentDocumentType) {
     logger('warn', [loggerPrefix, `No access to create this documenttype "${documentTypeId}" for student "${studentFeidenavn}"`])
     throw new Error(`No access to create this documenttype "${documentTypeId}" for student "${studentFeidenavn}"`)
@@ -82,6 +83,18 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
     logger('warn', [loggerPrefix, `No access to create this documenttype "${documentTypeId}" at selected school with schoolNumber "${schoolNumber}"`])
     throw new Error(`No access to create this documenttype "${documentTypeId}" for student "${studentFeidenavn}" selected school with schoolNumber "${schoolNumber}"`)
   }
+
+  logger('info', [loggerPrefix, 'Cheking if documenttype is set to ReadOnly in env'])
+  let currentDocTypeIsReadOnly = false
+  if (env.VARSEL_READONLY === 'true' && currentDocumentType.id.startsWith('varsel')) currentDocTypeIsReadOnly = true
+  if (env.ELEVSAMTALE_READONLY === 'true' && currentDocumentType.id === 'samtale') currentDocTypeIsReadOnly = true
+  if (env.NOTAT_READONLY === 'true' && currentDocumentType.id === 'notat') currentDocTypeIsReadOnly = true
+
+  if (currentDocTypeIsReadOnly) {
+    logger('warn', [loggerPrefix, `No access to create this documenttype "${documentTypeId}" due to env variable is set to readonly for this documenttype`])
+    throw new Error(`No access to create this documenttype "${documentTypeId}" due to env variable is set to readonly for this documenttype`)
+  }
+
   logger('info', [loggerPrefix, 'Access to create document for student validated, getting student data (with ssn)'])
 
   const studentData = await getStudent(user, studentFeidenavn, true) // Include ssn here, only server side and not returned
