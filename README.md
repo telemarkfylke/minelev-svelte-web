@@ -85,6 +85,7 @@ Om du trenger å legge til en dokumenttype - legg inn her [./src/lib/document-ty
   - matchContent property (hva slags data kreves for at dokumentet har alt den trenger / er "ferdig")
   - generateContent funksjon, tar inn student, og content. Content er input fra brukeren, student er data på valgt elev. Det som returneres av generateContent må matche det i matchContent property for dokumenttypen
   - smell på isEncrypted: true dersom du trenger at content blir kryptert med custom nøkkel i databasen
+- Opprett {docType}.svelte og putt inn
 
 ### Data-henting
 - Gjør all data-henting server-side. Pass på hva du returnere til frontend / sluttbruker
@@ -184,7 +185,6 @@ En tilbamelding på utplassering kan først opprettes når en lokal læreplan og
 
 ### GREP
 - Brukes til å hente utdanningsprogrammer, programområder, og kompetansemål fra udir via noen sparQl-spørringer... Se [./src/lib/minelev-api/grep.js](./src/lib/minelev-api/grep.js) og [grep api-dokumentasjon](https://github.com/Utdanningsdirektoratet/Grep_SPARQL/wiki)
-
 
 ## Developing
 Opprett en .env fil med følgende verdier (bytt ut med reelle verdier da)
