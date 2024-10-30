@@ -84,7 +84,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
     throw new Error(`No access to create this documenttype "${documentTypeId}" for student "${studentFeidenavn}" selected school with schoolNumber "${schoolNumber}"`)
   }
 
-  logger('info', [loggerPrefix, `Cheking if documenttype is set to ReadOnly in env`])
+  logger('info', [loggerPrefix, 'Cheking if documenttype is set to ReadOnly in env'])
   let currentDocTypeIsReadOnly = false
   if (env.VARSEL_READONLY === 'true' && currentDocumentType.id.startsWith('varsel')) currentDocTypeIsReadOnly = true
   if (env.ELEVSAMTALE_READONLY === 'true' && currentDocumentType.id === 'samtale') currentDocTypeIsReadOnly = true
