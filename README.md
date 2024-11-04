@@ -218,6 +218,9 @@ YFF_ENABLED="false | true" # Om YFF-modulen er skrudd av eller på
 BRREG_API_URL="https://{brreg-url}/enhetsregisteret/api" # Kreves av YFF-modulen
 GREP_SPARQL_URL="https://{sparql-url}/repositories/{version}" # Kreves av YFF-modulen
 FRONTEND_APP_ID="dev frontend appreg client id" # brukes for å hente ledertilganger
+VARSEL_READONLY="true | false" # Sett til true dersom man ikke skal kunne opprette varsler
+ELEVSAMTALE_READONLY="true | false" # Sett til true dersom man ikke skal kunne opprette elevsamtaler
+NOTAT_READONLY="true | false" # Sett til true dersom man ikke skal kunne opprette notater
 ```
 
 
