@@ -158,7 +158,8 @@
       {#if data.systemInfo.VARSEL_READONLY}
         <div class="boxAction">
           <div class="readOnlyInfo">
-            OBS! Varselbrev skal nå opprettes i Visma InSchool. Se <a href="/" target="_blank">opplæringsmateriell</a>
+            MinElev skal ikke lenger benyttes til å sende varsel. Du har fremdeles tilgang til MinElev for å se varsler som er sendt før 13. november. Varselbrev sendes nå fra Visma InSchool. Sett deg inn i denne veiledningen:
+            <a href="https://inschool.zendesk.com/hc/no/articles/360030859132-4b-22-Opprette-og-sende-varsel" target="_blank">4b.22 - Opprette og sende varsel - Visma InSchool (zendesk.com)</a>
           </div>
         </div>
       {:else}
@@ -206,7 +207,8 @@
       {#if data.systemInfo.ELEVSAMTALE_READONLY}
         <div class="boxAction">
           <div class="readOnlyInfo">
-            OBS! Elevsamtaler skal nå dokumenteres i Visma InSchool. Se <a href="/" target="_blank">opplæringsmateriell</a>
+            VIS skal benyttes for elev- og fagsamtaler. Se hvordan du gjør det:
+            <a href="https://inschool.zendesk.com/hc/no/articles/13156950686610-4b-21B-Halv%C3%A5rsvurderinger-uten-karakter-i-orden-og-atferd-elevsamtaler" target="_blank">4b.21B - Halvårsvurderinger uten karakter i orden og atferd (elevsamtaler) - Visma InSchool</a>
           </div>
         </div>
       {:else}
@@ -247,7 +249,8 @@
       {#if data.systemInfo.NOTAT_READONLY}
         <div class="boxAction">
           <div class="readOnlyInfo">
-            OBS! Notater skal nå opprettes i Visma InSchool. Se <a href="/" target="_blank">opplæringsmateriell</a>
+            VIS skal benyttes for notater. Se hvordan du gjør det:
+            <a href="/" target="_blank">Husk å legge inn riktig lenke</a>
           </div>
         </div>
       {:else}

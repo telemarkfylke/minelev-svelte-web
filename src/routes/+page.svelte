@@ -65,24 +65,25 @@
     {#if data.systemInfo.ELEVSAMTALE_READONLY || data.systemInfo.NOTAT_READONLY || data.systemInfo.VARSEL_READONLY}
         <h3 class="boxTitle">⚠️ OBS!</h3>
         <div class="textBox">
-            Arkivkjernen i Visma InSchool er nå aktivert. Dette betyr at følgende dokumenttyper må opprettes i Visma InSchool:
             {#if data.systemInfo.VARSEL_READONLY}
-                <div>
-                    ● Varsler
-                </div>
-            {/if}
+                MinElev skal ikke lenger benyttes til å sende varsel. Du har fremdeles tilgang til MinElev for å se varsler som er sendt før 13. november. Varselbrev sendes nå fra Visma InSchool. Sett deg inn i denne veiledningen:
+                <a href="https://inschool.zendesk.com/hc/no/articles/360030859132-4b-22-Opprette-og-sende-varsel" target="_blank">4b.22 - Opprette og sende varsel - Visma InSchool (zendesk.com)</a>
+                <br>
+                <br>
+                {/if}
             {#if data.systemInfo.ELEVSAMTALE_READONLY}
-                <div>
-                    ● Elevsamtaler
-                </div>
+                VIS skal benyttes for elev- og fagsamtaler. Se hvordan du gjør det:
+                <a href="https://inschool.zendesk.com/hc/no/articles/13156950686610-4b-21B-Halv%C3%A5rsvurderinger-uten-karakter-i-orden-og-atferd-elevsamtaler" target="_blank">4b.21B - Halvårsvurderinger uten karakter i orden og atferd (elevsamtaler) - Visma InSchool</a>
+                <br>
+                <br>
             {/if}
             {#if data.systemInfo.NOTAT_READONLY}
-                <div>
-                    ● Notater
-                </div>
+                VIS skal benyttes for notater. Se hvordan du gjør det:
+                <a href="/" target="_blank">Husk å legge inn riktig lenke</a>
+                <br>
+                <br>
             {/if}
-            <br>
-            <a href="/" target="_blank">Se opplæringsmateriell for mer informasjon</a>
+            Notat i MinElev kan du fremdeles benytte.
         </div>
     {/if}
 </div>
