@@ -116,11 +116,20 @@
       {/if}
     </div>
     {#if data.user.canCreateDocuments}
-      <div class="boxAction">
-        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-bekreftelse`)}><span class="material-symbols-outlined">add</span>Ny bekreftelse på utplassering</button>
-        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-laereplan`)}><span class="material-symbols-outlined">edit_note</span>Lokal læreplan</button>
-        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-tilbakemelding`)}><span class="material-symbols-outlined">add</span>Ny tilbakemelding på utplassering</button>
-      </div>
+      {#if data.systemInfo.YFF_READONLY}
+        <div class="boxAction">
+          <div class="readOnlyInfo">
+            VIS skal benyttes for YFF. Se hvordan du gjør det:
+            <a href="/" target="_blank">Husk å legge inn lenke om dette trengs</a>
+          </div>
+        </div>
+      {:else}
+        <div class="boxAction">
+          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-bekreftelse`)}><span class="material-symbols-outlined">add</span>Ny bekreftelse på utplassering</button>
+          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-laereplan`)}><span class="material-symbols-outlined">edit_note</span>Lokal læreplan</button>
+          <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=yff-tilbakemelding`)}><span class="material-symbols-outlined">add</span>Ny tilbakemelding på utplassering</button>
+        </div>
+      {/if}
     {/if}
   </div>
 {/if}

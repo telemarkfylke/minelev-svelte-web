@@ -62,7 +62,7 @@
             YFF-modulen er nå klar. Dersom du har elever som går et yrkesfaglig utdanningsprogram, kan du nå opprette bekreftelse på utplassering, lokal læreplan, og tilbakemelding på utplassering. Gå inn på en elev for å opprette YFF-dokumenter.
         </div>
     {/if}
-    {#if data.systemInfo.ELEVSAMTALE_READONLY || data.systemInfo.NOTAT_READONLY || data.systemInfo.VARSEL_READONLY}
+    {#if data.systemInfo.ELEVSAMTALE_READONLY || data.systemInfo.NOTAT_READONLY || data.systemInfo.VARSEL_READONLY || data.systemInfo.YFF_READONLY}
         <h3 class="boxTitle">⚠️ OBS!</h3>
         <div class="textBox">
             {#if data.systemInfo.VARSEL_READONLY}
@@ -70,7 +70,7 @@
                 <a href="https://inschool.zendesk.com/hc/no/articles/360030859132-4b-22-Opprette-og-sende-varsel" target="_blank">4b.22 - Opprette og sende varsel - Visma InSchool (zendesk.com)</a>
                 <br>
                 <br>
-                {/if}
+            {/if}
             {#if data.systemInfo.ELEVSAMTALE_READONLY}
                 VIS skal benyttes for elev- og fagsamtaler. Se hvordan du gjør det:
                 <a href="https://inschool.zendesk.com/hc/no/articles/13156950686610-4b-21B-Halv%C3%A5rsvurderinger-uten-karakter-i-orden-og-atferd-elevsamtaler" target="_blank">4b.21B - Halvårsvurderinger uten karakter i orden og atferd (elevsamtaler) - Visma InSchool</a>
@@ -79,6 +79,12 @@
             {/if}
             {#if data.systemInfo.NOTAT_READONLY}
                 VIS skal benyttes for notater. Se hvordan du gjør det:
+                <a href="/" target="_blank">Husk å legge inn riktig lenke</a>
+                <br>
+                <br>
+            {/if}
+            {#if data.systemInfo.YFF_READONLY}
+                VIS skal benyttes for yrkesfaglig fordypning. Se hvordan du gjør det:
                 <a href="/" target="_blank">Husk å legge inn riktig lenke</a>
                 <br>
                 <br>

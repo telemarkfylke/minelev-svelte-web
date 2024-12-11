@@ -29,11 +29,12 @@
     teacherStudent.availableDocumentTypes = teacherStudent.availableDocumentTypes.filter(docType => docType.schools.length > 0)
   }
 
-  // Filtrer vekk readonly dokumettyper
+  // Filtrer vekk readonly dokumenttyper
   teacherStudent.availableDocumentTypes = teacherStudent.availableDocumentTypes.filter(docType => {
     if (data.systemInfo.VARSEL_READONLY && ['varsel-fag', 'varsel-orden', 'varsel-atferd'].includes(docType.id)) return false
     if (data.systemInfo.ELEVSAMTALE_READONLY && ['samtale'].includes(docType.id)) return false
     if (data.systemInfo.NOTAT_READONLY && ['notat'].includes(docType.id)) return false
+    if (data.systemInfo.YFF_READONLY && ['yff-bekreftelse', 'yff-laereplan', 'yff-tilbakemelding'].includes(docType.id)) return false
     return true
   })
 

@@ -221,6 +221,7 @@ FRONTEND_APP_ID="dev frontend appreg client id" # brukes for å hente ledertilga
 VARSEL_READONLY="true | false" # Sett til true dersom man ikke skal kunne opprette varsler
 ELEVSAMTALE_READONLY="true | false" # Sett til true dersom man ikke skal kunne opprette elevsamtaler
 NOTAT_READONLY="true | false" # Sett til true dersom man ikke skal kunne opprette notater
+YFF_READONLY="true | false" # Sett til true dersom man ikke skal kunne opprette yff dokumenter
 ```
 
 

@@ -8,6 +8,7 @@ import { version } from '../../package.json'
  * @property {boolean} VARSEL_READONLY
  * @property {boolean} ELEVSAMTALE_READONLY
  * @property {boolean} NOTAT_READONLY
+ * @property {boolean} YFF_READONLY
  *
  */
 
@@ -21,6 +22,7 @@ export const getSystemInfo = () => {
     YFF_ENABLED: env.YFF_ENABLED === 'true',
     VARSEL_READONLY: env.VARSEL_READONLY === 'true',
     ELEVSAMTALE_READONLY: env.ELEVSAMTALE_READONLY === 'true',
-    NOTAT_READONLY: env.NOTAT_READONLY === 'true'
+    NOTAT_READONLY: env.NOTAT_READONLY === 'true',
+    YFF_READONLY: env.YFF_READONLY === 'true'
   }
 }
