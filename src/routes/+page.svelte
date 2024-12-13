@@ -66,7 +66,7 @@
         <h3 class="boxTitle">⚠️ OBS!</h3>
         <div class="textBox">
             {#if data.systemInfo.VARSEL_READONLY}
-                MinElev skal ikke lenger benyttes til å sende varsel. Du har fremdeles tilgang til MinElev for å se varsler som er sendt før 13. november. Varselbrev sendes nå fra Visma InSchool. Sett deg inn i denne veiledningen:
+                MinElev skal ikke lenger benyttes til å sende varsel. Du har fremdeles tilgang til MinElev for å se varsler som er sendt fra MinElev. Varselbrev sendes nå fra Visma InSchool. Sett deg inn i denne veiledningen:
                 <a href="https://inschool.zendesk.com/hc/no/articles/360030859132-4b-22-Opprette-og-sende-varsel" target="_blank">4b.22 - Opprette og sende varsel - Visma InSchool (zendesk.com)</a>
                 <br>
                 <br>
