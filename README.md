@@ -4,6 +4,8 @@ SvelteKit Web app
 ## Generell beskrivelse
 Web app der lærere kan logge på, velge en elev de har tilgang på, for så å se eller opprette dokumenter som legges i køen til [MinElev Roboten](https://github.com/vtfk/minelev-robot).
 
+OBS - legg inn info om READONLY env variabler
+
 Kontaktlærere kan opprette og se:
 - Varsel atferd
 - Varsel orden
