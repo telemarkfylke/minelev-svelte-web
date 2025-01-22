@@ -85,7 +85,7 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
     }
     // Notat skal være tilgjengelig for basisgrupper også
-    if (docType.accessCondition === 'hasBasisgruppeOrUndervisningsgruppe') {      
+    if (docType.accessCondition === 'hasBasisgruppeOrUndervisningsgruppe') {
       const docTypeSchools = []
       for (const school of student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe' || klasse.type === 'basisgruppe').map(klasse => klasse.skole)) { // Skoler der læreren har eleven i en undervisningsgruppe ELLER basisgruppe
         if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
