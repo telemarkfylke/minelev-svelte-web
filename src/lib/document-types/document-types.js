@@ -203,7 +203,7 @@ export const documentTypes = [
     id: 'notat',
     title: 'Notat',
     type: 'notat',
-    accessCondition: 'hasUndervisningsgruppe',
+    accessCondition: 'hasBasisgruppeOrUndervisningsgruppe',
     isEncrypted: true,
     matchContent: {
       note: 'fjidsofjkldsfkldsjflks'
