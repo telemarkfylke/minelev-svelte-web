@@ -89,7 +89,7 @@ export const newDocument = async (user, studentFeidenavn, documentTypeId, type, 
   if (env.VARSEL_READONLY === 'true' && currentDocumentType.id.startsWith('varsel')) currentDocTypeIsReadOnly = true
   if (env.ELEVSAMTALE_READONLY === 'true' && currentDocumentType.id === 'samtale') currentDocTypeIsReadOnly = true
   if (env.NOTAT_READONLY === 'true' && currentDocumentType.id === 'notat') currentDocTypeIsReadOnly = true
-  if (env.YFF_READONLY === 'true' && currentDocumentType.startsWith('yff')) currentDocTypeIsReadOnly = true
+  if (env.YFF_READONLY === 'true' && currentDocumentType.id.startsWith('yff')) currentDocTypeIsReadOnly = true
 
   if (currentDocTypeIsReadOnly) {
     logger('warn', [loggerPrefix, `No access to create this documenttype "${documentTypeId}" due to env variable is set to readonly for this documenttype`])
