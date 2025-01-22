@@ -84,6 +84,16 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
       }
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
     }
+    // Notat skal være tilgjengelig for basisgrupper også
+    if (docType.accessCondition === 'hasBasisgruppeOrUndervisningsgruppe') {
+      const docTypeSchools = []
+      for (const school of student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe' || klasse.type === 'basisgruppe').map(klasse => klasse.skole)) { // Skoler der læreren har eleven i en undervisningsgruppe ELLER basisgruppe
+        if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
+          docTypeSchools.push(school)
+        }
+      }
+      if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe ELLER basisgruppe
+    }
     if ((env.YFF_ENABLED && env.YFF_ENABLED === 'true') && docType.accessCondition === 'yffEnabled') {
       // Yff blir også validert på elev-nivå ved henting av elev, samt ved innsending og henting av yff-data, her blir det kun sjekket at skolen har YFF, og at env YFF er enabled
       // Sjekker hvilke skoler som har yff
@@ -250,7 +260,7 @@ export const getUserData = async (user) => {
     const whitelistedTeachers = (env.WHITELISTED_TEACHERS && env.WHITELISTED_TEACHERS.split(',').map(user => user.trim())) || []
     // Special case for whitelisted teachers - they can have any undervisningsforhold description
     const teacherIsWhitelisted = whitelistedTeachers.includes(teacher.upn)
-    if (teacherIsWhitelisted) logger('warn', [loggerPrefix, 'Teacher is whitelisted - will ignore invalid undervisningsforhold descriptions, adn give teacher access'])
+    if (teacherIsWhitelisted) logger('warn', [loggerPrefix, 'Teacher is whitelisted - will ignore invalid undervisningsforhold descriptions, and give teacher access'])
 
     const validUndervisningsforhold = teacher.undervisningsforhold.filter(forhold => (forhold.aktiv && allowedUndervisningsforholdDescription.includes(forhold.beskrivelse)) || (forhold.aktiv && teacherIsWhitelisted))
     const invalidUndervisningsforhold = teacher.undervisningsforhold.filter(forhold => forhold.aktiv && !allowedUndervisningsforholdDescription.includes(forhold.beskrivelse))
