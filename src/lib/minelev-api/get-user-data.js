@@ -7,7 +7,7 @@ import { logger } from '@vtfk/logger'
 import vtfkSchoolsInfo from 'vtfk-schools-info'
 import { getLeaderAccess } from './leder-access'
 
-const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1', 'Spesialkonsulent']
+const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1', 'Spesialkonsulent', 'Adjunkt med tilleggsutdanning']
 
 /**
  * @typedef MiniSchool
