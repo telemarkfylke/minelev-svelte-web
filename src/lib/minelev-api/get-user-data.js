@@ -125,7 +125,7 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
 export const getAvailableDocumentTypesForLeader = (student) => {
   const availableDocumentTypes = []
   for (const docType of documentTypes) {
-    if (['isContactTeacher', 'hasUndervisningsgruppe'].includes(docType.accessCondition)) {
+    if (['isContactTeacher', 'hasUndervisningsgruppe', 'hasBasisgruppeOrUndervisningsgruppe'].includes(docType.accessCondition)) {
       const docTypeSchools = student.skoler // Kun skoler der leder har tilgang på eleven
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools })
     }
