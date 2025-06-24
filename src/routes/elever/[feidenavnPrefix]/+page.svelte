@@ -133,7 +133,7 @@
     {/if}
   </div>
 {/if}
-{#if accessTo.varsel}
+{#if accessTo.varsel && !data.systemInfo.VARSEL_READONLY}
   <div class="documentsBox">
     <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Varselbrev</h3>
     <div class="boxContent">
@@ -185,7 +185,7 @@
     {/if}
   </div>
 {/if}
-{#if accessTo.elevsamtale}
+{#if accessTo.elevsamtale && !data.systemInfo.ELEVSAMTALE_READONLY}
   <div class="documentsBox">
     <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Elevsamtaler</h3>
     <div class="boxContent">

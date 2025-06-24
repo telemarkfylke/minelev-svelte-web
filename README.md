@@ -103,7 +103,7 @@ Alle lærere får i utgangspunktet se YFF-dokumenter i aktivitetsloggen for sine
 ### Tilgang på YFF-modulen
 - Dersom YFF er enabled, har alle lærere tilgang automatisk til å se alle YFF-dokumentene for en elev (både faglærer og kontaktlærer)
 - Dersom YFF er enabled, har alle lærere tilgang på å opprette YFF-dokumenter på en elev, så lenge de har tilgang på eleven - OG dersom elevens utdanningsprogram ved skolen lærer har tilgang på er yrkesfaglig eller ukjent.
-- Data om utdanningsprogram hentes via SparQl-spørringer mot GREP (udir) - sjekk [greo.js](./src/lib/minelev-api/grep.js) om du er nysgjerrig, og har altfor mye tid...
+- Data om utdanningsprogram hentes via SparQl-spørringer mot GREP (udir) - sjekk [grep.js](./src/lib/minelev-api/grep.js) om du er nysgjerrig, og har altfor mye tid...
 
 ### YFF-bekreftelse
 Bekreftelse på en utplassering har denne dataen

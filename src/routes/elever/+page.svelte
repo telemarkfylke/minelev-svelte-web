@@ -158,7 +158,7 @@
 				display: none;
 			}
 			.studentInfo {
-				width: 8rem;;
+				width: 8rem;
 			}
     }
 </style>
