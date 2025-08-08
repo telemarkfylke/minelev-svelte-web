@@ -17,13 +17,15 @@
     varselOrden: student.availableDocumentTypes.some(docType => docType.id === 'varsel-orden'),
     varselAtferd: student.availableDocumentTypes.some(docType => docType.id === 'varsel-atferd'),
     elevsamtale: student.availableDocumentTypes.some(docType => docType.id === 'samtale'),
-    notat: student.availableDocumentTypes.some(docType => docType.id === 'notat')
+    notat: student.availableDocumentTypes.some(docType => docType.id === 'notat'),
+    fagskolenForhandsvarsel: student.availableDocumentTypes.some(docType => docType.id === 'fagskolen-forhandsvarsel')
   }
   const documents = {
     yff: [],
     varsel: [],
     elevsamtale: [],
-    notat: []
+    notat: [],
+    fagskolenForhandsvarsel: []
   }
   let loadingDocuments = true
   let documentErrorMessage = ""
@@ -35,6 +37,7 @@
         documents.varsel = data.filter(doc => doc.type === 'varsel')
         documents.elevsamtale = data.filter(doc => doc.type === 'samtale')
         documents.notat = data.filter(doc => doc.type === 'notat')
+        documents.fagskolenForhandsvarsel = data.filter(doc => doc.type === 'fagskolen-forhandsvarsel')
       }
         {
           if (data.studentData.hasYff) {
@@ -225,6 +228,40 @@
           <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=samtale`)}><span class="material-symbols-outlined">add</span>Ny elevsamtale</button>
         </div>
       {/if}
+    {/if}
+  </div>
+{/if}
+{#if accessTo.fagskolenForhandsvarsel}
+  <div class="documentsBox">
+    <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Forhåndsvarsler</h3>
+    <div class="boxContent">
+      {#if loadingDocuments}
+        <LoadingSpinner width="1" />
+      {:else}
+        {#if documents.fagskolenForhandsvarsel.length > 0}
+          {#each documents.fagskolenForhandsvarsel as document}
+            <div class="documentContainer">
+              <div class="documentInfo">
+                  <div class="documentDate">{prettyPrintDate(document.created.timestamp, { shortMonth: true })}</div>
+                  <div class="documentTitle"><a href="/elever/{document.student.feidenavnPrefix}/dokumenter/{document._id}">{document.title}</a></div>
+                  <div class="documentStatus">{documentStatuses.find(s => s.id === document.status[document.status.length - 1].status)?.short.nb || 'Ukjent status'}</div>
+                  <div class="mobileCreatedBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+              <div class="documentDetails">
+                  <div>{conversationStatuses.find(status => status.id === document.variant)?.value.nb}</div>
+                  <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
+              </div>
+            </div>
+          {/each}
+        {:else}
+          Eleven har ingen tilgjengelige forhåndsvarsler
+        {/if}
+      {/if}
+    </div>
+    {#if data.user.canCreateDocuments}
+      <div class="boxAction">
+        <button class="filled" on:click={() => goto(`${$page.url.pathname}/nyttdokument?document_type=fagskolen-forhandsvarsel`)}><span class="material-symbols-outlined">add</span>Nytt forhåndsvarsel</button>
+      </div>
     {/if}
   </div>
 {/if}

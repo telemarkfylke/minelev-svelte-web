@@ -8,6 +8,7 @@ import vtfkSchoolsInfo from 'vtfk-schools-info'
 import { getLeaderAccess } from './leder-access'
 
 const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1', 'Spesialkonsulent', 'Adjunkt med tilleggsutdanning']
+const FAGSKOLEN_SKOLENUMMER = getSystemInfo().FAGSKOLEN_SKOLENUMMER
 
 /**
  * @typedef MiniSchool
@@ -94,6 +95,24 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
       }
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe ELLER basisgruppe
     }
+    // Fagskolen skal kun være tilgjengelig for fagskolen
+    if (docType.accessCondition === 'fagskolenUndervisningsgruppe') {
+      const docTypeSchools = []
+      for (const school of student.klasser.filter(klasse => klasse.skole.skolenummer === FAGSKOLEN_SKOLENUMMER && klasse.type === 'undervisningsgruppe').map(klasse => klasse.skole)) { // Fagskolen der læreren har eleven i en undervisningsgruppe
+        if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
+          docTypeSchools.push(school)
+        }
+      }
+      // Vi må la kontaktlærere få lov til dette også (selv om de ikke har eleven i en undervisningsgruppe), siden de er kontaklærere da
+      const kontaktlarerSchools = student.skoler.filter(skole => skole.skolenummer === FAGSKOLEN_SKOLENUMMER && skole.kontaktlarer) // Kun fagskolen der læreren er kontaktlærer for eleven
+      for (const school of kontaktlarerSchools) {
+        if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
+          docTypeSchools.push(school)
+        }
+      }
+      if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe
+    }
+
     if ((env.YFF_ENABLED && env.YFF_ENABLED === 'true') && docType.accessCondition === 'yffEnabled') {
       // Yff blir også validert på elev-nivå ved henting av elev, samt ved innsending og henting av yff-data, her blir det kun sjekket at skolen har YFF, og at env YFF er enabled
       // Sjekker hvilke skoler som har yff
@@ -185,6 +204,12 @@ export const getAvailableDocumentTypesForLeader = (student) => {
  */
 
 /**
+ * @typedef MainSchool
+ * @property {string} skolenummer
+ * @property {string} kortnavn
+ */
+
+/**
  * @typedef PersonData
  * @property {string} upn
  * @property {string} feidenavn
@@ -192,6 +217,9 @@ export const getAvailableDocumentTypesForLeader = (student) => {
  * @property {string} name
  * @property {string} firstName
  * @property {string} lastName
+ * @property {?MainSchool} mainSchool
+ * @property {string} mainSchool.skolenummer
+ * @property {string} mainSchool.kortnavn
  *
  */
 
@@ -253,7 +281,8 @@ export const getUserData = async (user) => {
       ansattnummer: teacher.ansattnummer,
       name: teacher.navn,
       firstName: teacher.fornavn,
-      lastName: teacher.etternavn
+      lastName: teacher.etternavn,
+      mainSchool: teacher.hovedskole
     }
 
     logger('info', [loggerPrefix, 'Got data from FINT - validating undervsiningsforhold description'])
