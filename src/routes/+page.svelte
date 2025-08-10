@@ -50,10 +50,22 @@
 <div class="infoBox">
     <h3 class="boxTitle">Om MinElev</h3>
     <div class="textBox">
-        Her kan lærere opprette notater.
+        Her kan lærere opprette notater{!data.systemInfo.ELEVSAMTALE_READONLY ? ' og elevsamtaler' : ''} på enkeltelever.
     </div>
     <div class="textBox">
-        Tilgang til elever og klasser i MinElev styres fra Visma InSchool. Ta kontakt med Visma InSchool-ansvarlig på skolen din, så hjelper de deg!
+        <br>
+        <strong>OBS!</strong><br>
+        Tenk gjennom følgende før du lager et notat:<br>
+        Notatet arkiveres i elevens elevmappe i fylkets sak- og arkivsystem. Hva er arkivverdig dokumentasjon på enkeltelever <a href="https://lovdata.no/forskrift/2017-12-19-2286/§7-28" target="_blank">(Riksarkivarens forskrift § 7-28 Opplæring og oppvekst)</a>?
+        <ul>
+            <li>Saker om rettigheter og plikter knyttet til innhold og organisering av opplæringen.</li>
+            <li>Saker om spesialpedagogisk støtte og spesialundervisning (individuell tilrettelagt opplæring), inkl. utredning, enkeltvedtak og individuell opplæringsplan med vurdering.</li>
+            <li>Saker om fysisk og psykososialt skolemiljø.</li>
+            <li>Skademelding.</li>
+        </ul>
+    </div>
+    <div class="textBox">
+        Tilgang til elever og klasser i MinElev styres fra InSchool (VIS). Ta kontakt med InSchool-ansvarlig på skolen din dersom du trenger hjelp med tilganger.
     </div>
     <br />
     {#if data.systemInfo.YFF_ENABLED}

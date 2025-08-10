@@ -54,7 +54,7 @@
 </script>
 
 <div class="actionBar">
-  {#if data.user.canCreateDocuments}
+  {#if data.user.canCreateDocuments && data.systemInfo.createDocumentAvailable}
     <a class="button" href="{$page.url.pathname}/nyttdokument"><span class="material-symbols-outlined">add</span>Nytt dokument</a>
   {/if}
   {#if accessTo.notat && data.user.canCreateDocuments}
@@ -269,6 +269,17 @@
   <div class="documentsBox">
     <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Notater</h3>
     <div class="boxContent">
+      <div>
+        <strong>OBS!</strong><br>
+        Tenk gjennom følgende før du lager et notat:<br>
+        Notatet arkiveres i elevens elevmappe i fylkets sak- og arkivsystem. Hva er arkivverdig dokumentasjon på enkeltelever <a href="https://lovdata.no/forskrift/2017-12-19-2286/§7-28" target="_blank">(Riksarkivarens forskrift § 7-28 Opplæring og oppvekst)</a>?
+        <ul>
+            <li>Saker om rettigheter og plikter knyttet til innhold og organisering av opplæringen.</li>
+            <li>Saker om spesialpedagogisk støtte og spesialundervisning (individuell tilrettelagt opplæring), inkl. utredning, enkeltvedtak og individuell opplæringsplan med vurdering.</li>
+            <li>Saker om fysisk og psykososialt skolemiljø.</li>
+            <li>Skademelding.</li>
+        </ul>
+      </div>
       {#if loadingDocuments}
         <LoadingSpinner width="1" />
       {:else}

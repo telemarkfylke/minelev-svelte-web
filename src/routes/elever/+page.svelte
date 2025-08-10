@@ -82,7 +82,9 @@
 						</button>
 						{#if studentMenus[student.elevnummer]}
 							<div class="studentMenu">
-								<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument`)}}>Nytt dokument</button>
+								{#if data.systemInfo.createDocumentAvailable}
+									<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument`)}}>Nytt dokument</button>
+								{/if}
 								<button class="blank studentMenuOption inward-focus-within" on:click={() => {goto(`/elever/${student.feidenavnPrefix}/nyttdokument?document_type=notat`)}}>Nytt notat</button>
 							</div>
 						{/if}
