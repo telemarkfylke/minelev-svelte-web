@@ -28,7 +28,7 @@ export const getSystemInfo = () => {
     NOTAT_READONLY: env.NOTAT_READONLY === 'true',
     YFF_READONLY: env.YFF_READONLY === 'true',
     FAGSKOLEN_ENABLED: env.FAGSKOLEN_ENABLED === 'true',
-    FAGSKOLEN_SKOLENUMMER: env.FAGSKOLEN_SKOLENUMMER || '70036', // Default to Fagskolen Vestfold og Telemark
+    FAGSKOLEN_SKOLENUMMER: env.FAGSKOLEN_SKOLENUMMER || '70036' // Default to Fagskolen Vestfold og Telemark
   }
   systemInfo.createDocumentAvailable = !systemInfo.VARSEL_READONLY || !systemInfo.ELEVSAMTALE_READONLY || (!systemInfo.YFF_READONLY && systemInfo.YFF_ENABLED)
   return systemInfo

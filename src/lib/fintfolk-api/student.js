@@ -3,6 +3,9 @@ import { env } from '$env/dynamic/private'
 import { getMsalToken } from '$lib/msal-token'
 import axios from 'axios'
 import { sleep } from '$lib/helpers/sleep'
+import { getSystemInfo } from '$lib/system-info.js'
+
+const systemInfo = getSystemInfo()
 
 const mockStudents = [
   {
@@ -683,6 +686,295 @@ const mockStudents = [
     ]
   }
 ]
+
+const mockFagskoleStudents = [
+  {
+    feidenavn: `leg0103@${env.FEIDENAVN_SUFFIX}`,
+    elevnummer: '10000004',
+    upn: `leg0103@skole.${env.FEIDENAVN_SUFFIX}`,
+    navn: 'Legolas Greenleaf',
+    fornavn: 'Legolas',
+    etternavn: 'Greenleaf',
+    fodselsnummer: '12345678920',
+    fodselsdato: '2005-07-09T00:00:00Z',
+    alder: 125,
+    kjonn: '1',
+    kontaktEpostadresse: 'legolas.greenleaf@gmail.com',
+    kontaktMobiltelefonnummer: '12345678',
+    privatEpostadresse: 'legolas.greenleaf@gmail.com',
+    privatMobiltelefonnummer: '12345678',
+    bostedsadresse: {
+      adresselinje: 'Tower of Sauron 6',
+      postnummer: '6666',
+      poststed: 'Mordor'
+    },
+    hybeladresse: {
+      adresselinje: null,
+      postnummer: null,
+      poststed: null
+    },
+    hovedskole: {
+      navn: 'Mordor fagskole',
+      skolenummer: systemInfo.FAGSKOLEN_SKOLENUMMER
+    },
+    kontaktlarere: [
+      {
+        feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
+        ansattnummer: '1111111',
+        navn: 'Sauron Hanson',
+        fornavn: 'Sauron',
+        etternavn: 'Hanson',
+        kontaktlarer: true,
+        gruppe: '2TMA',
+        skole: {
+          navn: 'Mordor videregående skole',
+          skolenummer: '12345',
+          hovedskole: true
+        }
+      }
+    ],
+    elevforhold: [
+      {
+        systemId: '9144826',
+        aktiv: true,
+        beskrivelse: null,
+        avbruddsdato: null,
+        gyldighetsperiode: {
+          start: '2022-08-17T00:00:00Z',
+          slutt: '2023-07-31T00:00:00Z',
+          aktiv: true
+        },
+        skole: {
+          navn: 'Mordor fagskole',
+          kortnavn: 'OF-FAGMRD',
+          skolenummer: systemInfo.FAGSKOLEN_SKOLENUMMER,
+          organisasjonsnummer: '12345678',
+          organisasjonsId: '87',
+          hovedskole: true
+        },
+        kategori: {
+          kode: '2',
+          navn: 'heltid'
+        },
+        programomrademedlemskap: [
+          {
+            medlemskapgyldighetsperiode: {
+              start: '2025-08-18T00:00:00Z',
+              slutt: '9999-12-31T00:00:00Z',
+              aktiv: false
+            },
+            aktiv: false,
+            navn: 'Habilitering og orkejakt (K)',
+            systemId: 'FHH31K',
+            grepreferanse: [],
+            utdanningsprogram: [
+              {
+                systemId: {
+                  identifikatorverdi: 'TF'
+                },
+                navn: 'Fagskolen',
+                grepreferanse: [
+                  'https://psi.udir.no/kl06/TF'
+                ]
+              }
+            ]
+          }
+        ],
+        basisgruppemedlemskap: [
+          {
+            medlemskapgyldighetsperiode: {
+              aktiv: true
+            },
+            navn: '2HAAN-P',
+            systemId: '1585892',
+            aktiv: true,
+            trinn: 'VG4',
+            skole: {
+              navn: 'Mordor fagskole',
+              skolenummer: systemInfo.FAGSKOLEN_SKOLENUMMER,
+              hovedskole: true
+            },
+            termin: [
+              {
+                kode: 'H2',
+                gyldighetsperiode: {
+                  start: '2026-01-10T00:00:00Z',
+                  slutt: '2026-07-31T00:00:00Z',
+                  aktiv: false
+                }
+              },
+              {
+                kode: 'H1',
+                gyldighetsperiode: {
+                  start: '2025-08-01T00:00:00Z',
+                  slutt: '2026-01-09T00:00:00Z',
+                  aktiv: true
+                }
+              }
+            ],
+            skolear: {
+              kode: '20252026',
+              gyldighetsperiode: {
+                start: '2025-08-01T00:00:00Z',
+                slutt: '2026-07-31T00:00:00Z',
+                aktiv: true
+              }
+            },
+            undervisningsforhold: [
+              {
+                feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
+                kontaktEpostadresse: 'sauron.hanson@telemarkfylke.no',
+                ansattnummer: '1111111',
+                navn: 'Sauron Hanson',
+                fornavn: 'Sauron',
+                etternavn: 'Hanson',
+                kontaktlarer: true
+              }
+            ]
+          }
+        ],
+        undervisningsgruppemedlemskap: [
+          {
+            medlemskapgyldighetsperiode: {
+              start: '2025-08-18T00:00:00Z',
+              slutt: '2026-07-31T00:00:00Z',
+              aktiv: false
+            },
+            navn: '2HAAN-P/36HH31C/1 Positiv orkejakt',
+            systemId: '13303105',
+            aktiv: false,
+            fag: [
+              {
+                systemId: {
+                  identifikatorverdi: '36HH31C'
+                },
+                navn: 'Positiv orkejakt',
+                grepreferanse: []
+              }
+            ],
+            skole: {
+              navn: 'Mordor fagskole',
+              skolenummer: systemInfo.FAGSKOLEN_SKOLENUMMER,
+              hovedskole: true
+            },
+            termin: [
+              {
+                kode: 'H1',
+                gyldighetsperiode: {
+                  start: '2025-08-01T00:00:00Z',
+                  slutt: '2026-01-09T00:00:00Z',
+                  aktiv: true
+                }
+              },
+              {
+                kode: 'H2',
+                gyldighetsperiode: {
+                  start: '2026-01-10T00:00:00Z',
+                  slutt: '2026-07-31T00:00:00Z',
+                  aktiv: false
+                }
+              }
+            ],
+            skolear: {
+              kode: '20252026',
+              gyldighetsperiode: {
+                start: '2025-08-01T00:00:00Z',
+                slutt: '2026-07-31T00:00:00Z',
+                aktiv: true
+              }
+            },
+            undervisningsforhold: [
+              {
+                feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
+                kontaktEpostadresse: 'sauron.hanson@telemarkfylke.no',
+                ansattnummer: '1111111',
+                navn: 'Sauron Hanson',
+                fornavn: 'Sauron',
+                etternavn: 'Hanson',
+                kontaktlarer: true
+              }
+            ]
+          }
+        ],
+        faggruppemedlemskap: [
+          {
+            medlemskapgyldighetsperiode: {
+              start: '2025-08-18T00:00:00Z',
+              slutt: '2026-07-31T00:00:00Z',
+              aktiv: false
+            },
+            aktiv: false,
+            navn: '2HAAN-P/36HH31C',
+            systemId: '341491',
+            fag: {
+              systemId: {
+                identifikatorverdi: '36HH31C'
+              },
+              navn: 'Positiv orkejakt',
+              grepreferanse: []
+            }
+          }
+        ],
+        kontaktlarergruppemedlemskap: [
+          {
+            medlemskapgyldighetsperiode: {
+              aktiv: true
+            },
+            navn: '2HAAN-P',
+            systemId: '1585892_550453',
+            aktiv: true,
+            skole: {
+              navn: 'Mordor fagskole',
+              skolenummer: systemInfo.FAGSKOLEN_SKOLENUMMER,
+              hovedskole: true
+            },
+            termin: [
+              {
+                kode: 'H1',
+                gyldighetsperiode: {
+                  start: '2025-08-01T00:00:00Z',
+                  slutt: '2026-01-09T00:00:00Z',
+                  aktiv: true
+                }
+              },
+              {
+                kode: 'H2',
+                gyldighetsperiode: {
+                  start: '2026-01-10T00:00:00Z',
+                  slutt: '2026-07-31T00:00:00Z',
+                  aktiv: false
+                }
+              }
+            ],
+            skolear: {
+              kode: '20252026',
+              gyldighetsperiode: {
+                start: '2025-08-01T00:00:00Z',
+                slutt: '2026-07-31T00:00:00Z',
+                aktiv: true
+              }
+            },
+            undervisningsforhold: [
+              {
+                feidenavn: `sauron@${env.FEIDENAVN_SUFFIX}`,
+                kontaktEpostadresse: 'sauron.hanson@telemarkfylke.no',
+                ansattnummer: '1111111',
+                navn: 'Sauron Hanson',
+                fornavn: 'Sauron',
+                etternavn: 'Hanson',
+                kontaktlarer: true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
+
+if (systemInfo.FAGSKOLEN_ENABLED) {
+  mockStudents.push(...mockFagskoleStudents)
+}
 
 /**
  *

@@ -5,6 +5,7 @@
   import VarselAtferd from "$lib/document-types/VarselAtferd.svelte";
   import VarselFag from "$lib/document-types/VarselFag.svelte";
   import VarselOrden from "$lib/document-types/VarselOrden.svelte";
+  import FagskolenForhandsvarsel from "$lib/document-types/FagskolenForhandsvarsel.svelte";
   import YffBekreftelse from "$lib/document-types/YFFBekreftelse.svelte";
   import YffLaereplan from "$lib/document-types/YFFLaereplan.svelte";
   import YffTilbakemelding from "$lib/document-types/YFFTilbakemelding.svelte";
@@ -99,6 +100,9 @@
   {/if}
   {#if documentTypeId === 'notat'}
     <Notat {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} />
+  {/if}
+  {#if documentTypeId === 'fagskolen-forhandsvarsel'}
+    <FagskolenForhandsvarsel {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} faggrupper={studentData.faggrupper} probableFaggrupper={studentData.probableFaggrupper} />
   {/if}
   {#if documentTypeId === 'yff-bekreftelse'}
     <YffBekreftelse {documentTypeId} {studentFeidenavnPrefix} {selectedSchoolNumber} {studentData} />

@@ -3,6 +3,9 @@ import { logger } from '@vtfk/logger'
 import { getUserData, repackMiniSchool } from './get-user-data'
 import { env } from '$env/dynamic/private'
 import { getGrepUtdanningsprogram } from './grep'
+import { getSystemInfo } from '$lib/system-info.js'
+
+const systemInfo = getSystemInfo()
 
 /**
  * @typedef Fag
@@ -127,6 +130,16 @@ export const getStudent = async (user, studentFeidenavn, includeSsn = false) => 
   // Henter alle faggrupper der det er en undervisningsgruppe som heter det samme som faggruppen eller har special match, resten må lærer utvide for å få se / velge. Frontend må passe på å vise alle som er valgt til en hver tid
   const probableFaggrupper = faggrupper.filter(faggruppe => {
     if (classes.some(group => group.navn === faggruppe.navn)) return true
+
+    // Fagskolen greier
+    if (systemInfo.FAGSKOLEN_ENABLED) {
+      console.warn('FAGSKOLEN_ENABLED is true, checking if faggruppe is from Fagskolen')
+      if (faggruppe.skole.skolenummer === systemInfo.FAGSKOLEN_SKOLENUMMER) {
+        console.warn('Faggruppe is from Fagskolen, checking if faggruppe name matches classes')
+        if (faggruppe.navn && faggruppe.navn.length > 5 && classes.some(group => group.navn.includes(faggruppe.navn))) return true
+      }
+    }
+
     const faggruppeNameList = faggruppe.navn.split('/')
     if (faggruppeNameList.length !== 3 && faggruppeNameList.length !== 2) return false // Antar faggruppe navn lik "{klasse}/{fagnavn}/{fagkode}" eller "{klasse}/{fagkode}"
     const faggruppeClassName = faggruppeNameList[0]

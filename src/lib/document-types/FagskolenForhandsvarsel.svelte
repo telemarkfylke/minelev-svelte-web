@@ -38,32 +38,32 @@
   let canClickSend = false
 
   // Content data
-  const varsel = {
+  const forhandsvarsel = {
     periodId: "",
     courseIds: [],
     reasonIds: []
   }
 
-  const resetVarsel = (schoolNumber) => {
-    varsel.courses = []
+  const resetForhandsvarsel = (schoolNumber) => {
+    forhandsvarsel.courses = []
   }
 
   // Reactive statements
-  $: resetVarsel(selectedSchoolNumber)
+  $: resetForhandsvarsel(selectedSchoolNumber)
 
-  $: canClickSend = Boolean(varsel.periodId && varsel.courseIds.length > 0 && varsel.reasonIds.length > 0)
+  $: canClickSend = Boolean(forhandsvarsel.periodId && forhandsvarsel.courseIds.length > 0 && forhandsvarsel.reasonIds.length > 0)
 
   let previewBase64
-  const sendVarsel = async (preview=false) => {
+  const sendForhandsvarsel = async (preview=false) => {
     errorMessage = ""
     try {
       //  documentTypeId, type, variant, schoolNumber, documentData, preview
       const payload = {
         documentTypeId,
-        type: 'varsel',
-        variant: 'fag',
+        type: 'fagskolen-forhandsvarsel',
+        variant: 'forhandsvarsel',
         schoolNumber: selectedSchoolNumber,
-        documentData: varsel,
+        documentData: forhandsvarsel,
         preview
       }
       const { data } = await axios.post(`/api/students/${studentFeidenavnPrefix}/newDocument`, payload)
@@ -102,7 +102,7 @@
       Velg periode
     </h4>
     {#each periods as period}
-      <input type="radio" id="period-{period.id}" bind:group={varsel.periodId} name="periodId" value="{period.id}" required />
+      <input type="radio" id="period-{period.id}" bind:group={forhandsvarsel.periodId} name="periodId" value="{period.id}" required />
       <label for="period-{period.id}">{period.value.nb}</label><br>
     {/each}
   </section>
@@ -110,7 +110,7 @@
 
 {#if isCompletedDocument}
   <section>
-    <h4>Fag</h4>
+    <h4>Emne</h4>
     {#each documentContent.classes as faggruppe}
       <input type="checkbox" id="{faggruppe.id}" name="courses" disabled checked />
       <label for="{faggruppe.id}">{faggruppe.nb} ({faggruppe.name})</label><br>
@@ -118,23 +118,23 @@
   </section>
 {:else}
   <section>
-    <h4>Hvilke fag gjelder varselet?</h4>
+    <h4>Hvilke emner gjelder varselet?</h4>
     {#each getProbableAndOtherChosenFaggrupper(selectedSchoolNumber) as faggruppe}
-      <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courseIds} name="courses" value="{faggruppe.systemId}" />
+      <input type="checkbox" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseIds} name="courses" value="{faggruppe.systemId}" />
       <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
     {/each}
     {#if displayAllFaggrupper}
       {#each getTheRestOfFaggrupper(selectedSchoolNumber) as faggruppe}
-        <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courseIds} name="courses" value="{faggruppe.systemId}" />
+        <input type="checkbox" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseIds} name="courses" value="{faggruppe.systemId}" />
         <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
       {/each}
-      <p><button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis færre fag</button></p>
+      <p><button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis færre emner</button></p>
     {:else}
-      {#each getChosenFromRestOfFaggrupper(selectedSchoolNumber, varsel.courseIds) as faggruppe}
-        <input type="checkbox" id="{faggruppe.systemId}" bind:group={varsel.courseIds} name="courses" value="{faggruppe.systemId}" />
+      {#each getChosenFromRestOfFaggrupper(selectedSchoolNumber, forhandsvarsel.courseIds) as faggruppe}
+        <input type="checkbox" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseIds} name="courses" value="{faggruppe.systemId}" />
         <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
       {/each}
-      <p>Ser du ikke faget du er ute etter?<button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis alle fag for eleven</button></p>
+      <p>Ser du ikke emnet du er ute etter?<button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis alle emner for eleven</button></p>
     {/if}
   </section>
 {/if}
@@ -151,7 +151,7 @@
   <section>
     <h4>Hva er årsaken til varselet</h4>
     {#each courseReasons as reason}
-      <input type="checkbox" id="reason-{reason.id}" bind:group={varsel.reasonIds} name="reasons" value="{reason.id}" />
+      <input type="checkbox" id="reason-{reason.id}" bind:group={forhandsvarsel.reasonIds} name="reasons" value="{reason.id}" />
       <label for="reason-{reason.id}">{reason.description.nb}</label><br>
     {/each}
   </section>
@@ -170,12 +170,12 @@
       {#if previewLoading}
         <button disabled><LoadingSpinner width={"1.5"} />Forhåndsvisning</button>
       {:else}
-        <button on:click={() => {sendVarsel(true); previewLoading=true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
+        <button on:click={() => {sendForhandsvarsel(true); previewLoading=true}}><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
       {/if}
       {#if sendLoading}
         <button disabled><LoadingSpinner width={"1.5"} />Send</button>
       {:else}
-        <button class="filled" on:click={() => {sendVarsel(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
+        <button class="filled" on:click={() => {sendForhandsvarsel(); sendLoading=true}}><span class="material-symbols-outlined">send</span>Send</button>
       {/if}
     {:else}
       <button disabled><span class="material-symbols-outlined">preview</span>Forhåndsvisning</button>
