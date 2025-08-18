@@ -901,9 +901,9 @@ const mockFagskoleStudents = [
             medlemskapgyldighetsperiode: {
               start: '2025-08-18T00:00:00Z',
               slutt: '2026-07-31T00:00:00Z',
-              aktiv: false
+              aktiv: true
             },
-            aktiv: false,
+            aktiv: true,
             navn: '2HAAN-P/36HH31C',
             systemId: '341491',
             fag: {
@@ -911,6 +911,40 @@ const mockFagskoleStudents = [
                 identifikatorverdi: '36HH31C'
               },
               navn: 'Positiv orkejakt',
+              grepreferanse: []
+            }
+          },
+          {
+            medlemskapgyldighetsperiode: {
+              start: '2025-08-18T00:00:00Z',
+              slutt: '2026-07-31T00:00:00Z',
+              aktiv: true
+            },
+            aktiv: true,
+            navn: '2HAAN-P/Trolldom',
+            systemId: '341492',
+            fag: {
+              systemId: {
+                identifikatorverdi: '3890890'
+              },
+              navn: 'Trolldom og magi',
+              grepreferanse: []
+            }
+          },
+          {
+            medlemskapgyldighetsperiode: {
+              start: '2025-08-18T00:00:00Z',
+              slutt: '2026-07-31T00:00:00Z',
+              aktiv: true
+            },
+            aktiv: true,
+            navn: '2HAAN-P/Hobbitkunst',
+            systemId: '341493',
+            fag: {
+              systemId: {
+                identifikatorverdi: '3890890'
+              },
+              navn: 'Hobbitkunst',
               grepreferanse: []
             }
           }
