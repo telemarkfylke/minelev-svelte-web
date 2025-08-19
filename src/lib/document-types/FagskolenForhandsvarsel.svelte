@@ -31,27 +31,29 @@
   const getTheRestOfFaggrupper = (schoolNumber) => {
     return otherFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber)
   }
-  const getChosenFromRestOfFaggrupper = (schoolNumber, courseIds) => {
-    return otherFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber && courseIds.includes(gruppe.systemId))
+  const getChosenFromRestOfFaggrupper = (schoolNumber, courseId) => {
+    return otherFaggrupper.filter(gruppe => gruppe.skole.skolenummer === selectedSchoolNumber && courseId === gruppe.systemId)
   }
 
   let canClickSend = false
 
   // Content data
   const forhandsvarsel = {
-    periodId: "",
-    courseIds: [],
-    reasonIds: []
+    courseId: "",
+    assignment: "",
+    contactWithinDays: 7
   }
 
   const resetForhandsvarsel = (schoolNumber) => {
-    forhandsvarsel.courses = []
+    forhandsvarsel.courseId = ""
+    forhandsvarsel.assignment = ""
+    forhandsvarsel.contactWithinDays = 7
   }
 
   // Reactive statements
   $: resetForhandsvarsel(selectedSchoolNumber)
 
-  $: canClickSend = Boolean(forhandsvarsel.periodId && forhandsvarsel.courseIds.length > 0 && forhandsvarsel.reasonIds.length > 0)
+  $: canClickSend = Boolean(forhandsvarsel.courseId && forhandsvarsel.assignment)
 
   let previewBase64
   const sendForhandsvarsel = async (preview=false) => {
@@ -60,7 +62,7 @@
       //  documentTypeId, type, variant, schoolNumber, documentData, preview
       const payload = {
         documentTypeId,
-        type: 'fagskolen-forhandsvarsel',
+        type: 'fagskolen',
         variant: 'forhandsvarsel',
         schoolNumber: selectedSchoolNumber,
         documentData: forhandsvarsel,
@@ -85,75 +87,61 @@
 </script>
 
 {#if showData}
-  <pre>{JSON.stringify(varsel, null, 2)}</pre>
-{/if}
-
-{#if isCompletedDocument}
-  <section>
-    <h4>
-      Periode
-    </h4>
-    <input type="radio" id="period" name="periodId" disabled checked />
-    <label for="period">{documentContent.period.nb}</label><br>
-  </section>
-{:else}
-  <section>
-    <h4>
-      Velg periode
-    </h4>
-    {#each periods as period}
-      <input type="radio" id="period-{period.id}" bind:group={forhandsvarsel.periodId} name="periodId" value="{period.id}" required />
-      <label for="period-{period.id}">{period.value.nb}</label><br>
-    {/each}
-  </section>
+  <pre>{JSON.stringify(forhandsvarsel, null, 2)}</pre>
 {/if}
 
 {#if isCompletedDocument}
   <section>
     <h4>Emne</h4>
-    {#each documentContent.classes as faggruppe}
-      <input type="checkbox" id="{faggruppe.id}" name="courses" disabled checked />
-      <label for="{faggruppe.id}">{faggruppe.nb} ({faggruppe.name})</label><br>
-    {/each}
+    <div>{documentContent.course.nb} ({documentContent.course.name})</div>
   </section>
 {:else}
   <section>
-    <h4>Hvilke emner gjelder varselet?</h4>
+    <h4>Hvilket emne gjelder varselet?</h4>
     {#each getProbableAndOtherChosenFaggrupper(selectedSchoolNumber) as faggruppe}
-      <input type="checkbox" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseIds} name="courses" value="{faggruppe.systemId}" />
+      <input type="radio" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseId} name="courses" value="{faggruppe.systemId}" />
       <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
     {/each}
     {#if displayAllFaggrupper}
       {#each getTheRestOfFaggrupper(selectedSchoolNumber) as faggruppe}
-        <input type="checkbox" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseIds} name="courses" value="{faggruppe.systemId}" />
+        <input type="radio" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseId} name="courses" value="{faggruppe.systemId}" />
         <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
       {/each}
       <p><button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis færre emner</button></p>
     {:else}
-      {#each getChosenFromRestOfFaggrupper(selectedSchoolNumber, forhandsvarsel.courseIds) as faggruppe}
-        <input type="checkbox" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseIds} name="courses" value="{faggruppe.systemId}" />
+      {#each getChosenFromRestOfFaggrupper(selectedSchoolNumber, forhandsvarsel.courseId) as faggruppe}
+        <input type="radio" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseId} name="courses" value="{faggruppe.systemId}" />
         <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
       {/each}
-      <p>Ser du ikke emnet du er ute etter?<button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis alle emner for eleven</button></p>
+      <p>Ser du ikke emnet du er ute etter?<button on:click={() => displayAllFaggrupper = !displayAllFaggrupper} class="link">Vis alle emner for studenten</button></p>
     {/if}
   </section>
 {/if}
 
 {#if isCompletedDocument}
   <section>
-    <h4>Årsaken til varselet</h4>
-    {#each documentContent.reasons as reason}
-      <input type="checkbox" id="reason-{reason.id}" name="reasons" disabled checked />
-      <label for="reason-{reason.id}">{reason.nb}</label><br>
-    {/each}
+    <h4>Arbeidskravets navn / beskrivelse</h4>
+    <div>{documentContent.assignment}</div>
   </section>
 {:else}
   <section>
-    <h4>Hva er årsaken til varselet</h4>
-    {#each courseReasons as reason}
-      <input type="checkbox" id="reason-{reason.id}" bind:group={forhandsvarsel.reasonIds} name="reasons" value="{reason.id}" />
-      <label for="reason-{reason.id}">{reason.description.nb}</label><br>
-    {/each}
+    <h4>Arbeidskravets navn / beskrivelse</h4>
+      <!--<label for="arbeidskrav">Arbeidskravets navn / beskrivelse</label>-->
+      <input id="arbeidskrav" type="text" bind:value={forhandsvarsel.assignment} placeholder="Eks: Arbeidskrav 1: Navn / beskrivelse" />
+  </section>
+{/if}
+
+{#if isCompletedDocument}
+  <section>
+    <h4>Frist for å ta kontakt (dager)</h4>
+    <div>{documentContent.contactWithinDays === 0 ? 'Ingen frist' : documentContent.contactWithinDays}</div>
+  </section>
+{:else}
+  <section>
+    <h4>Frist for å ta kontakt (dager)</h4>
+      <!--<label for="arbeidskrav">Arbeidskravets navn / beskrivelse</label>-->
+      <div class="subInfo" >Hvor mange dager har studenten på å ta kontakt med deg etter at varselet er sendt (for spørsmål eller veiledning)? Velg <strong>0</strong> for ingen frist.</div>
+      <input id="contactWithinDays" style="width: 60px;" type="number" bind:value={forhandsvarsel.contactWithinDays} placeholder="Eks: 5" />
   </section>
 {/if}
 
@@ -192,7 +180,17 @@
   .form-buttons {
     display: flex;
     gap: var(--spacing-small);
+  }  
+
+  .subInfo {
+    margin-bottom: var(--spacing-small);
   }
+
+  #arbeidskrav {
+    box-sizing: border-box;
+    width: 100%;
+  }
+
   section {
     /* background-color: var(--primary-color-20); */
     padding-bottom: 0.5rem;
