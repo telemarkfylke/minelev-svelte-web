@@ -58,6 +58,7 @@
   let previewBase64
   const sendForhandsvarsel = async (preview=false) => {
     errorMessage = ""
+    if (preview) showPreview = false
     try {
       //  documentTypeId, type, variant, schoolNumber, documentData, preview
       const payload = {
@@ -97,7 +98,7 @@
   </section>
 {:else}
   <section>
-    <h4>Hvilket emne gjelder varselet?</h4>
+    <h4>Hvilket emne gjelder forhåndsvarselet?</h4>
     {#each getProbableAndOtherChosenFaggrupper(selectedSchoolNumber) as faggruppe}
       <input type="radio" id="{faggruppe.systemId}" bind:group={forhandsvarsel.courseId} name="courses" value="{faggruppe.systemId}" />
       <label for="{faggruppe.systemId}">{faggruppe.fag.navn} ({faggruppe.navn})</label><br>
@@ -127,7 +128,7 @@
   <section>
     <h4>Arbeidskravets navn / beskrivelse</h4>
       <!--<label for="arbeidskrav">Arbeidskravets navn / beskrivelse</label>-->
-      <input id="arbeidskrav" type="text" bind:value={forhandsvarsel.assignment} placeholder="Eks: Arbeidskrav 1: Navn / beskrivelse" />
+      <input id="arbeidskrav" type="text" maxlength="200" bind:value={forhandsvarsel.assignment} placeholder="Eks: Arbeidskrav 1: Navn / beskrivelse" />
   </section>
 {/if}
 

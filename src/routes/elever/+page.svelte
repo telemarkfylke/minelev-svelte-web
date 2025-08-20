@@ -60,7 +60,9 @@
 		{#each students.slice(currentPage * studentsPerPage, (currentPage * studentsPerPage) + studentsPerPage) as student}
 			<div class=studentRow>
 				<div class="studentInfo">
-					{#if student.kontaktlarer}
+					{#if data.systemInfo.FAGSKOLEN_ENABLED && student.skoler.find(school => school.skolenummer === data.systemInfo.FAGSKOLEN_SKOLENUMMER)}
+						<div class="contactTeacher" title="Dette er en student ved Fagskolen"><strong>Student</strong></div>
+					{:else if student.kontaktlarer}
 						<div class="contactTeacher" title="Du er kontaktlærer for denne eleven"><strong>Kontaktlærer</strong></div>
 					{/if}
 					<div class="studentName">

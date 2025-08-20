@@ -37,10 +37,10 @@
         documents.varsel = data.filter(doc => doc.type === 'varsel')
         documents.elevsamtale = data.filter(doc => doc.type === 'samtale')
         documents.notat = data.filter(doc => doc.type === 'notat')
-        documents.fagskolenForhandsvarsel = data.filter(doc => doc.type === 'fagskolen-forhandsvarsel')
+        documents.fagskolenForhandsvarsel = data.filter(doc => doc.documentTypeId === 'fagskolen-forhandsvarsel')
       }
-        {
-          if (data.studentData.hasYff) {
+      {
+        if (data.studentData.hasYff) {
           const { data } = await axios.get(`/api/students/${$page.params.feidenavnPrefix}/yff/documents`)
           documents.yff = data
         }
@@ -248,7 +248,8 @@
                   <div class="mobileCreatedBy">Opprettet av: {document.created.createdBy.name}</div>
               </div>
               <div class="documentDetails">
-                  <div>{conversationStatuses.find(status => status.id === document.variant)?.value.nb}</div>
+                  <div>{document.content.assignment ? document.content.assignment.length > 36 ? `${document.content.assignment.substring(0, 36)}...` : document.content.assignment : 'Ingen beskrivelse'}</div>
+                  <div><strong>{document.content.course.nb}</strong></div>
                   <div class="createdBy">Opprettet av: {document.created.createdBy.name}</div>
               </div>
             </div>

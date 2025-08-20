@@ -222,6 +222,7 @@ export const documentTypes = [
       if (!(courseId && assignment)) throw new Error('Missing required argument(s) "courseId", "assignment" and/or "contactWithinDays"')
       if (typeof courseId !== 'string') throw new Error('parameter "courseId" must be string')
       if (typeof assignment !== 'string') throw new Error('parameter "assignment" must be string')
+      if (assignment.length > 200) throw new Error('parameter "assignment" must be less than 200 characters')
       if (typeof contactWithinDays !== 'number') throw new Error('parameter "contactWithinDays" must be number')
 
       const selectedCourse = student.faggrupper.find(gruppe => gruppe.systemId === courseId)
