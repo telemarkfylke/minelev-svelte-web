@@ -11,7 +11,6 @@ import { version } from '../../package.json'
  * @property {boolean} YFF_READONLY
  * @property {boolean} FAGSKOLEN_ENABLED
  * @property {string} FAGSKOLEN_SKOLENUMMER
- * @property {boolean} createDocumentAvailable
  *
  */
 
@@ -30,6 +29,5 @@ export const getSystemInfo = () => {
     FAGSKOLEN_ENABLED: env.FAGSKOLEN_ENABLED === 'true',
     FAGSKOLEN_SKOLENUMMER: env.FAGSKOLEN_SKOLENUMMER || '70036' // Default to Fagskolen Vestfold og Telemark
   }
-  systemInfo.createDocumentAvailable = !systemInfo.VARSEL_READONLY || !systemInfo.ELEVSAMTALE_READONLY || (!systemInfo.YFF_READONLY && systemInfo.YFF_ENABLED)
   return systemInfo
 }

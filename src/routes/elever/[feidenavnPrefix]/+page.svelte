@@ -54,10 +54,10 @@
 </script>
 
 <div class="actionBar">
-  {#if data.user.canCreateDocuments && data.systemInfo.createDocumentAvailable}
+  {#if data.user.canCreateDocuments && student.availableDocumentTypes.some(docType => docType.id !== 'notat' && !docType.readOnly)}
     <a class="button" href="{$page.url.pathname}/nyttdokument"><span class="material-symbols-outlined">add</span>Nytt dokument</a>
   {/if}
-  {#if accessTo.notat && data.user.canCreateDocuments}
+  {#if accessTo.notat && student.availableDocumentTypes.find(docType => docType.id === 'notat' && !docType.readOnly) && data.user.canCreateDocuments}
     <a class="button" href="{$page.url.pathname}/nyttdokument?document_type=notat"><span class="material-symbols-outlined">add</span>Nytt notat</a>
   {/if}
 </div>

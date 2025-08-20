@@ -8,7 +8,8 @@ import vtfkSchoolsInfo from 'vtfk-schools-info'
 import { getLeaderAccess } from './leder-access'
 
 const allowedUndervisningsforholdDescription = ['Adjunkt', 'Adjunkt m/till utd', 'Adjunkt 1', 'Lærer', 'Lærer-', 'Lektor', 'Lektor m/till utd', 'Lektor 1', 'Spesialkonsulent', 'Adjunkt med tilleggsutdanning', 'Lektor med tilleggsutdanning']
-const FAGSKOLEN_SKOLENUMMER = getSystemInfo().FAGSKOLEN_SKOLENUMMER
+const systemInfo = getSystemInfo()
+const FAGSKOLEN_SKOLENUMMER = systemInfo.FAGSKOLEN_SKOLENUMMER
 
 /**
  * @typedef MiniSchool
@@ -66,12 +67,12 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
   const availableDocumentTypes = []
   for (const docType of documentTypes) {
     if (docType.accessCondition === 'isContactTeacher') {
-      const docTypeSchools = student.skoler.filter(skole => skole.kontaktlarer) // Kun skoler der læreren er kontaktlærer for eleven
+      const docTypeSchools = student.skoler.filter(skole => skole.kontaktlarer && (!systemInfo.FAGSKOLEN_ENABLED || skole.skolenummer !== systemInfo.FAGSKOLEN_SKOLENUMMER)) // Kun skoler der læreren er kontaktlærer for eleven, dropp fagskolen
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools })
     }
     if (docType.accessCondition === 'hasUndervisningsgruppe') {
       const docTypeSchools = []
-      for (const school of student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe').map(klasse => klasse.skole)) { // Skoler der læreren har eleven i en undervisningsgruppe
+      for (const school of student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe' && (!systemInfo.FAGSKOLEN_ENABLED || klasse.skole.skolenummer !== systemInfo.FAGSKOLEN_SKOLENUMMER)).map(klasse => klasse.skole)) { // Skoler der læreren har eleven i en undervisningsgruppe, men ikke fagskolen
         if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
           docTypeSchools.push(school)
         }
@@ -88,7 +89,7 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
     // Notat skal være tilgjengelig for basisgrupper også
     if (docType.accessCondition === 'hasBasisgruppeOrUndervisningsgruppe') {
       const docTypeSchools = []
-      for (const school of student.klasser.filter(klasse => klasse.type === 'undervisningsgruppe' || klasse.type === 'basisgruppe').map(klasse => klasse.skole)) { // Skoler der læreren har eleven i en undervisningsgruppe ELLER basisgruppe
+      for (const school of student.klasser.filter(klasse => (klasse.type === 'undervisningsgruppe' || klasse.type === 'basisgruppe') && (klasse.skole.skolenummer !== systemInfo.FAGSKOLEN_SKOLENUMMER)).map(klasse => klasse.skole)) { // Skoler der læreren har eleven i en undervisningsgruppe ELLER basisgruppe
         if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
           docTypeSchools.push(school)
         }
@@ -96,7 +97,7 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun skoler der læreren har eleven i en undervisningsgruppe ELLER basisgruppe
     }
     // Fagskolen skal kun være tilgjengelig for fagskolen
-    if (docType.accessCondition === 'fagskolenUndervisningsgruppe') {
+    if (systemInfo.FAGSKOLEN_ENABLED && docType.accessCondition === 'fagskolenUndervisningsgruppe') {
       const docTypeSchools = []
       for (const school of student.klasser.filter(klasse => klasse.skole.skolenummer === FAGSKOLEN_SKOLENUMMER && klasse.type === 'undervisningsgruppe').map(klasse => klasse.skole)) { // Fagskolen der læreren har eleven i en undervisningsgruppe
         if (!docTypeSchools.some(docTypeSchool => docTypeSchool.skolenummer === school.skolenummer)) { // Trenger bare skolen en gang
@@ -132,7 +133,16 @@ export const getAvailableDocumentTypesForTeacher = (student) => {
       if (docTypeSchools.length > 0) availableDocumentTypes.push({ id: docType.id, title: docType.title, isEncrypted: docType.isEncrypted || false, schools: docTypeSchools }) // Kun hvis YFF er enabled, og hvis skolen har skrudd på yff i vtfk-schools-info
     }
   }
-  return availableDocumentTypes
+  // Arrgh, expand here i am lazy
+  const availableDocumentTypesWithReadOnly = availableDocumentTypes.map(docType => {
+    let readOnly = false
+    if (['varsel-fag', 'varsel-orden', 'varsel-atferd'].includes(docType.id) && systemInfo.VARSEL_READONLY) readOnly = true
+    if (docType.id === 'notat' && systemInfo.NOTAT_READONLY) readOnly = true
+    if (docType.id === 'samtale' && systemInfo.ELEVSAMTALE_READONLY) readOnly = true
+    if (docType.id.startsWith('yff-') && systemInfo.YFF_READONLY) readOnly = true
+    return { ...docType, readOnly }
+  })
+  return availableDocumentTypesWithReadOnly
 }
 
 // Tar inn en elev en leder har tilgang på ved en skole - returnerer en liste over alle dokumenttype for skolen inntil videre
@@ -305,8 +315,9 @@ export const getUserData = async (user) => {
         }
       }
     }
-    logger('info', [loggerPrefix, `Validated undervsiningsforhold description - ${validUndervisningsforhold.length} valid undervisningsforhold`])
+    logger('info', [loggerPrefix, `Validated undervisningsforhold description - ${validUndervisningsforhold.length} valid undervisningsforhold`])
 
+    /** @type {TeacherStudent[]} */
     let students = []
     const classes = []
     for (const undervisningsforhold of validUndervisningsforhold) {
@@ -344,6 +355,11 @@ export const getUserData = async (user) => {
     if (studentsWithoutFeidenavn.length > 0) {
       logger('warn', [loggerPrefix, `Found ${studentsWithoutFeidenavn.length} students without feidenavn, filtering them away... Elevnummers: ${studentsWithoutFeidenavn.map(stud => stud.elevnummer).join(', ')}`])
       students = students.filter(stud => stud.feidenavn)
+    }
+
+    // Filtrer vekk studenter fra fagskolen dersom ikke FAGSKOLEN_ENABLED er true, og de ikke har noen annen skole enn fagskolen
+    if (!systemInfo.FAGSKOLEN_ENABLED) {
+      students = students.filter(stud => stud.klasser.some(klasse => klasse.skole.skolenummer !== systemInfo.FAGSKOLEN_SKOLENUMMER))
     }
 
     logger('info', [loggerPrefix, `Done repacking fint data - found ${students.length} students available for user. Adding feidenavnPrefix and availableDocumentTypes for all students. And sorting students alphabetically`])
