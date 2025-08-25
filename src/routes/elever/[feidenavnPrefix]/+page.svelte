@@ -233,7 +233,7 @@
 {/if}
 {#if accessTo.fagskolenForhandsvarsel}
   <div class="documentsBox">
-    <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Forhåndsvarsler</h3>
+    <h3 class="boxTitle"><span class="material-symbols-outlined">list</span>Forhåndsvarsler - Arbeidskrav</h3>
     <div class="boxContent">
       {#if loadingDocuments}
         <LoadingSpinner width="1" />
@@ -255,7 +255,7 @@
             </div>
           {/each}
         {:else}
-          Eleven har ingen tilgjengelige forhåndsvarsler
+          Studenten har ingen tilgjengelige forhåndsvarsler
         {/if}
       {/if}
     </div>

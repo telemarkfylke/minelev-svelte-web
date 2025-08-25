@@ -16,6 +16,9 @@
     let getStats = false
     let getGroupStats = false
 
+    const onlyFagskolenTeacher = data.systemInfo.FAGSKOLEN_ENABLED && data.students.every(stud => stud.skoler.every(school => school.skolenummer === data.systemInfo.FAGSKOLEN_SKOLENUMMER))
+    const isFagskolenTeacher = data.systemInfo.FAGSKOLEN_ENABLED && data.students.some(stud => stud.skoler.some(school => school.skolenummer === data.systemInfo.FAGSKOLEN_SKOLENUMMER))
+
     onMount(async () => {
         try {
             const documentResult = await axios.get(`/api/latestactivity`);
@@ -48,61 +51,73 @@
 
 <h2>Hei, {data.user.name}</h2>
 <div class="infoBox">
-    <h3 class="boxTitle">Om MinElev</h3>
-    <div class="textBox">
-        Her kan lærere opprette notater{!data.systemInfo.ELEVSAMTALE_READONLY ? ' og elevsamtaler' : ''} på enkeltelever.
-    </div>
-    <div class="textBox">
-        <br>
-        <strong>OBS!</strong><br>
-        Tenk gjennom følgende før du lager et notat:<br>
-        Notatet arkiveres i elevens elevmappe i fylkets sak- og arkivsystem. Hva er arkivverdig dokumentasjon på enkeltelever <a href="https://lovdata.no/forskrift/2017-12-19-2286/§7-28" target="_blank">(Riksarkivarens forskrift § 7-28 Opplæring og oppvekst)</a>?
-        <ul>
-            <li>Saker om rettigheter og plikter knyttet til innhold og organisering av opplæringen.</li>
-            <li>Saker om spesialpedagogisk støtte og spesialundervisning (individuell tilrettelagt opplæring), inkl. utredning, enkeltvedtak og individuell opplæringsplan med vurdering.</li>
-            <li>Saker om fysisk og psykososialt skolemiljø.</li>
-            <li>Skademelding.</li>
-        </ul>
-    </div>
-    <div class="textBox">
-        Tilgang til elever og klasser i MinElev styres fra InSchool (VIS). Ta kontakt med InSchool-ansvarlig på skolen din dersom du trenger hjelp med tilganger.
-    </div>
-    <br />
-    {#if data.systemInfo.YFF_ENABLED}
-        <h3 class="boxTitle">Om YFF-modulen</h3>
-        <div class=textBox>
-            YFF-modulen er nå klar. Dersom du har elever som går et yrkesfaglig utdanningsprogram, kan du nå opprette bekreftelse på utplassering, lokal læreplan, og tilbakemelding på utplassering. Gå inn på en elev for å opprette YFF-dokumenter.
-        </div>
-    {/if}
-    {#if /*data.systemInfo.ELEVSAMTALE_READONLY || */data.systemInfo.NOTAT_READONLY/* || data.systemInfo.VARSEL_READONLY*/ || data.systemInfo.YFF_READONLY}
-        <h3 class="boxTitle">⚠️ OBS!</h3>
+    <!-- Hvis Fagskolen er enabled og kun lærer på fagskolen viser vi ikke vanlig info -->
+    {#if !onlyFagskolenTeacher}
+        <h3 class="boxTitle">Om MinElev</h3>
         <div class="textBox">
-            <!--
-            {#if data.systemInfo.VARSEL_READONLY}
-                MinElev skal ikke lenger benyttes til å sende varsel. Du har fremdeles tilgang til MinElev for å se varsler som er sendt fra MinElev. Varselbrev sendes nå fra Visma InSchool. Sett deg inn i denne veiledningen:
-                <a href="https://inschool.zendesk.com/hc/no/articles/360030859132-4b-22-Opprette-og-sende-varsel" target="_blank">4b.22 - Opprette og sende varsel - Visma InSchool (zendesk.com)</a>
-                <br>
-                <br>
-            {/if}
-            {#if data.systemInfo.ELEVSAMTALE_READONLY}
-                VIS skal benyttes for elev- og fagsamtaler. Se hvordan du gjør det:
-                <a href="https://inschool.zendesk.com/hc/no/articles/13156950686610-4b-21B-Halv%C3%A5rsvurderinger-uten-karakter-i-orden-og-atferd-elevsamtaler" target="_blank">4b.21B - Halvårsvurderinger uten karakter i orden og atferd (elevsamtaler) - Visma InSchool</a>
-                <br>
-                <br>
-            {/if}
-            -->
-            {#if data.systemInfo.NOTAT_READONLY}
-                VIS skal benyttes for notater. Se hvordan du gjør det:
-                <a href="/" target="_blank">Husk å legge inn riktig lenke</a>
-                <br>
-                <br>
-            {/if}
-            {#if data.systemInfo.YFF_READONLY}
-                VIS skal benyttes for yrkesfaglig fordypning. Se hvordan du gjør det:
-                <a href="/" target="_blank">Husk å legge inn riktig lenke</a>
-                <br>
-                <br>
-            {/if}
+            Her kan lærere opprette notater{!data.systemInfo.ELEVSAMTALE_READONLY ? ' og elevsamtaler' : ''} på enkeltelever.
+        </div>
+        <div class="textBox">
+            <br>
+            <strong>OBS!</strong><br>
+            Tenk gjennom følgende før du lager et notat:<br>
+            Notatet arkiveres i elevens elevmappe i fylkets sak- og arkivsystem. Hva er arkivverdig dokumentasjon på enkeltelever <a href="https://lovdata.no/forskrift/2017-12-19-2286/§7-28" target="_blank">(Riksarkivarens forskrift § 7-28 Opplæring og oppvekst)</a>?
+            <ul>
+                <li>Saker om rettigheter og plikter knyttet til innhold og organisering av opplæringen.</li>
+                <li>Saker om spesialpedagogisk støtte og spesialundervisning (individuell tilrettelagt opplæring), inkl. utredning, enkeltvedtak og individuell opplæringsplan med vurdering.</li>
+                <li>Saker om fysisk og psykososialt skolemiljø.</li>
+                <li>Skademelding.</li>
+            </ul>
+        </div>
+        <div class="textBox">
+            Tilgang til elever og klasser i MinElev styres fra InSchool (VIS). Ta kontakt med InSchool-ansvarlig på skolen din dersom du trenger hjelp med tilganger.
+        </div>
+        <br />
+        {#if data.systemInfo.YFF_ENABLED}
+            <h3 class="boxTitle">Om YFF-modulen</h3>
+            <div class=textBox>
+                YFF-modulen er nå klar. Dersom du har elever som går et yrkesfaglig utdanningsprogram, kan du nå opprette bekreftelse på utplassering, lokal læreplan, og tilbakemelding på utplassering. Gå inn på en elev for å opprette YFF-dokumenter.
+            </div>
+        {/if}
+        {#if /*data.systemInfo.ELEVSAMTALE_READONLY || */data.systemInfo.NOTAT_READONLY/* || data.systemInfo.VARSEL_READONLY*/ || data.systemInfo.YFF_READONLY}
+            <h3 class="boxTitle">⚠️ OBS!</h3>
+            <div class="textBox">
+                <!--
+                {#if data.systemInfo.VARSEL_READONLY}
+                    MinElev skal ikke lenger benyttes til å sende varsel. Du har fremdeles tilgang til MinElev for å se varsler som er sendt fra MinElev. Varselbrev sendes nå fra Visma InSchool. Sett deg inn i denne veiledningen:
+                    <a href="https://inschool.zendesk.com/hc/no/articles/360030859132-4b-22-Opprette-og-sende-varsel" target="_blank">4b.22 - Opprette og sende varsel - Visma InSchool (zendesk.com)</a>
+                    <br>
+                    <br>
+                {/if}
+                {#if data.systemInfo.ELEVSAMTALE_READONLY}
+                    VIS skal benyttes for elev- og fagsamtaler. Se hvordan du gjør det:
+                    <a href="https://inschool.zendesk.com/hc/no/articles/13156950686610-4b-21B-Halv%C3%A5rsvurderinger-uten-karakter-i-orden-og-atferd-elevsamtaler" target="_blank">4b.21B - Halvårsvurderinger uten karakter i orden og atferd (elevsamtaler) - Visma InSchool</a>
+                    <br>
+                    <br>
+                {/if}
+                -->
+                {#if data.systemInfo.NOTAT_READONLY}
+                    VIS skal benyttes for notater. Se hvordan du gjør det:
+                    <a href="/" target="_blank">Husk å legge inn riktig lenke</a>
+                    <br>
+                    <br>
+                {/if}
+                {#if data.systemInfo.YFF_READONLY}
+                    VIS skal benyttes for yrkesfaglig fordypning. Se hvordan du gjør det:
+                    <a href="/" target="_blank">Husk å legge inn riktig lenke</a>
+                    <br>
+                    <br>
+                {/if}
+            </div>
+        {/if}
+    {/if}
+    {#if isFagskolenTeacher}
+        <h3>Om MinElev (Fagskolen)</h3>
+        <div class="textBox">
+            Tilgang til studenter og undervisningsgrupper/klasser i MinElev styres fra InSchool (VIS). Ta kontakt med InSchool-ansvarlig på fagskolen dersom du trenger hjelp med tilganger.
+        </div>
+        <div class="textBox">
+            Undervisere ved fagskolen kan opprette forhåndsvarsler på ikke godkjent arbeidskrav for studenter de underviser. For å opprette et forhåndsvarsel, gå inn på en student og velg "Nytt dokument" og deretter "Forhåndsvarsel - arbeidskrav".
         </div>
     {/if}
 </div>
