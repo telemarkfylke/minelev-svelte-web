@@ -14,7 +14,9 @@
       <span class="material-symbols-outlined">school</span>
     </div>
     <div class="studentInfo">
-      {#if student.kontaktlarer}
+      {#if data.systemInfo.FAGSKOLEN_ENABLED && student.skoler.find(school => school.skolenummer === data.systemInfo.FAGSKOLEN_SKOLENUMMER)}
+        <div title="Dette er en student ved fagskolen" class="studentId"><strong>Student</strong></div>
+      {:else if student.kontaktlarer}
         <div title="Du er kontaktlærer for denne eleven" class="studentId"><strong>Kontaktlærer</strong></div>
       {/if}
       <h1 class="studentTitle"><a title="Til elevsiden" href="/elever/{$page.params.feidenavnPrefix}">{student.navn}</a></h1>

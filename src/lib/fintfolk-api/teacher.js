@@ -3,6 +3,9 @@ import { env } from '$env/dynamic/private'
 import { getMsalToken } from '$lib/msal-token'
 import axios from 'axios'
 import { sleep } from '$lib/helpers/sleep'
+import { getSystemInfo } from '$lib/system-info.js'
+
+const systemInfo = getSystemInfo()
 
 const mockTeacher = {
   feidenavn: `larer.laresen@${env.FEIDENAVN_SUFFIX}`,
@@ -29,7 +32,7 @@ const mockTeacher = {
   azureOfficeLocation: 'Mordor vgs',
   hovedskole: {
     navn: 'Mordor videregående skole',
-    skolenummer: '12345'
+    skolenummer: env.FAGSKOLEN_ENABLED ? systemInfo.FAGSKOLEN_SKOLENUMMER : '12345' // Default to Fagskolen if enabled, else Mordor vgs
   },
   undervisningsforhold: [
     {
@@ -569,6 +572,109 @@ const mockTeacher = {
     }
   ]
 }
+
+const mockFagskoleUndervisiningsforhold = {
+  systemId: '26017341--1--20230520',
+  beskrivelse: 'Lærer',
+  aktiv: true,
+  arbeidsforhold: {
+    arbeidsforholdstype: {
+      kode: 'ML',
+      navn: 'Midl. oppl.l.§10-6'
+    },
+    gyldighetsperiode: {
+      start: '2025-08-01T12:00:00Z',
+      slutt: '2026-07-31T12:00:00Z',
+      aktiv: true
+    },
+    arbeidsforholdsperiode: {
+      start: '2024-08-01T12:00:00Z',
+      slutt: '2026-07-31T12:00:00Z',
+      aktiv: true
+    },
+    ansettelsesprosent: 0,
+    lonnsprosent: 1000
+  },
+  skole: {
+    navn: 'Mordor fagskolen',
+    kortnavn: null,
+    skolenummer: systemInfo.FAGSKOLEN_SKOLENUMMER,
+    organisasjonsnummer: '874568112',
+    organisasjonsId: 'O-39006-160',
+    hovedskole: true
+  },
+  basisgrupper: [],
+  kontaktlarergrupper: [],
+  undervisningsgrupper: [
+    {
+      navn: '2HAAN-P/36HH31C/1 Positiv orkejakt',
+      systemId: '1234569999',
+      aktiv: true,
+      fag: [
+        {
+          systemId: {
+            identifikatorverdi: '36HH31C'
+          },
+          navn: 'Positiv orkejakt',
+          grepreferanse: []
+        }
+      ],
+      skole: {
+        navn: 'Mordor fagskolen',
+        skolenummer: systemInfo.FAGSKOLEN_SKOLENUMMER,
+        hovedskole: true
+      },
+      termin: [
+        {
+          kode: 'H2',
+          gyldighetsperiode: {
+            start: '2026-01-10T00:00:00Z',
+            slutt: '2026-07-31T00:00:00Z',
+            aktiv: false
+          }
+        },
+        {
+          kode: 'H1',
+          gyldighetsperiode: {
+            start: '2025-08-01T00:00:00Z',
+            slutt: '2026-01-09T00:00:00Z',
+            aktiv: true
+          }
+        }
+      ],
+      skolear: {
+        kode: '20252026',
+        gyldighetsperiode: {
+          start: '2025-08-01T00:00:00Z',
+          slutt: '2026-07-31T00:00:00Z',
+          aktiv: true
+        }
+      },
+      elever: [
+        {
+          navn: 'Legolas Greenleaf',
+          fornavn: 'Legolas',
+          etternavn: 'Greenleaf',
+          feidenavn: `leg0103@${env.FEIDENAVN_SUFFIX}`,
+          elevnummer: '10000004',
+          kontaktlarer: false
+        }
+        /*
+        {
+          navn: 'Gimli Glóinsson',
+          fornavn: 'Gimli',
+          etternavn: 'Glóinsson',
+          feidenavn: `gim1304@${env.FEIDENAVN_SUFFIX}`,
+          elevnummer: '10000005',
+          kontaktlarer: false
+        }
+        */
+      ]
+    }
+  ]
+}
+
+if (systemInfo.FAGSKOLEN_ENABLED) mockTeacher.undervisningsforhold.push(mockFagskoleUndervisiningsforhold)
 
 /*
 function makeid (length) {
