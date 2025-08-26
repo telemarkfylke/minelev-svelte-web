@@ -240,7 +240,7 @@ export const getAvailableDocumentTypesForLeader = (student) => {
  * @property {string} systemId
  * @property {string[]} fag
  * @property {string} skole school full name
- *
+ * @property {string} skolenummer school number
  */
 
 /**
@@ -322,7 +322,7 @@ export const getUserData = async (user) => {
     const classes = []
     for (const undervisningsforhold of validUndervisningsforhold) {
       for (const basisgruppe of undervisningsforhold.basisgrupper.filter(gruppe => gruppe.aktiv)) {
-        classes.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, fag: ['Basisgruppe'], skole: basisgruppe.skole.navn })
+        classes.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, fag: ['Basisgruppe'], skole: basisgruppe.skole.navn, skolenummer: basisgruppe.skole.skolenummer })
         for (const elev of basisgruppe.elever) {
           // I tilfelle eleven er med i flere basisgrupper
           const existingStudent = students.find(student => student.elevnummer === elev.elevnummer)
@@ -336,7 +336,7 @@ export const getUserData = async (user) => {
       }
       for (const undervisningsgruppe of undervisningsforhold.undervisningsgrupper.filter(gruppe => gruppe.aktiv)) {
         // Note to self - læreren kan ha flere undervisningsforhold med de samme undervisningsgruppene.. Lollert, lar det være inntil videre
-        classes.push({ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, fag: undervisningsgruppe.fag.map(f => f.navn), skole: undervisningsgruppe.skole.navn })
+        classes.push({ navn: undervisningsgruppe.navn, type: 'undervisningsgruppe', systemId: undervisningsgruppe.systemId, fag: undervisningsgruppe.fag.map(f => f.navn), skole: undervisningsgruppe.skole.navn, skolenummer: undervisningsgruppe.skole.skolenummer })
         for (const elev of undervisningsgruppe.elever) {
           // I tilfelle eleven er med i flere basisgrupper
           const existingStudent = students.find(student => student.elevnummer === elev.elevnummer)
@@ -424,7 +424,7 @@ export const getUserData = async (user) => {
       }
       // Dytt inn alle elever fra basisgruppene (og basisgruppene på eleven)
       for (const basisgruppe of school.basisgrupper.filter(gruppe => gruppe.aktiv)) {
-        classes.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, fag: ['Basisgruppe'], skole: miniSchool.navn })
+        classes.push({ navn: basisgruppe.navn, type: 'basisgruppe', systemId: basisgruppe.systemId, fag: ['Basisgruppe'], skole: miniSchool.navn, skolenummer: miniSchool.skolenummer })
         for (const elev of basisgruppe.elever) {
           // Vi bør ha eleven allerede, men sjekker for sikkerhets skyld
           const existingStudent = students.find(student => student.elevnummer === elev.elevnummer)

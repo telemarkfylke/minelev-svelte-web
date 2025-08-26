@@ -16,7 +16,7 @@
     let getStats = false
     let getGroupStats = false
 
-    const onlyFagskolenTeacher = data.systemInfo.FAGSKOLEN_ENABLED && data.students.every(stud => stud.skoler.every(school => school.skolenummer === data.systemInfo.FAGSKOLEN_SKOLENUMMER))
+    const onlyFagskolenTeacher = data.systemInfo.FAGSKOLEN_ENABLED && data.students.length > 0 && data.students.every(stud => stud.skoler.every(school => school.skolenummer === data.systemInfo.FAGSKOLEN_SKOLENUMMER))
     const isFagskolenTeacher = data.systemInfo.FAGSKOLEN_ENABLED && data.students.some(stud => stud.skoler.some(school => school.skolenummer === data.systemInfo.FAGSKOLEN_SKOLENUMMER))
 
     onMount(async () => {
