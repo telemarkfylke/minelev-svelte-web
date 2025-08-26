@@ -13,6 +13,8 @@
 
   let currentClass = data.classes.find(group => group.systemId === $page.params.klasseid)
 
+	const studentTitle = data.systemInfo.FAGSKOLEN_ENABLED && currentClass.skolenummer === data.systemInfo.FAGSKOLEN_SKOLENUMMER ? 'Studenter' : 'Elever'
+
 	let studentsPerPage = 10
 	let currentPage = 0 // zero-indexed
 	let students = data.students.filter(student => student.klasser.some(group => group.systemId === currentClass.systemId))
@@ -68,7 +70,7 @@
 	})
 </script>
 
-<h1>Elever i klassen</h1>
+<h1>{studentTitle} i klassen</h1>
 <div class="icon-input" style="width: 16rem;">
 	<span class="material-symbols-outlined">search</span>
 	<input type="text" bind:value={searchValue} on:input={() => { search(searchValue) }} placeholder="Søk etter elev eller klasse" />
@@ -76,10 +78,10 @@
 <div class="studentList">
 	{#if originalStudents.length === 0}
 		<br />
-		Fant ingen elever i klassen 🤷‍♂️
+		Fant ingen {studentTitle.toLowerCase()} i klassen 🤷‍♂️
 	{:else if students.length === 0}
 		<br />	
-		Fant ingen elever i klassen med søket 🤷‍♂️
+		Fant ingen {studentTitle.toLowerCase()} i klassen med søket 🤷‍♂️
 	{:else}
 	<div class="studentRow header">
 		<div class="studentInfo">Navn</div>

@@ -16,7 +16,7 @@ export const getCurrentSchoolYear = (delimiter = '/') => {
   return getSchoolYearFromDate(new Date(), delimiter)
 }
 
-// accessConditions: 'hasUndervisningsgruppe', 'isContactTeacher', 'yff'
+// accessConditions: 'hasUndervisningsgruppe', 'isContactTeacher', 'yff', 'fagskolenUndervisningsgruppe'
 
 export const documentTypes = [
   {
@@ -196,6 +196,52 @@ export const documentTypes = [
       if (!student) throw new Error('Missing required argumnet "student"')
       return {
         year: getCurrentSchoolYear()
+      }
+    }
+  },
+  {
+    id: 'fagskolen-forhandsvarsel',
+    title: 'Forhåndsvarsel arbeidskrav',
+    type: 'fagskolen',
+    accessCondition: 'fagskolenUndervisningsgruppe',
+    matchContent: { // What should be the result of generateContent()
+      course: {
+        id: '12345',
+        name: 'Orkejakt 1',
+        schoolId: '67890',
+        nb: 'Orkejakt 1',
+        nn: 'Orkejakt 1',
+        en: 'Orkejakt 1'
+      },
+      assignment: 'Arbeidskrav 1: Orkejakt i Innlandet',
+      contactWithinDays: 7
+    },
+    generateContent: (student, content) => {
+      if (!student) throw new Error('Missing required argumnet "student"')
+      const { courseId, assignment, contactWithinDays } = content
+      if (!(courseId && assignment)) throw new Error('Missing required argument(s) "courseId", "assignment" and/or "contactWithinDays"')
+      if (typeof courseId !== 'string') throw new Error('parameter "courseId" must be string')
+      if (typeof assignment !== 'string') throw new Error('parameter "assignment" must be string')
+      if (assignment.length > 200) throw new Error('parameter "assignment" must be less than 200 characters')
+      if (typeof contactWithinDays !== 'number') throw new Error('parameter "contactWithinDays" must be number')
+
+      const selectedCourse = student.faggrupper.find(gruppe => gruppe.systemId === courseId)
+      if (!selectedCourse) throw error(400, `Could not find course for student with systemId: "${courseId}"`)
+      const { systemId, navn, fag } = selectedCourse
+      if (!(systemId && navn && fag.navn)) throw error(500, `Missing either systemId, name, or course.name for course with id: "${courseId}"`)
+      const course = {
+        id: systemId,
+        name: navn,
+        schoolId: selectedCourse.skole.skolenummer,
+        nb: fag.navn,
+        nn: fag.navn,
+        en: fag.navn
+      }
+
+      return {
+        course,
+        assignment,
+        contactWithinDays
       }
     }
   },

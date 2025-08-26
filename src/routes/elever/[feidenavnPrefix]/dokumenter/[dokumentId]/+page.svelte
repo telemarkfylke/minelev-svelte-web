@@ -9,6 +9,7 @@
     import YffBekreftelse from "$lib/document-types/YFFBekreftelse.svelte";
     import YffLaereplan from "$lib/document-types/YFFLaereplan.svelte";
     import YffTilbakemelding from "$lib/document-types/YFFTilbakemelding.svelte";
+    import FagskolenForhandsvarsel from "$lib/document-types/FagskolenForhandsvarsel.svelte";
     import { prettyPrintDate } from "$lib/helpers/pretty-date";
     /** @type {import('./$types').PageData} */
     export let data
@@ -38,6 +39,9 @@
 {/if}
 {#if document.documentTypeId === 'notat'}
     <Notat isCompletedDocument={true} {studentFeidenavnPrefix} />
+{/if}
+{#if document.documentTypeId === 'fagskolen-forhandsvarsel'}
+    <FagskolenForhandsvarsel isCompletedDocument={true} documentContent={document.content} {studentFeidenavnPrefix} />
 {/if}
 {#if document.documentTypeId === 'yff-bekreftelse'}
     <YffBekreftelse isCompletedDocument={true} documentContent={document.content} {studentFeidenavnPrefix} />

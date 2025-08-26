@@ -87,10 +87,19 @@ Om du trenger å legge til en dokumenttype - legg inn her [./src/lib/document-ty
   - matchContent property (hva slags data kreves for at dokumentet har alt den trenger / er "ferdig")
   - generateContent funksjon, tar inn student, og content. Content er input fra brukeren, student er data på valgt elev. Det som returneres av generateContent må matche det i matchContent property for dokumenttypen
   - smell på isEncrypted: true dersom du trenger at content blir kryptert med custom nøkkel i databasen
-- Opprett {docType}.svelte og putt inn
+- Opprett {docType}.svelte og putt inn felter osv du trenger fra brukeren
 
 ### Data-henting
 - Gjør all data-henting server-side. Pass på hva du returnere til frontend / sluttbruker
+
+## Fagskolen-funksjonalitet
+- Skru på fagskolen greier med env variabel FAGSKOLEN_ENABLED=true
+- Gir tilgang til lærere på fagskolen å opprette forhåndsvarsel til studentene sine
+- Vurder om logo og tittel skal være fagskolen og "MinStudent" dersom lærerens hovedskole er fagskolen, ikke sikkert nødvendig
+- Tilgangsstyring for å opprette dokumenttypen styres av at læreren har en elev/student som i en undervisningsgruppe som tilhører fagskolen, enkelt og greit
+
+### Forhåndsvarsel
+- Hent inn data for klasse og fag automatisk, læreren må selv skrive inn hvilket arbeidskrav som gjelder. Pdf-preview må mekkes av pdf-api. Sender over nødvendig informasjon til db-køen. MinElev-roboten tar seg av arkivering i STUDENTMAPPE (ikke elevmappe), får lage funksjonalitet for syncStudentmappe på et eller annet vis... Kan hende det er greiest i azf-archive-v2.
 
 ## YFF beskrivelse
 Tilleggsmodul for Yrkesfaglig fordypning, for å dokumentere utplassering, opprette / redigere lokal læreplan, og sende tilbakemelding på en utplassering
