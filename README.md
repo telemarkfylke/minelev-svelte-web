@@ -95,8 +95,7 @@ Om du trenger å legge til en dokumenttype - legg inn her [./src/lib/document-ty
 ## Fagskolen-funksjonalitet
 - Skru på fagskolen greier med env variabel FAGSKOLEN_ENABLED=true
 - Gir tilgang til lærere på fagskolen å opprette forhåndsvarsel til studentene sine
-- Vurder om logo og tittel skal være fagskolen og "MinStudent" dersom lærerens hovedskole er fagskolen, ikke sikkert nødvendig
-- Tilgangsstyring for å opprette dokumenttypen styres av at læreren har en elev/student som i en undervisningsgruppe som tilhører fagskolen, enkelt og greit
+- Tilgangsstyring for å opprette dokumenttypen styres av at læreren har en elev/student som i en undervisningsgruppe eller basisgruppe som tilhører fagskolen, enkelt og greit
 
 ### Forhåndsvarsel
 - Hent inn data for klasse og fag automatisk, læreren må selv skrive inn hvilket arbeidskrav som gjelder. Pdf-preview må mekkes av pdf-api. Sender over nødvendig informasjon til db-køen. MinElev-roboten tar seg av arkivering i STUDENTMAPPE (ikke elevmappe), får lage funksjonalitet for syncStudentmappe på et eller annet vis... Kan hende det er greiest i azf-archive-v2.
