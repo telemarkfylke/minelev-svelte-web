@@ -240,7 +240,7 @@ export const documentTypes = [
 
       return {
         course,
-        assignment,
+        assignment: assignment.trim(),
         contactWithinDays
       }
     }
