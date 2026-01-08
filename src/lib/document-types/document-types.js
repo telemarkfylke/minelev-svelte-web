@@ -371,7 +371,7 @@ export const documentTypes = [
       if (content.bekreftelse.kontaktpersonData.length === 0) throw new Error('Må ha minst en kontaktperson ved utplasseringsbedriften')
       for (const person of content.bekreftelse.kontaktpersonData) {
         if (!person.navn) throw new Error('Kontaktperson ved bedriften mangler "Navn"')
-        if (person.telefon) person.telefon = person.telefon.toString()
+        person.telefon = person.telefon?.toString() || ''
         if (person.telefon && !isValidMobile(person.telefon)) throw new Error(`Telefonnummer ${person.telefon} til kontaktperson er ikke et gyldig telefonnummer`)
         if (person.epost && !isValidEmail(person.epost)) throw new Error(`E-post adresse ${person.epost} til kontaktperson er ikke en gyldig e-postadresse`)
       }
@@ -379,7 +379,7 @@ export const documentTypes = [
       if (content.bekreftelse.parorendeData.length === 0) throw new Error('Må ha minst en pårørerende for eleven')
       for (const person of content.bekreftelse.parorendeData) {
         if (!person.navn) throw new Error('Pårørerende for eleven mangler "Navn"')
-        if (person.telefon) person.telefon = person.telefon.toString()
+        person.telefon = person.telefon?.toString() || ''
         if (!person.telefon) throw new Error('Pårørerende for eleven mangler "Telefon"')
         if (!isValidMobile(person.telefon)) throw new Error(`Telefonnummer ${person.telefon} til pårørende er ikke et gyldig telefonnummer`)
       }

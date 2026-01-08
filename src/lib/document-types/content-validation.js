@@ -30,7 +30,7 @@ const validateObject = (content, contentValidator, resultArray, parentKey = '') 
         continue
       }
       if (typeof contentValidator[Array.isArray(contentValidator) ? '0' : key] !== typeof value) { // Hvis typen til nåværende element ikke matcher typen til matchende element i validatoren
-        resultArray.push({ [`${parentKey}${key}`]: 'wrong type' })
+        resultArray.push({ [`${parentKey}${key}`]: `wrong type (need ${typeof contentValidator[Array.isArray(contentValidator) ? '0' : key]}, got ${typeof value})`})
         continue
       }
       if (typeof content[key] === 'object' && content[key]) {
